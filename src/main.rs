@@ -1,7 +1,10 @@
+use std::cmp::Eq;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::fs::File;
+use std::hash::Hash;
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
@@ -29,7 +32,52 @@ impl Event {
 }
 
 // This will contain all the events
-pub type EventLog = Vec<Event>;
+pub struct EventLog {
+    events: Vec<Event>,
+}
+
+impl EventLog {
+    pub fn get_account_list(&self) -> Vec<u32> {
+        let mut result: Vec<u32> = Vec::new();
+        let mut d = self.events.iter().map(|e| e.debit).collect::<Vec<u32>>();
+        let mut c = self.events.iter().map(|e| e.credit).collect::<Vec<u32>>();
+
+        result.append(&mut d);
+        result.append(&mut c);
+
+        // Dedup result vector
+        let set: HashSet<_> = result.drain(..).collect();
+        result.extend(set.into_iter());
+
+        result.sort();
+        result
+    }
+
+    pub fn get_all_account_balance_by_month(&self, date: chrono::NaiveDate) -> HashMap<u32, i32> {
+        let mut result: HashMap<u32, i32> = HashMap::new();
+
+        for account in self.get_account_list() {
+            let d_sum: u32 = self
+                .events
+                .iter()
+                .filter(|e| e.debit == account)
+                .filter(|e| e.performance_date <= date)
+                .map(|e| e.value)
+                .sum();
+            let c_sum: u32 = self
+                .events
+                .iter()
+                .filter(|e| e.credit == account)
+                .filter(|e| e.performance_date <= date)
+                .map(|e| e.value)
+                .sum();
+
+            result.insert(account, d_sum as i32 - c_sum as i32);
+        }
+
+        result
+    }
+}
 
 /// Read file to string
 /// Gets a File reference, tries to read it, once its done returns a Result
@@ -77,18 +125,21 @@ pub fn process_file(file: &String, log: &mut EventLog) {
         // Process each row
         // Create a new event
         // And push it to the log
-        log.push(Event::new(
+        log.events.push(Event::new(
             items[1].parse::<u32>().unwrap(),
             items[2].parse::<u32>().unwrap(),
             items[3].parse::<u32>().unwrap(),
-            NaiveDate::parse_from_str(&items[0], "%Y.%m.%d")
-                .expect(&format!("Wrong date format at line {line}", line = i)),
+            get_chrono_naivedate_from_str(&items[0]),
         ));
     }
 }
 
+pub fn get_chrono_naivedate_from_str(str: &String) -> chrono::NaiveDate {
+    NaiveDate::parse_from_str(&str, "%Y-%m-%d").expect(&format!("Wrong date format"))
+}
+
 fn main() {
-    let mut log = EventLog::new();
+    let mut log = EventLog { events: Vec::new() };
 
     let files = fs::read_dir(env::current_dir().expect("Error while determining current dir"))
         .expect("Error during reading folder..")
@@ -117,5 +168,17 @@ fn main() {
         process_file(&content, &mut log);
     }
 
-    println!("{:?}", log);
+    print_ledger(
+        &log.get_all_account_balance_by_month(get_chrono_naivedate_from_str(
+            &"2019-04-30".to_string(),
+        )),
+    );
+}
+
+pub fn print_ledger(ledger: &HashMap<u32, i32>) {
+    println!("{0: <10} | {1: <10}", "Account", "Balance");
+    println!("{0: <10} | {1: <10}", "---", "---");
+    for (k, v) in ledger {
+        println!("{0: <10} | {1: <10}", k, v);
+    }
 }
