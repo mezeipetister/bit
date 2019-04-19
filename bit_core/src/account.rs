@@ -57,7 +57,7 @@ pub fn new_account(id: &str, name: &str) -> Account {
 pub fn is_valid_account(accounts: &[Account], account_id_to_check: &str) -> bool {
     accounts
         .iter()
-        .any(|account| account.id == account_id_to_check.to_string())
+        .any(|account| account.id == account_id_to_check)
 }
 
 /// Get account by id
@@ -141,6 +141,7 @@ pub fn check_account_is_leaf(accounts: &[Account], account_id_to_check: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_is_valid_account() {
         let mut accounts: Vec<Account> = Vec::new();
