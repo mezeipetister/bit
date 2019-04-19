@@ -1,9 +1,5 @@
-[package]
-name = "bit"
-version = "0.1.0"
-authors = ["Peter Mezei <mezeipetister@gmail.com>"]
-edition = "2018"
+[workspace]
 
-[dependencies]
-chrono = "*"
-structopt = "*"
+members = [
+"bit_core",
+]
