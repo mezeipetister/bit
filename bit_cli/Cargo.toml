@@ -1,9 +1,10 @@
 [package]
 name = "bit"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Peter Mezei <mezeipetister@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 chrono = "*"
+num-format = "*"
 bit_core = { path="../bit_core" }

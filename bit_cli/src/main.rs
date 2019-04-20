@@ -16,11 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>
  */
 extern crate bit_core;
+extern crate num_format;
 mod parser;
 
 use bit_core::account::*;
 use bit_core::event::*;
 use chrono::prelude::*;
+use num_format::{Locale, ToFormattedString};
 use std::env;
 use std::ffi::OsStr;
 use std::fs;
@@ -233,16 +235,21 @@ fn main() -> Result<(), String> {
 
     // Print ledger as result
     for account in accounts {
-        let name = if account.name.len() > 14 {
-            &account.name[0..14]
-        } else {
-            &account.name
-        };
+        let mut name: String = "".to_string();
+        let mut index: u32 = 0;
+        for char in account.name.chars() {
+            if index > 13 {
+                continue;
+            }
+            index = index + 1;
+            name.push(char);
+        }
+        
         println!(
             "{0: <4} {1: <15} | {2: <10}",
             account.id,
             name,
-            get_ledger_by_account_id_and_by_date(&account.id, &events, date)
+            get_ledger_by_account_id_and_by_date(&account.id, &events, date).to_formatted_string(&Locale::en)
         )
     }
 
