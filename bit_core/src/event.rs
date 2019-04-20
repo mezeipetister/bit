@@ -56,18 +56,18 @@ pub fn add_event(events: &mut Vec<Event>, event_to_add: Event) {
 pub fn get_ledger_by_account_id_and_by_date(
     account_id: &str,
     events: &[Event],
-    month: NaiveDate,
+    date: NaiveDate,
 ) -> i32 {
     (events
         .iter()
         .filter(|event| event.debit == account_id)
-        .filter(|event| event.performance_date <= month)
+        .filter(|event| event.performance_date <= date)
         .map(|event| event.value)
         .sum::<u32>()
         - events
             .iter()
             .filter(|event| event.credit == account_id)
-            .filter(|event| event.performance_date <= month)
+            .filter(|event| event.performance_date <= date)
             .map(|event| event.value)
             .sum::<u32>()) as i32
 }
