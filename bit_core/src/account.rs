@@ -25,8 +25,8 @@
 /// - name	=>	Account name
 #[derive(Debug, PartialEq, Clone)]
 pub struct Account {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 /// New Account
@@ -142,7 +142,6 @@ pub fn check_account_is_leaf(accounts: &[Account], account_id_to_check: &str) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn test_is_valid_account() {
         let mut accounts: Vec<Account> = Vec::new();
