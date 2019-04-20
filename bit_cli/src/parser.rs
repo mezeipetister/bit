@@ -25,9 +25,16 @@ pub fn clean_line(line: &str) -> Option<Vec<&str>> {
     if line.is_empty() {
         return None;
     }
-    
+
+    // Check for tab+//
+    // TODO: Refact
+    let looking_for = match line.find("\t//") {
+        Some(_) => "\t//",
+        None => "//",
+    };
+
     // Looking for comments to remove
-    match line.find("//") {
+    match line.find(looking_for) {
         // Once we found comment
         // We remove it and the remaining string
         // is sent to process
@@ -39,7 +46,7 @@ pub fn clean_line(line: &str) -> Option<Vec<&str>> {
                 .split("\t")
                 .map(|token| token.trim())
                 .collect::<Vec<&str>>();
-            
+
             // If vector is not empty, returns it
             if vector.len() > 0 {
                 return Some(vector);
@@ -59,5 +66,9 @@ mod tests {
         assert_eq!(clean_line("1	2	3 //comment"), Some(vec!["1", "2", "3"]));
         assert_eq!(clean_line("4	5	6"), Some(vec!["4", "5", "6"]));
         assert_eq!(clean_line("//comment"), None);
+        assert_eq!(
+            clean_line("2019-03-11	7	8	9	// comment"),
+            Some(vec!["2019-03-11", "7", "8", "9"])
+        )
     }
 }

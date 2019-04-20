@@ -103,18 +103,19 @@ pub fn get_ledger_by_account_id_and_by_date(
     events: &[Event],
     date: NaiveDate,
 ) -> i32 {
-    (events
+    let sum_debit: u32 = events
         .iter()
         .filter(|event| event.debit == account_id)
         .filter(|event| event.performance_date <= date)
         .map(|event| event.value)
-        .sum::<u32>()
-        - events
-            .iter()
-            .filter(|event| event.credit == account_id)
-            .filter(|event| event.performance_date <= date)
-            .map(|event| event.value)
-            .sum::<u32>()) as i32
+        .sum::<u32>();
+    let sum_credit: u32 = events
+        .iter()
+        .filter(|event| event.credit == account_id)
+        .filter(|event| event.performance_date <= date)
+        .map(|event| event.value)
+        .sum::<u32>();
+    (sum_debit as i32 - sum_credit as i32)
 }
 
 #[cfg(test)]

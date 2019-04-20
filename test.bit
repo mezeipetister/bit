@@ -1,0 +1,5 @@
+// Test file
+// Date		Debit	Credit	Value
+2019-03-11	5	3	7	// We purchased cofee for 5 USD
+2019-03-11	3	9	1000	// We have receieved an 1000 USD revenue
+2019-03-11	5	3	300	// We have paid our monthly house bills
