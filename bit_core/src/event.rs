@@ -39,8 +39,8 @@ pub struct Event {
 /// Returns a new event
 pub fn new_event(debit: &str, credit: &str, value: u32, performance_date: NaiveDate) -> Event {
     Event {
-        debit: debit.to_string(),
-        credit: credit.to_string(),
+        debit: debit.trim().to_string(),
+        credit: credit.trim().to_string(),
         value,
         performance_date,
     }
@@ -77,11 +77,16 @@ mod tests {
     use super::*;
     #[test]
     fn test_new_event() {
+        // Date helper
+        let date = |y, m, d| NaiveDate::from_ymd(y, m, d);
+
         // This should be ok!
-        assert_eq!(
-            new_event("1", "2", 3, NaiveDate::from_ymd(2019, 3, 20)).value,
-            3
-        );
+        assert_eq!(new_event("1", "2", 3, date(2019, 3, 20)).value, 3);
+
+        // Test trim
+        let event = new_event("   1  ", "      2    ", 3, date(2019, 3, 20));
+        assert_eq!(event.debit, "1"); // Test debit
+        assert_eq!(event.credit, "2"); // Test credit
     }
 
     #[test]
@@ -104,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_ledger_by_month() {
+    fn test_get_ledger_by_date() {
         // Events holder
         let mut events: Vec<Event> = Vec::new();
 
