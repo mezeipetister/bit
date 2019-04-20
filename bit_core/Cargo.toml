@@ -5,3 +5,4 @@ authors = ["Peter Mezei <mezeipetister@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+chrono = "*"
