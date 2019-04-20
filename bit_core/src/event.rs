@@ -37,6 +37,20 @@ pub struct Event {
 
 /// New event
 /// Returns a new event
+///
+/// # Example
+///
+/// ```rust
+/// extern crate chrono;  
+/// use chrono::NaiveDate;
+///
+/// # use bit_core::event::*;
+///
+/// // Date helper                                    
+/// let date = |y, m, d| NaiveDate::from_ymd(y, m, d);
+///
+/// new_event("1", "2", 3, date(2019,3,11));
+/// ```
 pub fn new_event(debit: &str, credit: &str, value: u32, performance_date: NaiveDate) -> Event {
     Event {
         debit: debit.trim().to_string(),
@@ -47,12 +61,43 @@ pub fn new_event(debit: &str, credit: &str, value: u32, performance_date: NaiveD
 }
 
 /// Add event
+///
+/// # Example
+///
+/// ```rust
+/// extern crate chrono;  
+/// use chrono::NaiveDate;
+///
+/// # use bit_core::event::*;
+///
+/// // Date helper                                    
+/// let date = |y, m, d| NaiveDate::from_ymd(y, m, d);
+///
+/// let mut events: Vec<Event> = Vec::new();
+/// add_event(&mut events, new_event("1", "2", 3, date(2019,3,11)));
+/// ```
 pub fn add_event(events: &mut Vec<Event>, event_to_add: Event) {
     events.push(event_to_add);
 }
 
 /// Get ledger by date
-/// ...
+///
+/// # Example
+///
+/// ```rust
+/// extern crate chrono;
+/// use chrono::NaiveDate;
+///
+/// # use bit_core::event::*;
+///
+/// // Events holder
+/// let mut events: Vec<Event> = Vec::new();
+/// // Date helper
+/// let date = |y, m, d| NaiveDate::from_ymd(y, m, d);
+///
+/// add_event(&mut events, new_event("1", "2", 3, date(2019, 3, 11)));
+/// get_ledger_by_account_id_and_by_date("1", &events, date(2019, 3, 11)); // This should be 3
+/// ```
 pub fn get_ledger_by_account_id_and_by_date(
     account_id: &str,
     events: &[Event],
