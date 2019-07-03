@@ -17,12 +17,17 @@
  */
 extern crate bit_core;
 extern crate num_format;
+extern crate open;
+
+mod jsonparser;
 mod parser;
 
 use bit_core::account::*;
 use bit_core::event::*;
 use chrono::prelude::*;
+use chrono::{Duration, TimeZone, Utc};
 use num_format::{Locale, ToFormattedString};
+// use std::collections::HashMap;
 use std::env;
 use std::ffi::OsStr;
 use std::fs;
@@ -30,6 +35,7 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
+use std::process::Command;
 
 fn main() -> Result<(), String> {
     // File reader
@@ -214,12 +220,44 @@ fn main() -> Result<(), String> {
     // Read CLI arguments
     let args: Vec<String> = env::args().collect();
 
+    for arg in &args {
+        // Create report
+        if arg == "report" {
+            let now = Local::now();
+            let file_name = format!(
+                "{}_{}_{}_{}_{}_{}",
+                now.year(),
+                now.month(),
+                now.day(),
+                now.hour(),
+                now.minute(),
+                now.second()
+            );
+            let mut create_report = Command::new("R");
+            create_report.arg("-e").arg(format!(
+                r#"rmarkdown::render('report.rmd', output_file='./report/{}.html')"#,
+                file_name
+            ));
+            let _result = create_report
+                .output()
+                .expect("failed to create report output!");
+            open::that(
+                current_dir
+                    .join("report")
+                    .join(format!("{}.html", file_name)),
+            )
+            .unwrap();
+            println!("Report done!");
+            return Ok(());
+        }
+    }
+
     // Define today
     let dt = Local::now();
     let mut date = NaiveDate::from_ymd(dt.year(), dt.month(), dt.day());
 
     // If we have provided date as filter, then apply it
-    if args.len() == 2 {
+    if args.len() == 2 || args.len() == 3 {
         date = match NaiveDate::parse_from_str(&args[1], "%Y-%m-%d") {
             Ok(date) => date,
             Err(msg) => {
@@ -229,6 +267,63 @@ fn main() -> Result<(), String> {
                 ));
             }
         };
+    }
+
+    // Refact needed!
+    // Its just for testing purpose!
+    for arg in args {
+        if arg == "csv" {
+            // Create the csv writer buffer
+            let mut wtr = csv::Writer::from_writer(io::stdout());
+
+            // Write header
+            let mut header: Vec<String> = Vec::new();
+            header.push("Date".to_string());
+            for account in accounts.clone() {
+                let aid = account.id;
+                header.push(aid.clone());
+            }
+            wtr.write_record(&header).unwrap();
+
+            // Define January 1.
+            let mut current_date = Utc.ymd(dt.year(), 1, 1);
+            let till_date = Utc.ymd(date.year(), date.month(), date.day());
+
+            // Iterate over the year, day by day
+            while current_date <= till_date {
+                let mut row = Vec::new();
+                row.push(format!(
+                    "{}-{}-{}",
+                    current_date.year(),
+                    current_date.month(),
+                    current_date.day(),
+                ));
+                for account in accounts.clone() {
+                    row.push(
+                        get_ledger_by_account_id_and_by_date(
+                            &account.id,
+                            &events,
+                            current_date.naive_utc(),
+                        )
+                        .to_string(),
+                    );
+                }
+                wtr.write_record(&row).unwrap();
+                current_date = current_date + Duration::days(1);
+            }
+
+            // Flush csv writer io buffer
+            wtr.flush().unwrap();
+
+            // for account in accounts {
+            //     result.insert(
+            //         account.id.clone(),
+            //         get_ledger_by_account_id_and_by_date(&account.id, &events, date),
+            //     );
+            // }
+            // println!("{}", jsonparser::to_string(result));
+            return Ok(());
+        }
     }
 
     println!("{0: <4} {1: <15} | {2: <10}", "ID", "Name", "Balance");
@@ -244,12 +339,13 @@ fn main() -> Result<(), String> {
             index = index + 1;
             name.push(char);
         }
-        
+
         println!(
             "{0: <4} {1: <15} | {2: <10}",
             account.id,
             name,
-            get_ledger_by_account_id_and_by_date(&account.id, &events, date).to_formatted_string(&Locale::en)
+            get_ledger_by_account_id_and_by_date(&account.id, &events, date)
+                .to_formatted_string(&Locale::en)
         )
     }
 

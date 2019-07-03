@@ -1,0 +1,38 @@
+---
+title: "Családi könyvelés 2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Peti bankszámla cashflow napi bontásban
+
+```{r echo=FALSE}
+# Load the package required to read JSON files.
+library("rjson")
+library("foreach")
+library("iterators")
+
+# Give the input file name to the function.
+result <- fromJSON(file = "data.json")
+
+# Convert JSON file to a data frame.
+data <- as.data.frame(result)
+
+plot(data$ID, data$Salary)
+barplot(t(as.matrix(data$Salary)), main="Demo plot", names.arg=data$ID)
+
+foreach(i=data$Salary, c=icount()) %do%
+  print(data$Salary[c])
+
+start <- as.Date("19-01-01",format="%y-%m-%d")
+end   <- as.Date("19-12-31",format="%y-%m-%d")
+
+theDate <- start
+
+while (theDate <= end)
+{
+  print(paste0("http://website.com/api/",format(theDate,"%Y-%m-%d")))
+  theDate <- theDate + 1                    
+}
+```
