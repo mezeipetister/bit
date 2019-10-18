@@ -343,12 +343,170 @@
 
             <div class="field is-grouped">
                 <div class="control">
-                    <button class="button is-success">Push commit</button>
+                    <button class="button is-success is-outlined">Push commit</button>
                 </div>
                 <div class="control">
                     <button class="button is-light">Close</button>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- 
+    List Commit -->
+    <section class="section">
+        <div class="container">
+            <p class="content">
+                <span class="is-size-3">Commits</span>
+            </p>
+            <table class="table is-striped">
+                <tbody>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@mezeipetister</a>
+                            <br>
+                            2 days ago
+                        </td>
+                        <td>Mai napi könyvelésem</td>
+                        <td>
+                            <div class="columns has-text-success is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    47.000 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <div class="button-group">
+                                        <button class="button is-small is-success">Accept</button>
+                                        <button class="button is-small is-warning">Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@beganyikriszta</a>
+                            <br>
+                            2 days ago
+                        </td>
+                        <td>Vegyes napló</td>
+                        <td>
+                            <div class="columns has-text-success is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    149.450 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <p class="is-size-7 has-text-grey">Accepted yesterday by</p>
+                                    <p class="is-size-7 has-text-grey">@mezeipetister</p>
+                                </div>
+                                <div class="column">
+                                    <span class="icon is-small is-left has-text-success">
+                                        <i class="far fa-check-circle has-text-weight-medium"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@mezeipetister</a>
+                            <br>
+                            5 days ago
+                        </td>
+                        <td>Vegyes napló</td>
+                        <td>
+                            <div class="columns has-text-danger is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    149.450 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <p class="is-size-7 has-text-grey">Rejected yesterday by</p>
+                                    <p class="is-size-7 has-text-grey">@beganyikriszta</p>
+                                </div>
+                                <div class="column">
+                                    <span class="icon is-small is-left has-text-danger">
+                                        <i class="far fa-exclamation has-text-weight-medium"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@beganyikriszta</a>
+                            <br>
+                            7 days ago
+                        </td>
+                        <td>ÉCS könyvelés</td>
+                        <td>
+                            <div class="columns has-text-success is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    17.899 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <p class="is-size-7 has-text-grey">Accepted yesterday by</p>
+                                    <p class="is-size-7 has-text-grey">@mezeipetister</p>
+                                </div>
+                                <div class="column">
+                                    <span class="icon is-small is-left has-text-success">
+                                        <i class="far fa-check-circle has-text-weight-medium"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <nav class="pagination is-small" role="navigation" aria-label="pagination">
+                <a class="pagination-previous">Previous</a>
+                <a class="pagination-next">Next page</a>
+                <ul class="pagination-list">
+                    <li><a class="pagination-link" aria-label="Goto page 1">1</a></li>
+                    <li><a class="pagination-link" aria-label="Goto page 1">2</a></li>
+                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                    <li><a class="pagination-link" aria-label="Goto page 45">10</a></li>
+                    <li><a class="pagination-link is-current" aria-label="Page 46" aria-current="page">11</a></li>
+                    <li><a class="pagination-link" aria-label="Goto page 47">12</a></li>
+                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                    <li><a class="pagination-link" aria-label="Goto page 86">19</a></li>
+                    <li><a class="pagination-link" aria-label="Goto page 86">20</a></li>
+                </ul>
+            </nav>
         </div>
     </section>
 
