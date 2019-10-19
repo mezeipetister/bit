@@ -22,10 +22,13 @@ extern crate rocket;
 extern crate core_lib;
 extern crate serde_derive;
 
+mod login;
+
 use self::handlebars::{
     Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
 };
-use rocket::http::RawStr;
+use login::*;
+use rocket::http::{Cookies, RawStr};
 use rocket::request::Form;
 use rocket::response::{status, NamedFile, Redirect};
 use rocket::Request;
@@ -47,14 +50,17 @@ struct TemplateContext {
 }
 
 #[get("/")]
-fn index() -> Template {
-    Template::render(
+fn index(mut cookies: Cookies) -> Result<Template, Redirect> {
+    if !user_auth(&mut cookies) {
+        return Err(Redirect::to("/login"));
+    }
+    Ok(Template::render(
         "index",
         &TemplateContext {
             title: "Welcome",
             parent: "layout",
         },
-    )
+    ))
 }
 
 #[get("/login")]
@@ -66,6 +72,30 @@ fn login() -> Template {
             parent: "layout_empty",
         },
     )
+}
+
+#[get("/logout")]
+fn logout(mut cookies: Cookies) -> Redirect {
+    if !user_auth(&mut cookies) {
+        return Redirect::to("/login");
+    }
+    user_logout(&mut cookies);
+    Redirect::to("/login")
+}
+
+#[derive(FromForm)]
+struct FormLogin {
+    username: String,
+    password: String,
+}
+
+#[post("/login", data = "<login>")]
+fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
+    if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
+        user_login(&mut cookies, "9");
+        return Redirect::to("/");
+    }
+    Redirect::to("/login/error")
 }
 
 #[get("/login/error")]
@@ -132,7 +162,9 @@ fn rocket() -> rocket::Rocket {
                 static_file,
                 index,
                 login,
+                login_post,
                 login_error,
+                logout,
                 login_reset_password,
                 login_reset_password_success,
                 login_reset_password_error
