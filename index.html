@@ -121,33 +121,73 @@
     Accounts PAGE -->
     <section class="section">
         <div class="container">
-            <p class="title is-spaced">
-                <span>Accounts</span>
-                <a class="button">
-                    <span class="icon">
-                        <i class="fa fa-plus-square"></i>
-                    </span>
-                </a>
+            <p class="content is-size-3">
+                Accounts
             </p>
             <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+                <col width="50">
+                <col width="*">
+                <col width="200">
+                <col width="50">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th class="is-hidden-mobile">Description</th>
+                        <th>Stats</th>
                         <th>#</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><a>3841</a></td>
-                        <td>Bank - Peti</td>
-                        <td class="is-hidden-mobile">Peti bankszámla. Ide könyvelünk mindent, ami a Peti bankkivonatán
-                            szerepel.</td>
+                        <td><a>38</a></td>
                         <td>
+                            <p class="is-size-6">
+                                Pénzeszközök
+                            </p>
+                        </td>
+                        <td>
+                            -
+                        </td>
+                        <td class="has-text-right">
                             <div class="dropdown is-right">
                                 <div class="dropdown-trigger">
-                                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                                    <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
+                                        <span>Action</span>
+                                        <span class="icon is-small">
+                                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                                    <div class="dropdown-content">
+                                        <a href="#" class="dropdown-item">
+                                            Edit item
+                                        </a>
+                                        <hr class="dropdown-divider">
+                                        <a href="#" class="dropdown-item">
+                                            Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><a>384</a></td>
+                        <td>
+                            <p class="is-size-6">
+                                Bankszámla
+                            </p>
+                        </td>
+                        <td>
+                            <p class="is-size-7">
+                                <a>349</a> transaction in <a>290 events</a> in <a>170 commits</a>
+                            </p>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="dropdown is-right">
+                                <div class="dropdown-trigger">
+                                    <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
                                         <span>Action</span>
                                         <span class="icon is-small">
                                             <i class="fas fa-angle-down" aria-hidden="true"></i>
@@ -863,7 +903,7 @@
     <hr>
 
     <!-- 
-    Reset password 2 -->
+    Reset password SUCCESS -->
     <section class="section">
         <div class="container">
             <p class="has-text-centered title is-spaced">Reset password</p>
@@ -888,7 +928,7 @@
     <hr>
 
     <!-- 
-    Reset password 3 -->
+    Reset password  -->
     <section class="section">
         <div class="container">
             <p class="has-text-centered title is-spaced">Reset password</p>
@@ -909,6 +949,178 @@
             </div>
         </div>
     </section>
+
+    <hr>
+
+    <!-- 
+    Users settings -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="is-size-3">Settings</p>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                    <input class="input is-static" type="text" placeholder="e.g johnsmith" value="@johnsmith" readonly>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                    <input class="input" type="email" placeholder="e.g. alexsmith@gmail.com"
+                        value="alexsmith@gmail.com">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g John Smith" value="John Smith">
+                </div>
+            </div>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined">Save</button>
+                    <button class="button">Change password</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!--     
+    Settings NEW PASSWORD -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="is-size-3">Settings / Password</p>
+                    <p class="subtitle">Please type your new password twice.</p>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">New password</label>
+                <div class="control">
+                    <input class="input" type="password" placeholder="e.g. strong_password">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">New password again</label>
+                <div class="control">
+                    <input class="input" type="password" placeholder="e.g. strong_password">
+                </div>
+            </div>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined">Change password</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    User NEW PASSWORD SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Good job!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Your settings are saved.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    User settings SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Good job!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Your settings are saved.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    User settings ERROR -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Ooops... Error!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                An error occured. <br>
+                Wrong email format.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Try again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Reset password SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Safety first!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Your password has been changed!
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
 
     <!-- 
     FOOTER -->
