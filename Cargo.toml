@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
-"bit_core",
-"bit_cli"
+    "core",
+    "website",
 ]
