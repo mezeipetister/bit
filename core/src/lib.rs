@@ -28,4 +28,3 @@ pub mod user;
 pub use error::*;
 pub use user::login::*;
 pub use user::password::*;
-pub use user::user::*;

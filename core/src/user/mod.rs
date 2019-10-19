@@ -18,7 +18,8 @@
 pub mod login;
 pub mod model;
 pub mod password;
-pub mod user;
+
+pub use model::user_v1::UserObject;
 
 pub trait User {
     fn get_user_id(&self) -> Option<String>;

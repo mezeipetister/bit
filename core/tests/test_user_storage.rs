@@ -19,12 +19,12 @@ extern crate core_lib;
 
 use core_lib::prelude::*;
 use core_lib::storage;
-use core_lib::user::model::user_v1::UserV1;
+use core_lib::user::model::user_v1::UserObject;
 use core_lib::user::User;
 use core_lib::user::*;
 
-pub fn find_users_with_name<'a>(users: &'a Vec<UserV1>, key: &str) -> Vec<&'a UserV1> {
-    let mut result: Vec<&UserV1> = Vec::new();
+pub fn find_users_with_name<'a>(users: &'a Vec<UserObject>, key: &str) -> Vec<&'a UserObject> {
+    let mut result: Vec<&UserObject> = Vec::new();
     for user in users {
         if user.get_user_name().is_some() {
             if user.get_user_name().unwrap().contains(key) {
@@ -36,9 +36,9 @@ pub fn find_users_with_name<'a>(users: &'a Vec<UserV1>, key: &str) -> Vec<&'a Us
 }
 
 fn init_storage() {
-    let mut user_storage = storage::load_storage::<UserV1>("../data/users").unwrap();
+    let mut user_storage = storage::load_storage::<UserObject>("../data/users").unwrap();
     for i in 1..100 {
-        let mut user = UserV1::new();
+        let mut user = UserObject::new();
         user.set_user_id(&format!("user_{}", i)).unwrap();
         user.set_user_name(&format!("User Name {}", i)).unwrap();
         storage::add_to_storage(&mut user_storage, user).unwrap();
@@ -48,15 +48,7 @@ fn init_storage() {
 #[test]
 fn test_user_storage_a() {
     init_storage();
-    let user_storage = storage::load_storage::<UserV1>("../data/users").unwrap();
+    let user_storage = storage::load_storage::<UserObject>("../data/users").unwrap();
     assert_eq!(user_storage.data.len(), 99);
     user_storage.remove();
-}
-
-#[test]
-fn test_user_storage_b() {
-    init_storage();
-    let storage = storage::load_storage::<UserV1>("../data/users").unwrap();
-    assert_eq!(find_users_with_name(&storage.data, "77").len(), 1);
-    storage.remove();
 }

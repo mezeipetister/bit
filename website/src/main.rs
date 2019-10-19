@@ -27,6 +27,7 @@ mod login;
 use self::handlebars::{
     Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
 };
+use core_lib::{storage, user};
 use login::*;
 use rocket::http::{Cookies, RawStr};
 use rocket::request::Form;
