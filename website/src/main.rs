@@ -27,7 +27,7 @@ mod login;
 use self::handlebars::{
     Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
 };
-use core_lib::{storage, user};
+use core_lib::{storage::*, user::*};
 use login::*;
 use rocket::http::{Cookies, RawStr};
 use rocket::request::Form;
@@ -155,8 +155,13 @@ fn not_found(req: &Request<'_>) -> Template {
     Template::render("error/404", &map)
 }
 
-fn rocket() -> rocket::Rocket {
+struct DataLoad {
+    users: Mutex<Storage<UserObject>>,
+}
+
+fn rocket(data: DataLoad) -> rocket::Rocket {
     rocket::ignite()
+        .manage(data)
         .mount(
             "/",
             routes![
@@ -176,5 +181,9 @@ fn rocket() -> rocket::Rocket {
 }
 
 fn main() {
-    rocket().launch();
+    let user_storage = load_storage::<UserObject>("/data/users").unwrap();
+    let data = DataLoad {
+        users: Mutex::new(user_storage),
+    };
+    rocket(data).launch();
 }
