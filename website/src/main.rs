@@ -42,10 +42,11 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 #[derive(Serialize)]
-struct TemplateContext {
+struct TemplateContext<'a, T> {
     title: &'static str,
     //name: Option<String>,
     //items: &'a Vec<T>,
+    data: Option<&'a T>,
     // This key tells handlebars which template is the parent.
     parent: &'static str,
 }
@@ -57,9 +58,10 @@ fn index(mut cookies: Cookies) -> Result<Template, Redirect> {
     }
     Ok(Template::render(
         "index",
-        &TemplateContext {
+        &TemplateContext::<i32> {
             title: "Welcome",
             parent: "layout",
+            data: None,
         },
     ))
 }
@@ -68,9 +70,10 @@ fn index(mut cookies: Cookies) -> Result<Template, Redirect> {
 fn login() -> Template {
     Template::render(
         "login",
-        &TemplateContext {
+        &TemplateContext::<i32> {
             title: "Login",
             parent: "layout_empty",
+            data: None,
         },
     )
 }
@@ -103,9 +106,10 @@ fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
 fn login_error() -> Template {
     Template::render(
         "login_error",
-        &TemplateContext {
+        &TemplateContext::<i32> {
             title: "Login failed",
             parent: "layout_empty",
+            data: None,
         },
     )
 }
@@ -114,9 +118,10 @@ fn login_error() -> Template {
 fn login_reset_password() -> Template {
     Template::render(
         "login_reset_password",
-        &TemplateContext {
+        &TemplateContext::<i32> {
             title: "Reset password",
             parent: "layout_empty",
+            data: None,
         },
     )
 }
@@ -125,9 +130,10 @@ fn login_reset_password() -> Template {
 fn login_reset_password_success() -> Template {
     Template::render(
         "login_reset_password_success",
-        &TemplateContext {
+        &TemplateContext::<i32> {
             title: "Success",
             parent: "layout_empty",
+            data: None,
         },
     )
 }
@@ -136,11 +142,49 @@ fn login_reset_password_success() -> Template {
 fn login_reset_password_error() -> Template {
     Template::render(
         "login_reset_password_error",
-        &TemplateContext {
+        &TemplateContext::<i32> {
             title: "Error",
             parent: "layout_empty",
+            data: None,
         },
     )
+}
+
+/**
+ * USERS
+ */
+#[get("/admin/user")]
+fn admin_user(mut cookies: Cookies, data: State<DataLoad>) -> Result<Template, Redirect> {
+    if !user_auth(&mut cookies) {
+        return Err(Redirect::to("/login"));
+    }
+
+    #[derive(Serialize)]
+    struct UserData {
+        username: String,
+        name: String,
+        email: String,
+    }
+
+    let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
+
+    let mut payload: Vec<UserData> = Vec::new();
+    for user in users {
+        payload.push(UserData {
+            username: user.get_user_id().unwrap_or("".to_owned()),
+            name: user.get_user_name().unwrap_or("".to_owned()),
+            email: user.get_user_email().unwrap_or("".to_owned()),
+        });
+    }
+
+    Ok(Template::render(
+        "user",
+        &TemplateContext {
+            title: "User admin",
+            parent: "layout",
+            data: Some(&payload),
+        },
+    ))
 }
 
 #[get("/static/<file..>")]
@@ -171,6 +215,7 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login_post,
                 login_error,
                 logout,
+                admin_user,
                 login_reset_password,
                 login_reset_password_success,
                 login_reset_password_error
@@ -181,7 +226,7 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
 }
 
 fn main() {
-    let user_storage = load_storage::<UserObject>("/data/users").unwrap();
+    let user_storage = load_storage::<UserObject>("data/users").unwrap();
     let data = DataLoad {
         users: Mutex::new(user_storage),
     };

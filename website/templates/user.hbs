@@ -18,10 +18,11 @@ Users -->
             </div>
         </div>
         <table class="table is-striped">
+            {{#each data}}
             <tr>
-                <td>@mezeipetister</td>
-                <td>Mezei Péter</td>
-                <td>mezeipetister@gmail.com</td>
+                <td>@{{this.username}}</td>
+                <td>{{this.name}}</td>
+                <td>{{this.email}}</td>
                 <td>
                     <div class="button-group">
                         <a class="button is-small">
@@ -33,21 +34,7 @@ Users -->
                     </div>
                 </td>
             </tr>
-            <tr>
-                <td>@beganyikriszta</td>
-                <td>Mezeiné Bégányi Krisztina</td>
-                <td>beganyikriszta@gmail.com</td>
-                <td>
-                    <div class="button-group">
-                        <a class="button is-small">
-                            <span class="icon">
-                                <i class="fas fa-key"></i>
-                            </span>
-                            <span>Reset password</span>
-                        </a>
-                    </div>
-                </td>
-            </tr>
+            {{/each}}
         </table>
     </div>
 </section>

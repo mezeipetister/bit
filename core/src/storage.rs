@@ -96,10 +96,8 @@ where
     if !Path::new(path).exists() {
         match fs::create_dir_all(path) {
             Ok(_) => (),
-            Err(_) => {
-                return Err(
-                    "Path does not exist. Trying to create path, but an error occured.".to_owned(),
-                );
+            Err(msg) => {
+                return Err(format!("Storage path failed to create: {}", msg));
             }
         }
     } else {
