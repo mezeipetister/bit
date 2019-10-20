@@ -10,30 +10,32 @@ Users Add new user -->
                 <p class="subtitle">Add new user</p>
             </div>
         </div>
-        <div class="field">
-            <label class="label">Username</label>
-            <div class="control">
-                <input class="input" type="text" placeholder="e.g johnsmith">
+        <form action="/admin/user/new" method="POST">
+            <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g johnsmith" name="id" autofocus>
+                </div>
             </div>
-        </div>
-        <div class="field">
-            <label class="label">Email</label>
-            <div class="control">
-                <input class="input" type="email" placeholder="e.g. alexsmith@gmail.com">
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                    <input class="input" type="email" placeholder="e.g. alexsmith@gmail.com" name="email">
+                </div>
             </div>
-        </div>
-        <div class="field">
-            <label class="label">Name</label>
-            <div class="control">
-                <input class="input" type="text" placeholder="e.g John Smith">
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g John Smith" name="name">
+                </div>
             </div>
-        </div>
-        <div class="field">
-            <div class="button-group">
-                <button class="button is-info is-outlined">Add user</button>
-                <button class="button">Cancel</button>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined" type="submit">Add user</button>
+                    <a href="." class="button">Cancel</a>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 </section>
 

@@ -27,6 +27,7 @@ mod login;
 use self::handlebars::{
     Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
 };
+use core_lib::user;
 use core_lib::{storage::*, user::*};
 use login::*;
 use rocket::http::{Cookies, RawStr};
@@ -187,6 +188,52 @@ fn admin_user(mut cookies: Cookies, data: State<DataLoad>) -> Result<Template, R
     ))
 }
 
+#[get("/admin/user/new")]
+fn admin_user_new(mut cookies: Cookies) -> Result<Template, Redirect> {
+    if !user_auth(&mut cookies) {
+        return Err(Redirect::to("/login"));
+    }
+
+    Ok(Template::render(
+        "user_add_user",
+        &TemplateContext::<i32> {
+            title: "User admin",
+            parent: "layout",
+            data: None,
+        },
+    ))
+}
+
+#[derive(FromForm)]
+struct FormUserNew {
+    id: String,
+    name: String,
+    email: String,
+}
+
+#[post("/admin/user/new", data = "<form>")]
+fn admin_user_new_post(
+    mut cookies: Cookies,
+    form: Form<FormUserNew>,
+    data: State<DataLoad>,
+) -> Redirect {
+    if !user_auth(&mut cookies) {
+        return Redirect::to("/login");
+    }
+
+    let mut new_user = user::UserObject::new();
+    new_user.set_user_id(form.id.as_ref());
+    new_user.set_user_name(form.name.as_ref());
+    new_user.set_user_email(form.email.as_ref());
+
+    let mut user_storage = data.inner().users.lock().unwrap();
+
+    let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).unwrap();
+    u1.save().unwrap();
+
+    Redirect::to("/admin/user")
+}
+
 #[get("/static/<file..>")]
 pub fn static_file(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("static/").join(file)).ok()
@@ -216,6 +263,8 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login_error,
                 logout,
                 admin_user,
+                admin_user_new,
+                admin_user_new_post,
                 login_reset_password,
                 login_reset_password_success,
                 login_reset_password_error
