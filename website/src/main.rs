@@ -74,7 +74,7 @@ impl<'a> Renderer<'a> {
                 head {
                     title {(self.title)}
                     link rel="stylesheet" type="text/css" href="/static/style.css" /
-                    link rel="icon" type="image/x-icon" href="/static/favicon.ico" /
+                    link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/mezeipetister/bit/web_refact/static/favicon.ico" /
                 }
                 body {
                     (body)
