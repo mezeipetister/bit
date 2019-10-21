@@ -20,6 +20,7 @@ Users -->
         <table class="table is-striped">
             {{#each data}}
             <tr>
+                <td>{{@index}}</td>
                 <td>@{{this.username}}</td>
                 <td>{{this.name}}</td>
                 <td>{{this.email}}</td>
