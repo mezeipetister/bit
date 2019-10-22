@@ -31,7 +31,7 @@ impl Component for Navbar {
                                     }
                                     span { "Settings" }
                                 }
-                                a.button.is-light href="/logout" accesskey="i" {
+                                a.button.is-light href="/logout" accesskey="l" {
                                     span.icon.is-small {
                                         i.fa.fa-sign-out-alt {}
                                     }

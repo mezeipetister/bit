@@ -64,14 +64,17 @@ struct TemplateContext<'a, T> {
 #[get("/")]
 fn index(mut cookies: Cookies) -> Result<Markup, Redirect> {
     user_auth(&mut cookies)?;
-    Ok(html! {h1 {"Wohoo"}})
+    Ok(Layout::new()
+        .set_title("Welcome")
+        .render(ViewIndex::new().render()))
 }
 
 #[get("/login")]
 fn login() -> Markup {
-    html! {
-        h1 { "Login"}
-    }
+    Layout::new()
+        .set_title("Login")
+        .set_empty()
+        .render(ViewLogin::new().render())
 }
 
 #[get("/logout")]
@@ -84,32 +87,28 @@ fn logout(mut cookies: Cookies) -> Result<Redirect, Redirect> {
     Ok(Redirect::to("/login"))
 }
 
-// #[derive(FromForm)]
-// struct FormLogin {
-//     username: String,
-//     password: String,
-// }
+#[derive(FromForm)]
+struct FormLogin {
+    username: String,
+    password: String,
+}
 
-// #[post("/login", data = "<login>")]
-// fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
-//     if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
-//         user_login(&mut cookies, "9");
-//         return Redirect::to("/");
-//     }
-//     Redirect::to("/login/error")
-// }
+#[post("/login", data = "<login>")]
+fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
+    if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
+        user_login(&mut cookies, "9");
+        return Redirect::to("/");
+    }
+    Redirect::to("/login/error")
+}
 
-// #[get("/login/error")]
-// fn login_error() -> Template {
-//     Template::render(
-//         "login_error",
-//         &TemplateContext::<i32> {
-//             title: "Login failed",
-//             parent: "layout_empty",
-//             data: None,
-//         },
-//     )
-// }
+#[get("/login/error")]
+fn login_error() -> Markup {
+    Layout::new()
+        .set_title("Login failed")
+        .set_empty()
+        .render(ViewLogin::new().render_error())
+}
 
 // #[get("/login/reset_password")]
 // fn login_reset_password() -> Template {
@@ -257,8 +256,8 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 static_file,
                 index,
                 login,
-                // login_post,
-                // login_error,
+                login_post,
+                login_error,
                 logout,
                 // admin_user,
                 // admin_user_new,
