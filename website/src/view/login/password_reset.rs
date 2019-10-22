@@ -18,43 +18,64 @@
 use crate::view::View;
 use maud::{html, Markup};
 
-pub struct ViewLogin {}
+pub struct ViewPasswordReset {}
 
-impl ViewLogin {
+impl ViewPasswordReset {
     pub fn new() -> Self {
-        ViewLogin {}
+        ViewPasswordReset {}
     }
 }
 
-impl View for ViewLogin {
+impl View for ViewPasswordReset {
     fn render(&self) -> Markup {
         html! {
             section.section {
                 .container {
-                    p.has-text-centered.title.is-spaced {"Login"}
+                    p.has-text-centered.title.is-spaced {"Reset password"}
                     p.subtitle.has-text-centered."is-size-6" {
-                        "BIT online financial"
+                        "Please type your email address."
                         br;
-                        "and project information system"
+                        "We are going to create a new password and"
+                        br;
+                        "send it to your email address."
                     }
-                    form action="/login" method="POST" {
+                    form action="/login/reset_password" method="POST" {
                         .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
                             .field {
-                                label.label { "Username" }
                                 .control {
-                                    input.input type="text" name="username" placeholder="e.g. John Smith" autofocus?;
+                                    input.input type="text" name="email" placeholder="e.g. john.smith@company.com" autofocus?;
                                 }
                             }
                             .field {
-                                label.label { "Password" }
-                                .control {
-                                    input.input type="password" name="password" placeholder="strong password";
+                                .control.has-text-centered {
+                                    .button-group {
+                                        button.button type="submit" { "Send me a new password" }
+                                    }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fn render_success(&self) -> Markup {
+        html! {
+            section.section {
+                .container {
+                    p.has-text-centered.title.is-spaced {"Reset password"}
+                    p.subtitle.has-text-centered."is-size-6" {
+                        "Your password has been sent!"
+                        br;
+                        "Please check your inbox."
+                    }
+                    .columns.is-mobile {
+                        .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
                             .field {
-                                .control {
-                                    button.button.is-info.is-outlined type="submit" href="/login" { "Login" }
-                                    a.button href="/login/reset_password" { "Forget password" }
+                                .control.has-text-centered {
+                                    form action="/login" method="GET" {
+                                        button.button type="submit" autofocus? { "Login" }
+                                    }
                                 }
                             }
                         }
@@ -67,23 +88,17 @@ impl View for ViewLogin {
         html! {
             section.section {
                 .container {
-                    p.has-text-centered.title.is-spaced { "Login failed" }
+                    p.has-text-centered.title.is-spaced {"Reset password"}
                     p.subtitle.has-text-centered."is-size-6" {
                         "Oooops!"
                         br;
-                        "Wrong username or password."
+                        "We do not know your email address."
                     }
                     .columns.is-mobile {
                         .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
                             .field {
                                 .control.has-text-centered {
-                                    .button-group {
-                                        form action="/login" method="GET" {
-                                            button.button autofocus? {
-                                                "Try again"
-                                            }
-                                        }
-                                    }
+                                    a.button href="/login/reset_password" { "Try again" }
                                 }
                             }
                         }

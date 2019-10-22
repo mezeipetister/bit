@@ -2,12 +2,12 @@
 document.addEventListener('keydown', function (e) {
     // Disable browser interaction
     // CTRL + A => Log out
-    if (e.ctrlKey && e.keyCode == 76) {
+    if (e.altKey && e.keyCode == 76) {
         window.location.href = "/logout";
         e.preventDefault();
     }
     // CTRL + I => Index
-    if (e.ctrlKey && e.keyCode == 73) {
+    if (e.altKey && e.keyCode == 73) {
         window.location.href = "/";
         e.preventDefault();
     }

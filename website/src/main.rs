@@ -44,7 +44,7 @@ use std::sync::Mutex;
 use view::*;
 
 #[get("/demo")]
-fn demo(route: &Route, mut cookies: Cookies) -> Result<Markup, Redirect> {
+fn demo(mut cookies: Cookies, route: &Route) -> Result<Markup, Redirect> {
     user_auth(&mut cookies, route)?;
     Ok(Layout::new()
         .set_title("Wohoo")
@@ -52,7 +52,7 @@ fn demo(route: &Route, mut cookies: Cookies) -> Result<Markup, Redirect> {
 }
 
 #[get("/")]
-fn index(route: &Route, mut cookies: Cookies) -> Result<Markup, Redirect> {
+fn index(mut cookies: Cookies, route: &Route) -> Result<Markup, Redirect> {
     user_auth(&mut cookies, route)?;
     Ok(Layout::new()
         .set_title("Welcome")
@@ -68,7 +68,7 @@ fn login() -> Markup {
 }
 
 #[get("/logout")]
-fn logout(route: &Route, mut cookies: Cookies) -> Result<Redirect, Redirect> {
+fn logout(mut cookies: Cookies, route: &Route) -> Result<Redirect, Redirect> {
     // Check wheter user is logged in
     user_auth(&mut cookies, route)?;
     // Remove userid cookie
@@ -99,78 +99,59 @@ fn login_error() -> Markup {
         .render(ViewLogin::new().render_error())
 }
 
-// #[get("/login/reset_password")]
-// fn login_reset_password() -> Template {
-//     Template::render(
-//         "login_reset_password",
-//         &TemplateContext::<i32> {
-//             title: "Reset password",
-//             parent: "layout_empty",
-//             data: None,
-//         },
-//     )
-// }
+#[get("/login/reset_password")]
+fn login_reset_password() -> Markup {
+    Layout::new()
+        .set_title("Reset password")
+        .set_empty()
+        .render(ViewPasswordReset::new().render())
+}
 
-// #[get("/login/reset_password/success")]
-// fn login_reset_password_success() -> Template {
-//     Template::render(
-//         "login_reset_password_success",
-//         &TemplateContext::<i32> {
-//             title: "Success",
-//             parent: "layout_empty",
-//             data: None,
-//         },
-//     )
-// }
+#[derive(FromForm)]
+struct FormResetPassword {
+    email: String,
+}
+// TODO: Implement! Now its just dummy.
+#[post("/login/reset_password", data = "<form>")]
+fn login_reset_password_post(form: Form<FormResetPassword>) -> Redirect {
+    // Letd manage form.email
+    Redirect::to("/login/reset_password/success")
+}
 
-// #[get("/login/reset_password/error")]
-// fn login_reset_password_error() -> Template {
-//     Template::render(
-//         "login_reset_password_error",
-//         &TemplateContext::<i32> {
-//             title: "Error",
-//             parent: "layout_empty",
-//             data: None,
-//         },
-//     )
-// }
+// TODO: Implement! Now its just dummy.
+#[get("/login/reset_password/success")]
+fn login_reset_password_success() -> Markup {
+    Layout::new()
+        .set_title("Reset password")
+        .set_empty()
+        .render(ViewPasswordReset::new().render_success())
+}
 
-// /**
-//  * USERS
-//  */
-// #[get("/admin/user")]
-// fn admin_user(mut cookies: Cookies, data: State<DataLoad>) -> Result<Template, Redirect> {
-//     if !user_auth(&mut cookies) {
-//         return Err(Redirect::to("/login"));
-//     }
+// TODO: Implement! Now its just dummy.
+#[get("/login/reset_password/error")]
+fn login_reset_password_error() -> Markup {
+    Layout::new()
+        .set_title("Reset password")
+        .set_empty()
+        .render(ViewPasswordReset::new().render_error())
+}
 
-//     #[derive(Serialize)]
-//     struct UserData {
-//         username: String,
-//         name: String,
-//         email: String,
-//     }
+/**
+ * USERS
+ */
+#[get("/admin/user")]
+fn admin_user(
+    mut cookies: Cookies,
+    route: &Route,
+    data: State<DataLoad>,
+) -> Result<Markup, Redirect> {
+    user_auth(&mut cookies, route)?;
 
-//     let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
-
-//     let mut payload: Vec<UserData> = Vec::new();
-//     for user in users {
-//         payload.push(UserData {
-//             username: user.get_user_id().unwrap_or("".to_owned()),
-//             name: user.get_user_name().unwrap_or("".to_owned()),
-//             email: user.get_user_email().unwrap_or("".to_owned()),
-//         });
-//     }
-
-//     Ok(Template::render(
-//         "user",
-//         &TemplateContext {
-//             title: "User admin",
-//             parent: "layout",
-//             data: Some(&payload),
-//         },
-//     ))
-// }
+    let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
+    Ok(Layout::new()
+        .set_title("Admin users")
+        .render(ViewAdminUser::new(users).render()))
+}
 
 // #[get("/admin/user/new")]
 // fn admin_user_new(mut cookies: Cookies) -> Result<Template, Redirect> {
@@ -248,12 +229,13 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login_post,
                 login_error,
                 logout,
-                // admin_user,
+                admin_user,
                 // admin_user_new,
                 // admin_user_new_post,
-                // login_reset_password,
-                // login_reset_password_success,
-                // login_reset_password_error
+                login_reset_password,
+                login_reset_password_post,
+                login_reset_password_success,
+                login_reset_password_error
             ],
         )
         .register(catchers![not_found])
