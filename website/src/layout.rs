@@ -71,6 +71,7 @@ impl<'a> Layout<'a> {
                     (self.footer.as_ref().unwrap_or(&html!{}))
                     script defer? src="/static/script.js" {}
                     script defer? src="/static/fa.js" {}
+                    script defer? src="/static/shortcut.js" {}
                 }
             }
         }
