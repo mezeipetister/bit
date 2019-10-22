@@ -15,13 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use maud::Markup;
 use rocket::http::{Cookie, Cookies};
+use rocket::response::Redirect;
 
-pub fn user_auth(mut cookies: &mut Cookies) -> bool {
+pub fn user_auth(mut cookies: &mut Cookies) -> Result<(), Redirect> {
     if cookie_get_private(&mut cookies, "USERID").is_none() {
-        return false;
+        return Err(Redirect::to("/login"));
     }
-    true
+    Ok(())
 }
 
 pub fn user_login(cookies: &mut Cookies, userid: &'static str) {

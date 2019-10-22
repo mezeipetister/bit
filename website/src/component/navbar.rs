@@ -1,11 +1,10 @@
+use crate::component::Component;
 use maud::{html, Markup};
 
-pub struct Navbar {
-    brand: &'static str,
-}
+pub struct Navbar {}
 
-impl Navbar {
-    pub fn default() -> Markup {
+impl Component for Navbar {
+    fn default() -> Markup {
         html! {
             nav.navbar.is-light role="navigation" aria-label="main navigation" {
                 .navbar-brand {

@@ -44,10 +44,11 @@ use std::sync::Mutex;
 use view::*;
 
 #[get("/demo")]
-fn demo() -> Markup {
-    Layout::new()
+fn demo(mut cookies: Cookies) -> Result<Markup, Redirect> {
+    user_auth(&mut cookies)?;
+    Ok(Layout::new()
         .set_title("Wohoo")
-        .render(PageIndex::render("Peti"))
+        .render(ViewIndex::new().render()))
 }
 
 #[derive(Serialize)]
@@ -62,9 +63,7 @@ struct TemplateContext<'a, T> {
 
 #[get("/")]
 fn index(mut cookies: Cookies) -> Result<Markup, Redirect> {
-    if !user_auth(&mut cookies) {
-        return Err(Redirect::to("/login"));
-    }
+    user_auth(&mut cookies)?;
     Ok(html! {h1 {"Wohoo"}})
 }
 
@@ -75,14 +74,15 @@ fn login() -> Markup {
     }
 }
 
-// #[get("/logout")]
-// fn logout(mut cookies: Cookies) -> Redirect {
-//     if !user_auth(&mut cookies) {
-//         return Redirect::to("/login");
-//     }
-//     user_logout(&mut cookies);
-//     Redirect::to("/login")
-// }
+#[get("/logout")]
+fn logout(mut cookies: Cookies) -> Result<Redirect, Redirect> {
+    // Check wheter user is logged in
+    user_auth(&mut cookies)?;
+    // Remove userid cookie
+    user_logout(&mut cookies);
+    // Redirect to /login page
+    Ok(Redirect::to("/login"))
+}
 
 // #[derive(FromForm)]
 // struct FormLogin {
@@ -240,7 +240,7 @@ fn not_found(req: &Request<'_>) -> Markup {
     Layout::new()
         .set_title("404 not found")
         .set_empty()
-        .render(View404::render(req.uri().path()))
+        .render(View404::new(req.uri().path()).render())
 }
 
 struct DataLoad {
@@ -259,7 +259,7 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login,
                 // login_post,
                 // login_error,
-                // logout,
+                logout,
                 // admin_user,
                 // admin_user_new,
                 // admin_user_new_post,

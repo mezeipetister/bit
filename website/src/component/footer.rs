@@ -1,11 +1,10 @@
+use crate::component::Component;
 use maud::{html, Markup};
 
-pub struct Footer {
-    year: &'static str,
-}
+pub struct Footer {}
 
-impl Footer {
-    pub fn default() -> Markup {
+impl Component for Footer {
+    fn default() -> Markup {
         html! {
             footer.footer {
                 .content.has-text-centered {

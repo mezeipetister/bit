@@ -1,9 +1,10 @@
+use crate::component::Component;
 use maud::{html, Markup};
 
 pub struct TabBar {}
 
-impl TabBar {
-    pub fn default() -> Markup {
+impl Component for TabBar {
+    fn default() -> Markup {
         html! {
             section.section {
                 .container {

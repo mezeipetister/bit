@@ -1,9 +1,18 @@
+use crate::view::View;
 use maud::{html, Markup};
 
-pub struct View404 {}
+pub struct View404<'a> {
+    path: Option<&'a str>,
+}
 
-impl View404 {
-    pub fn render(path: &str) -> Markup {
+impl<'a> View404<'a> {
+    pub fn new(path: &'a str) -> Self {
+        View404 { path: Some(path) }
+    }
+}
+
+impl<'a> View for View404<'a> {
+    fn render(&self) -> Markup {
         html! {
             section.hero.is-fullheight {
                 .hero-body {
@@ -14,7 +23,7 @@ impl View404 {
                             }
                         }
                         h1.title { "Ooo. Page not found." }
-                        p.subtitle { "Path: " (path)}
+                        p.subtitle { "Path: " (self.path.unwrap_or("NONE"))}
                     }
                 }
             }
