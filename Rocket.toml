@@ -4,6 +4,7 @@ address = "localhost"
 port = 8000
 log = "normal"
 template_dir = "./website/templates/"
+secret_key = "AOSqISFLJ55Vw36Jn1nrvXHqRpJsJoDvoGzYcpX7fFY="
 
 [production]
 address = "localhost"

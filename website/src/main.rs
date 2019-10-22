@@ -22,100 +22,31 @@ extern crate rocket;
 extern crate core_lib;
 extern crate serde_derive;
 
-mod login;
+pub mod component;
+pub mod layout;
+pub mod login;
 
-use self::handlebars::{
-    Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
-};
 use core_lib::user;
 use core_lib::{storage::*, user::*};
-// use horrorshow::helper::doctype;
-// use horrorshow::prelude::*;
+use layout::Layout;
 use login::*;
-use maud::{html, Markup, DOCTYPE};
-use rocket::http::{Cookies, RawStr};
+use maud::{html, Markup};
+use rocket::http::Cookies;
 use rocket::request::Form;
-use rocket::response::{content, status, NamedFile, Redirect};
+use rocket::response::{NamedFile, Redirect};
 use rocket::Request;
 use rocket::{Data, State};
-use rocket_contrib::serve::StaticFiles;
-use rocket_contrib::templates::{handlebars, Template};
+use rocket_contrib::templates::Template;
 use serde::Serialize;
-use std::io;
-use std::iter::*;
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::Mutex;
 
-struct Renderer<'a> {
-    title: &'a str,
-    name: &'a str,
-}
-
-impl<'a> Renderer<'a> {
-    pub fn new() -> Self {
-        Renderer {
-            title: "",
-            name: "",
-        }
-    }
-    pub fn set_title(&'a mut self, title: &'a str) -> &'a mut Renderer {
-        self.title = title;
-        self
-    }
-    pub fn set_name(&'a mut self, name: &'a str) -> &'a mut Renderer {
-        self.name = name;
-        self
-    }
-    pub fn layout(&self, body: Markup) -> Markup {
-        html! {
-            (DOCTYPE)
-            html {
-                head {
-                    title {(self.title)}
-                    link rel="stylesheet" type="text/css" href="/static/style.css" /
-                    link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" /
-                }
-                body {
-                    (body)
-                    (self.footer())
-                }
-            }
-        }
-    }
-    pub fn footer(&self) -> Markup {
-        html! {
-            footer.footer {
-                .content.has-text-centered {
-                    p {
-                        strong {"BIT "}
-                        span { "by Peter Mezei" }
-                    }
-                }
-            }
-        }
-    }
-    pub fn render(&self) -> Markup {
-        self.layout(html! {
-            section.section {
-                .container {
-                    p.content {
-                        "Bruhaha"
-                        br;
-                        "Hello " (self.name) "."
-                    }
-                }
-            }
-        })
-    }
-}
-
 #[get("/demo")]
 fn demo() -> Markup {
-    Renderer::new()
-        .set_title("Hello World")
-        .set_name("Peter Mezei")
-        .render()
+    Layout::new()
+        .set_title("Wohoo")
+        .render(html! { h1 { "Hi Peti!" }})
 }
 
 #[derive(Serialize)]
