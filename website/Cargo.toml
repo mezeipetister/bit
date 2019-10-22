@@ -6,12 +6,6 @@ edition = "2018"
 license = "GPLv2"
 workspace = "./.."
 
-[profile.release]
-opt-level = 'z'  # Optimize for size.
-lto = true
-codegen-units = 1
-panic = 'abort'
-
 [dependencies]
 core_lib = { path = "../core" }
 rocket = "*"
@@ -24,4 +18,4 @@ maud = { version = "*", features = ["rocket"]}
 [dependencies.rocket_contrib]
 version = "*"
 default-features = false
-features = ["handlebars_templates", "serve"]
+features = ["serve"]

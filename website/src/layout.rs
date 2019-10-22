@@ -1,5 +1,5 @@
 use crate::component::*;
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{html, Markup, DOCTYPE};
 
 pub struct Layout<'a> {
     pub title: Option<&'a str>,
@@ -11,6 +11,7 @@ pub struct Layout<'a> {
     pub meta_designer: Option<&'a str>,
     pub meta_publisher: Option<&'a str>,
     pub navbar: Option<Markup>,
+    pub tabbar: Option<Markup>,
     pub footer: Option<Markup>,
 }
 
@@ -26,11 +27,30 @@ impl<'a> Layout<'a> {
             meta_designer: None,
             meta_publisher: None,
             navbar: Some(Navbar::default()),
+            tabbar: Some(TabBar::default()),
             footer: Some(Footer::default()),
         }
     }
     pub fn set_title(&mut self, title: &'a str) -> &'a mut Layout {
         self.title = Some(title);
+        self
+    }
+    pub fn set_empty(&mut self) -> &'a mut Layout {
+        self.navbar = None;
+        self.tabbar = None;
+        self.footer = None;
+        self
+    }
+    pub fn disable_tabbar(&mut self) -> &'a mut Layout {
+        self.tabbar = None;
+        self
+    }
+    pub fn disable_navbar(&mut self) -> &'a mut Layout {
+        self.navbar = None;
+        self
+    }
+    pub fn disable_footer(&mut self) -> &'a mut Layout {
+        self.footer = None;
         self
     }
     pub fn render(&self, body: Markup) -> Markup {
@@ -45,9 +65,10 @@ impl<'a> Layout<'a> {
                     link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" /
                 }
                 body {
-                    (&self.navbar.as_ref().unwrap_or(&html!{}))
+                    (self.navbar.as_ref().unwrap_or(&html!{}))
+                    (self.tabbar.as_ref().unwrap_or(&html!{}))
                     (body)
-                    (&self.footer.as_ref().unwrap_or(&html!{}))
+                    (self.footer.as_ref().unwrap_or(&html!{}))
                     script defer? src="/static/fa.js" {}
                     script defer? src="/static/script.js" {}
                 }

@@ -16,8 +16,6 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use rocket::http::{Cookie, Cookies};
-use rocket::response::{status, NamedFile, Redirect};
-use rocket_contrib::templates::{handlebars, Template};
 
 pub fn user_auth(mut cookies: &mut Cookies) -> bool {
     if cookie_get_private(&mut cookies, "USERID").is_none() {

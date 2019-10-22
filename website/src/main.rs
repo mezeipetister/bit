@@ -25,6 +25,7 @@ extern crate serde_derive;
 pub mod component;
 pub mod layout;
 pub mod login;
+pub mod view;
 
 use core_lib::user;
 use core_lib::{storage::*, user::*};
@@ -36,17 +37,17 @@ use rocket::request::Form;
 use rocket::response::{NamedFile, Redirect};
 use rocket::Request;
 use rocket::{Data, State};
-use rocket_contrib::templates::Template;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::Mutex;
+use view::*;
 
 #[get("/demo")]
 fn demo() -> Markup {
     Layout::new()
         .set_title("Wohoo")
-        .render(html! { h1 { "Hi Peti!" }})
+        .render(PageIndex::render("Peti"))
 }
 
 #[derive(Serialize)]
@@ -60,186 +61,174 @@ struct TemplateContext<'a, T> {
 }
 
 #[get("/")]
-fn index(mut cookies: Cookies) -> Result<Template, Redirect> {
+fn index(mut cookies: Cookies) -> Result<Markup, Redirect> {
     if !user_auth(&mut cookies) {
         return Err(Redirect::to("/login"));
     }
-    Ok(Template::render(
-        "index",
-        &TemplateContext::<i32> {
-            title: "Welcome",
-            parent: "layout",
-            data: None,
-        },
-    ))
+    Ok(html! {h1 {"Wohoo"}})
 }
 
 #[get("/login")]
-fn login() -> Template {
-    Template::render(
-        "login",
-        &TemplateContext::<i32> {
-            title: "Login",
-            parent: "layout_empty",
-            data: None,
-        },
-    )
-}
-
-#[get("/logout")]
-fn logout(mut cookies: Cookies) -> Redirect {
-    if !user_auth(&mut cookies) {
-        return Redirect::to("/login");
+fn login() -> Markup {
+    html! {
+        h1 { "Login"}
     }
-    user_logout(&mut cookies);
-    Redirect::to("/login")
 }
 
-#[derive(FromForm)]
-struct FormLogin {
-    username: String,
-    password: String,
-}
+// #[get("/logout")]
+// fn logout(mut cookies: Cookies) -> Redirect {
+//     if !user_auth(&mut cookies) {
+//         return Redirect::to("/login");
+//     }
+//     user_logout(&mut cookies);
+//     Redirect::to("/login")
+// }
 
-#[post("/login", data = "<login>")]
-fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
-    if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
-        user_login(&mut cookies, "9");
-        return Redirect::to("/");
-    }
-    Redirect::to("/login/error")
-}
+// #[derive(FromForm)]
+// struct FormLogin {
+//     username: String,
+//     password: String,
+// }
 
-#[get("/login/error")]
-fn login_error() -> Template {
-    Template::render(
-        "login_error",
-        &TemplateContext::<i32> {
-            title: "Login failed",
-            parent: "layout_empty",
-            data: None,
-        },
-    )
-}
+// #[post("/login", data = "<login>")]
+// fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
+//     if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
+//         user_login(&mut cookies, "9");
+//         return Redirect::to("/");
+//     }
+//     Redirect::to("/login/error")
+// }
 
-#[get("/login/reset_password")]
-fn login_reset_password() -> Template {
-    Template::render(
-        "login_reset_password",
-        &TemplateContext::<i32> {
-            title: "Reset password",
-            parent: "layout_empty",
-            data: None,
-        },
-    )
-}
+// #[get("/login/error")]
+// fn login_error() -> Template {
+//     Template::render(
+//         "login_error",
+//         &TemplateContext::<i32> {
+//             title: "Login failed",
+//             parent: "layout_empty",
+//             data: None,
+//         },
+//     )
+// }
 
-#[get("/login/reset_password/success")]
-fn login_reset_password_success() -> Template {
-    Template::render(
-        "login_reset_password_success",
-        &TemplateContext::<i32> {
-            title: "Success",
-            parent: "layout_empty",
-            data: None,
-        },
-    )
-}
+// #[get("/login/reset_password")]
+// fn login_reset_password() -> Template {
+//     Template::render(
+//         "login_reset_password",
+//         &TemplateContext::<i32> {
+//             title: "Reset password",
+//             parent: "layout_empty",
+//             data: None,
+//         },
+//     )
+// }
 
-#[get("/login/reset_password/error")]
-fn login_reset_password_error() -> Template {
-    Template::render(
-        "login_reset_password_error",
-        &TemplateContext::<i32> {
-            title: "Error",
-            parent: "layout_empty",
-            data: None,
-        },
-    )
-}
+// #[get("/login/reset_password/success")]
+// fn login_reset_password_success() -> Template {
+//     Template::render(
+//         "login_reset_password_success",
+//         &TemplateContext::<i32> {
+//             title: "Success",
+//             parent: "layout_empty",
+//             data: None,
+//         },
+//     )
+// }
 
-/**
- * USERS
- */
-#[get("/admin/user")]
-fn admin_user(mut cookies: Cookies, data: State<DataLoad>) -> Result<Template, Redirect> {
-    if !user_auth(&mut cookies) {
-        return Err(Redirect::to("/login"));
-    }
+// #[get("/login/reset_password/error")]
+// fn login_reset_password_error() -> Template {
+//     Template::render(
+//         "login_reset_password_error",
+//         &TemplateContext::<i32> {
+//             title: "Error",
+//             parent: "layout_empty",
+//             data: None,
+//         },
+//     )
+// }
 
-    #[derive(Serialize)]
-    struct UserData {
-        username: String,
-        name: String,
-        email: String,
-    }
+// /**
+//  * USERS
+//  */
+// #[get("/admin/user")]
+// fn admin_user(mut cookies: Cookies, data: State<DataLoad>) -> Result<Template, Redirect> {
+//     if !user_auth(&mut cookies) {
+//         return Err(Redirect::to("/login"));
+//     }
 
-    let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
+//     #[derive(Serialize)]
+//     struct UserData {
+//         username: String,
+//         name: String,
+//         email: String,
+//     }
 
-    let mut payload: Vec<UserData> = Vec::new();
-    for user in users {
-        payload.push(UserData {
-            username: user.get_user_id().unwrap_or("".to_owned()),
-            name: user.get_user_name().unwrap_or("".to_owned()),
-            email: user.get_user_email().unwrap_or("".to_owned()),
-        });
-    }
+//     let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
 
-    Ok(Template::render(
-        "user",
-        &TemplateContext {
-            title: "User admin",
-            parent: "layout",
-            data: Some(&payload),
-        },
-    ))
-}
+//     let mut payload: Vec<UserData> = Vec::new();
+//     for user in users {
+//         payload.push(UserData {
+//             username: user.get_user_id().unwrap_or("".to_owned()),
+//             name: user.get_user_name().unwrap_or("".to_owned()),
+//             email: user.get_user_email().unwrap_or("".to_owned()),
+//         });
+//     }
 
-#[get("/admin/user/new")]
-fn admin_user_new(mut cookies: Cookies) -> Result<Template, Redirect> {
-    if !user_auth(&mut cookies) {
-        return Err(Redirect::to("/login"));
-    }
+//     Ok(Template::render(
+//         "user",
+//         &TemplateContext {
+//             title: "User admin",
+//             parent: "layout",
+//             data: Some(&payload),
+//         },
+//     ))
+// }
 
-    Ok(Template::render(
-        "user_add_user",
-        &TemplateContext::<i32> {
-            title: "User admin",
-            parent: "layout",
-            data: None,
-        },
-    ))
-}
+// #[get("/admin/user/new")]
+// fn admin_user_new(mut cookies: Cookies) -> Result<Template, Redirect> {
+//     if !user_auth(&mut cookies) {
+//         return Err(Redirect::to("/login"));
+//     }
 
-#[derive(FromForm)]
-struct FormUserNew {
-    id: String,
-    name: String,
-    email: String,
-}
+//     Ok(Template::render(
+//         "user_add_user",
+//         &TemplateContext::<i32> {
+//             title: "User admin",
+//             parent: "layout",
+//             data: None,
+//         },
+//     ))
+// }
 
-#[post("/admin/user/new", data = "<form>")]
-fn admin_user_new_post(
-    mut cookies: Cookies,
-    form: Form<FormUserNew>,
-    data: State<DataLoad>,
-) -> Redirect {
-    if !user_auth(&mut cookies) {
-        return Redirect::to("/login");
-    }
+// #[derive(FromForm)]
+// struct FormUserNew {
+//     id: String,
+//     name: String,
+//     email: String,
+// }
 
-    let mut new_user = user::UserObject::new();
-    new_user.set_user_id(form.id.as_ref()).unwrap();
-    new_user.set_user_name(form.name.as_ref()).unwrap();
-    new_user.set_user_email(form.email.as_ref()).unwrap();
+// #[post("/admin/user/new", data = "<form>")]
+// fn admin_user_new_post(
+//     mut cookies: Cookies,
+//     form: Form<FormUserNew>,
+//     data: State<DataLoad>,
+// ) -> Redirect {
+//     if !user_auth(&mut cookies) {
+//         return Redirect::to("/login");
+//     }
 
-    let mut user_storage = data.inner().users.lock().unwrap();
+//     let mut new_user = user::UserObject::new();
+//     new_user.set_user_id(form.id.as_ref()).unwrap();
+//     new_user.set_user_name(form.name.as_ref()).unwrap();
+//     new_user.set_user_email(form.email.as_ref()).unwrap();
 
-    let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).unwrap();
-    u1.save().unwrap();
+//     let mut user_storage = data.inner().users.lock().unwrap();
 
-    Redirect::to("/admin/user")
-}
+//     let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).unwrap();
+//     u1.save().unwrap();
+
+//     Redirect::to("/admin/user")
+// }
 
 #[get("/static/<file..>")]
 pub fn static_file(file: PathBuf) -> Option<NamedFile> {
@@ -247,10 +236,11 @@ pub fn static_file(file: PathBuf) -> Option<NamedFile> {
 }
 
 #[catch(404)]
-fn not_found(req: &Request<'_>) -> Template {
-    let mut map = std::collections::HashMap::new();
-    map.insert("path", req.uri().path());
-    Template::render("error/404", &map)
+fn not_found(req: &Request<'_>) -> Markup {
+    Layout::new()
+        .set_title("404 not found")
+        .set_empty()
+        .render(View404::render(req.uri().path()))
 }
 
 struct DataLoad {
@@ -267,18 +257,17 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 static_file,
                 index,
                 login,
-                login_post,
-                login_error,
-                logout,
-                admin_user,
-                admin_user_new,
-                admin_user_new_post,
-                login_reset_password,
-                login_reset_password_success,
-                login_reset_password_error
+                // login_post,
+                // login_error,
+                // logout,
+                // admin_user,
+                // admin_user_new,
+                // admin_user_new_post,
+                // login_reset_password,
+                // login_reset_password_success,
+                // login_reset_password_error
             ],
         )
-        .attach(Template::fairing())
         .register(catchers![not_found])
 }
 
