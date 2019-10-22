@@ -38,7 +38,6 @@ use rocket::response::{NamedFile, Redirect};
 use rocket::Request;
 use rocket::Route;
 use rocket::{Data, State};
-use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::Mutex;
@@ -50,16 +49,6 @@ fn demo(route: &Route, mut cookies: Cookies) -> Result<Markup, Redirect> {
     Ok(Layout::new()
         .set_title("Wohoo")
         .render(ViewIndex::new().render()))
-}
-
-#[derive(Serialize)]
-struct TemplateContext<'a, T> {
-    title: &'static str,
-    //name: Option<String>,
-    //items: &'a Vec<T>,
-    data: Option<&'a T>,
-    // This key tells handlebars which template is the parent.
-    parent: &'static str,
 }
 
 #[get("/")]

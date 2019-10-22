@@ -22,10 +22,15 @@ use rocket::Route;
 
 pub fn user_auth(mut cookies: &mut Cookies, route: &Route) -> Result<(), Redirect> {
     if cookie_get_private(&mut cookies, "USERID").is_none() {
-        cookies.add(Cookie::new("REDIRECT", format!("{}", route.uri.path())));
+        // Set redirect cookie to return after successfull login
+        set_redirect_cookie(cookies, route);
         return Err(Redirect::to("/login"));
     }
     Ok(())
+}
+
+pub fn set_redirect_cookie(cookies: &mut Cookies, route: &Route) {
+    cookies.add(Cookie::new("REDIRECT", format!("{}", route.uri.path())));
 }
 
 pub fn user_login(cookies: &mut Cookies, userid: &'static str) -> Redirect {
@@ -38,6 +43,11 @@ pub fn user_login(cookies: &mut Cookies, userid: &'static str) -> Redirect {
 
 pub fn user_logout(cookies: &mut Cookies) {
     cookies.remove_private(Cookie::named("USERID"));
+}
+
+pub fn user_lock(cookies: &mut Cookies, route: &Route) {
+    // TODO: Implement LOCK!
+    set_redirect_cookie(cookies, route);
 }
 
 pub fn cookie_set_message(cookies: &mut Cookies, message: &'static str) {
