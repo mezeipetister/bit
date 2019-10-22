@@ -18,16 +18,22 @@
 use maud::Markup;
 use rocket::http::{Cookie, Cookies};
 use rocket::response::Redirect;
+use rocket::Route;
 
-pub fn user_auth(mut cookies: &mut Cookies) -> Result<(), Redirect> {
+pub fn user_auth(mut cookies: &mut Cookies, route: &Route) -> Result<(), Redirect> {
     if cookie_get_private(&mut cookies, "USERID").is_none() {
+        cookies.add(Cookie::new("REDIRECT", format!("{}", route.uri.path())));
         return Err(Redirect::to("/login"));
     }
     Ok(())
 }
 
-pub fn user_login(cookies: &mut Cookies, userid: &'static str) {
+pub fn user_login(cookies: &mut Cookies, userid: &'static str) -> Redirect {
     cookie_set_private(cookies, "USERID", userid);
+    if let Some(redirect_to) = cookies.get("REDIRECT") {
+        return Redirect::to(redirect_to.value().to_owned());
+    }
+    Redirect::to("/")
 }
 
 pub fn user_logout(cookies: &mut Cookies) {

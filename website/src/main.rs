@@ -36,6 +36,7 @@ use rocket::http::Cookies;
 use rocket::request::Form;
 use rocket::response::{NamedFile, Redirect};
 use rocket::Request;
+use rocket::Route;
 use rocket::{Data, State};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -44,8 +45,8 @@ use std::sync::Mutex;
 use view::*;
 
 #[get("/demo")]
-fn demo(mut cookies: Cookies) -> Result<Markup, Redirect> {
-    user_auth(&mut cookies)?;
+fn demo(route: &Route, mut cookies: Cookies) -> Result<Markup, Redirect> {
+    user_auth(&mut cookies, route)?;
     Ok(Layout::new()
         .set_title("Wohoo")
         .render(ViewIndex::new().render()))
@@ -62,8 +63,8 @@ struct TemplateContext<'a, T> {
 }
 
 #[get("/")]
-fn index(mut cookies: Cookies) -> Result<Markup, Redirect> {
-    user_auth(&mut cookies)?;
+fn index(route: &Route, mut cookies: Cookies) -> Result<Markup, Redirect> {
+    user_auth(&mut cookies, route)?;
     Ok(Layout::new()
         .set_title("Welcome")
         .render(ViewIndex::new().render()))
@@ -78,9 +79,9 @@ fn login() -> Markup {
 }
 
 #[get("/logout")]
-fn logout(mut cookies: Cookies) -> Result<Redirect, Redirect> {
+fn logout(route: &Route, mut cookies: Cookies) -> Result<Redirect, Redirect> {
     // Check wheter user is logged in
-    user_auth(&mut cookies)?;
+    user_auth(&mut cookies, route)?;
     // Remove userid cookie
     user_logout(&mut cookies);
     // Redirect to /login page
@@ -96,8 +97,7 @@ struct FormLogin {
 #[post("/login", data = "<login>")]
 fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
     if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
-        user_login(&mut cookies, "9");
-        return Redirect::to("/");
+        return user_login(&mut cookies, "9");
     }
     Redirect::to("/login/error")
 }
