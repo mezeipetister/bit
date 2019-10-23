@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-use maud::Markup;
 use rocket::http::{Cookie, Cookies};
 use rocket::response::Redirect;
 use rocket::Route;

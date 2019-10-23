@@ -51,22 +51,22 @@ impl Component for TabBar {
                                     span { "Accounts" }
                                 }
                             }
-                            li {
-                                a href="/projects" {
-                                    span.icon.is-small {
-                                        i.fa.fa-project-diagram aria-hidden="true" {}
-                                    }
-                                    span { "Projects" }
-                                }
-                            }
-                            li {
-                                a href="/team" {
-                                    span.icon.is-small {
-                                        i.fa.fa-user-friends aria-hidden="true" {}
-                                    }
-                                    span { "Team" }
-                                }
-                            }
+                            // li {
+                            //     a href="/projects" {
+                            //         span.icon.is-small {
+                            //             i.fa.fa-project-diagram aria-hidden="true" {}
+                            //         }
+                            //         span { "Projects" }
+                            //     }
+                            // }
+                            // li {
+                            //     a href="/team" {
+                            //         span.icon.is-small {
+                            //             i.fa.fa-user-friends aria-hidden="true" {}
+                            //         }
+                            //         span { "Team" }
+                            //     }
+                            // }
                         }
                     }
                 }

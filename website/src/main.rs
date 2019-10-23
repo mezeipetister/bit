@@ -27,19 +27,17 @@ pub mod layout;
 pub mod login;
 pub mod view;
 
-use core_lib::user;
 use core_lib::{storage::*, user::*};
 use layout::Layout;
 use login::*;
-use maud::{html, Markup};
+use maud::Markup;
 use rocket::http::Cookies;
 use rocket::request::Form;
 use rocket::response::{NamedFile, Redirect};
 use rocket::Request;
 use rocket::Route;
-use rocket::{Data, State};
+use rocket::State;
 use std::path::{Path, PathBuf};
-use std::str;
 use std::sync::Mutex;
 use view::*;
 
@@ -114,6 +112,7 @@ struct FormResetPassword {
 // TODO: Implement! Now its just dummy.
 #[post("/login/reset_password", data = "<form>")]
 fn login_reset_password_post(form: Form<FormResetPassword>) -> Redirect {
+    let _ = form.email;
     // Letd manage form.email
     Redirect::to("/login/reset_password/success")
 }
