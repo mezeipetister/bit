@@ -16,5 +16,7 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod user;
+pub mod user_add;
 
 pub use user::ViewAdminUser;
+pub use user_add::ViewAdminUserNew;

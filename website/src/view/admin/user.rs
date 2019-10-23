@@ -39,7 +39,7 @@ impl<'a> View for ViewAdminUser<'a> {
                             .content."is-size-3" { "Users" }
                         }
                         .column.has-text-right {
-                            a.button href="/admin/users/new" {
+                            a.button href="/admin/user/new" {
                                 span.icon.icon-small {
                                     i.far.fa-plus-square {}
                                 }
