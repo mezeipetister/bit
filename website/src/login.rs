@@ -35,6 +35,9 @@ pub fn set_redirect_cookie(cookies: &mut Cookies, route: &Route) {
 pub fn user_login(cookies: &mut Cookies, userid: &'static str) -> Redirect {
     cookie_set_private(cookies, "USERID", userid);
     if let Some(redirect_to) = cookies.get("REDIRECT") {
+        if redirect_to.value() == "/login" {
+            return Redirect::to("/");
+        }
         return Redirect::to(redirect_to.value().to_owned());
     }
     Redirect::to("/")

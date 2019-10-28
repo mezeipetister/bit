@@ -253,7 +253,6 @@ impl User for UserObject {
             env::var("E_USERNAME").unwrap().as_ref(),
             env::var("E_PASSWORD").unwrap().as_ref(),
             &self.email.as_ref().unwrap().as_ref(),
-            &self.name.as_ref().unwrap().as_ref(),
             env::var("E_FROM").unwrap().as_ref(),
             "New password",
             format!(

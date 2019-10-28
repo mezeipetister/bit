@@ -15,17 +15,41 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-pub struct Error {
+use std::error;
+use std::fmt;
+
+#[derive(Debug)]
+pub struct AppError {
+    kind: String,
     message: String,
 }
 
-impl Error {
-    pub fn new(message: &str) -> Result<(), Error> {
-        Err(Error {
-            message: message.to_owned(),
-        })
+impl AppError {
+    pub fn new(message: &str) -> Self {
+        AppError {
+            kind: "Crate error".into(),
+            message: message.into(),
+        }
     }
-    pub fn get_error_message(&self) -> &str {
-        self.message.as_str()
+}
+
+pub fn error<T>(message: &str) -> Result<T, AppError> {
+    Err(AppError {
+        kind: "Crate error".into(),
+        message: message.into(),
+    })
+}
+
+// Well formatted display text for users
+// TODO: Use error code and language translation for end-user error messages.
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl From<&'static str> for AppError {
+    fn from(error: &'static str) -> Self {
+        AppError::new(error)
     }
 }
