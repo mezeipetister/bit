@@ -15,16 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::error::*;
+use crate::error;
 use crate::prelude::*;
 use lettre::smtp::authentication::Credentials;
 use lettre::{SmtpClient, Transport};
 use lettre_email;
 
 pub trait Email<'a> {
-    fn to(&mut self, to: &'a str);
-    fn subject(&mut self, subject: &'a str);
-    fn message(&mut self, message: &'a str);
+    fn to(&mut self, to: &'a str) -> AppResult<&mut Self>;
+    fn subject(&mut self, subject: &'a str) -> AppResult<&mut Self>;
+    fn message(&mut self, message: &'a str) -> AppResult<&mut Self>;
     fn send(&self) -> AppResult<()>;
 }
 
@@ -43,28 +43,33 @@ pub fn new<'a>() -> impl Email<'a> {
 }
 
 impl<'a> Email<'a> for EmailData<'a> {
-    fn to(&mut self, to: &'a str) {
+    fn to(&mut self, to: &'a str) -> AppResult<&mut Self> {
         self.to = Some(to);
+        Ok(self)
     }
-    fn subject(&mut self, subject: &'a str) {
+    fn subject(&mut self, subject: &'a str) -> AppResult<&mut Self> {
         self.subject = Some(subject);
+        Ok(self)
     }
-    fn message(&mut self, message: &'a str) {
+    fn message(&mut self, message: &'a str) -> AppResult<&mut Self> {
         self.body = Some(message);
+        Ok(self)
     }
     fn send(&self) -> AppResult<()> {
         // Check field content not empty
         if self.to.is_none() || self.subject.is_none() || self.body.is_none() {
-            return error("To, Subject and message fields need to have content.");
+            return Err(error::new(
+                "To, Subject and message fields need to have content.",
+            ));
         }
         // Check email address contains @
         match self.to {
             Some(to) => {
                 if !to.contains("@") {
-                    return error(
+                    return Err(error::new(
                         "Wrong TO email format.
                          Not a valid email address.",
-                    );
+                    ));
                 }
             }
             None => (),
@@ -77,7 +82,7 @@ impl<'a> Email<'a> for EmailData<'a> {
             .build()
         {
             Ok(email) => email,
-            Err(err) => return error("Error during creating email"),
+            Err(err) => return Err(error::new("Error during creating email")),
         };
 
         let creds = Credentials::new("username".to_string(), "password".to_string());
@@ -93,7 +98,7 @@ impl<'a> Email<'a> for EmailData<'a> {
 
         match result {
             Ok(_) => return Ok(()),
-            Err(_) => return error("Error while sending email."),
+            Err(_) => return Err(error::new("Error while sending email.")),
         }
     }
 }
@@ -111,7 +116,7 @@ pub fn send_new_email(
     from: &str,
     subject: &str,
     body: &str,
-) -> Result<String, AppError> {
+) -> Result<String, error::AppError> {
     let email: lettre_email::Email = match lettre_email::Email::builder()
         // Addresses can be specified by the tuple (email, alias)
         .to(to)
@@ -122,7 +127,7 @@ pub fn send_new_email(
         .build()
     {
         Ok(email) => email,
-        Err(_) => return error("Error during creating email"),
+        Err(_) => return Err(error::new("Error during creating email")),
     };
 
     let creds = Credentials::new(username.to_string(), password.to_string());
@@ -138,7 +143,7 @@ pub fn send_new_email(
 
     match result {
         Ok(_) => Ok("bruhaha".into()),
-        Err(_) => error("Error while sending email."),
+        Err(_) => Err(error::new("Error while sending email.")),
     }
 }
 

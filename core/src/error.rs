@@ -21,89 +21,83 @@ use std::fmt;
 /// Contains all the managed error codes
 /// We can use it for multi language text
 /// translations.
+/// 
+/// 5XX =>  Format error
+///         Input data validation e.g.: email validation,
+///         missing field, input length, weak password.
+/// 
+/// XXX =>  Internal error
+/// 
+/// 9XX =>  Package error
+///         3rd party package error.
 #[rustfmt::skip]
+#[derive(Copy, Clone)]
 pub enum ErrorCode {
-    // Page not found
-    E404NotFound                = 404,
-    // Internal Error
-    E500InternalError           = 500,
-    E700WrongEmailFormat        = 700,
-    E701WeakPassword            = 701,
-    E702PermissionDenied        = 702,
-    E703TimeOut                 = 703,
-    E704OperationTimeOut        = 704,
-    // 705 Request permission
-    // denied
-    E705RequestPermissionDenied = 705,
-    // 706 - Permission Denied
-    E706IOPermissionDenied      = 706,
-    // # CrateError
-    // 
-    // General UNKNOWN error for crate.
-    // Use it when we have no clue what is
-    // going on.
-    E900CrateError              = 900,
+    Empty               = 0,
+    // Errors from 3rd party crate
+    E500InternalError   = 500,
 }
 
-// Implementing Debug trait for ErrorCode
-// It's needed for #[derive(Debug)] AppError
 impl fmt::Debug for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", *self as i32)
     }
 }
 
-pub enum ErrorKind {
-    // Error in our crate(s)
-    // It holds a static str reference
-    // with the crate name.
-    // e.g.: ErrorKind::CrateError("core")
-    CrateError(&'static str),
-    // Error in a third party package we use
-    // It holds a static str reference
-    // with the package name.
-    // e.g.: ErrorKind::PackageError("email")
-    PackageError(&'static str),
-}
-
-/// Error Trait for core errors.
-pub trait Error {
-    // Optionally set error code
-    fn set_error_code(&mut self, code: &str) -> &mut Self;
-    /// Optionally set error kind
-    fn set_kind(&mut self, kind: &str) -> &mut Self;
-}
-
-#[derive(Debug)]
-pub struct AppError {
-    code: Option<ErrorCode>,
-    kind: Option<String>,
-    message: Option<String>,
-}
-
-impl AppError {
-    pub fn new(message: &str) -> Self {
-        AppError {
-            code: None,
-            kind: None,
-            message: None,
-        }
+impl fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", *self as i32)
     }
+}
+
+pub struct AppError {
+    error_code: ErrorCode,
+    message: Option<String>,
 }
 
 // Well formatted display text for users
 // TODO: Use error code and language translation for end-user error messages.
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.message {
-            Some(message) => write!(f, "{}", message),
-            None => write!(f, "Error, but no error message"),
-        }
+        write!(
+            f,
+            "ErrorCode: {}. Error message: {}",
+            self.error_code,
+            self.message.as_ref().unwrap_or(&"-".into()),
+        )
     }
 }
 
+impl fmt::Debug for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ErrorCode: {}. Error message: {}",
+            self.error_code,
+            self.message.as_ref().unwrap_or(&"-".into()),
+        )
+    }
+}
+
+/// New error with message
+pub fn new(message: &str) -> AppError {
+    AppError {
+        error_code: ErrorCode::Empty,
+        message: Some(message.into()),
+    }
+}
+
+/// New error with error code + message
+pub fn new_with_code(error_code: ErrorCode, message: &str) -> AppError {
+    AppError {
+        error_code: error_code,
+        message: Some(message.into()),
+    }
+}
+
+// AppError::from(&str);
 impl From<&'static str> for AppError {
     fn from(error: &'static str) -> Self {
-        AppError::new(error)
+        new(error)
     }
 }
