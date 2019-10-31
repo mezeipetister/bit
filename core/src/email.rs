@@ -15,157 +15,104 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::error;
+use crate::check::*;
+use crate::error::Error;
+use crate::error::Error::*;
 use crate::prelude::*;
 use lettre::smtp::authentication::Credentials;
 use lettre::{SmtpClient, Transport};
 use lettre_email;
+use std::env;
 
 pub trait Email<'a> {
-    fn to(&mut self, to: &'a str) -> AppResult<&mut Self>;
-    fn subject(&mut self, subject: &'a str) -> AppResult<&mut Self>;
-    fn message(&mut self, message: &'a str) -> AppResult<&mut Self>;
     fn send(&self) -> AppResult<()>;
+    fn is_dummy(&mut self) -> &mut Self;
 }
 
 pub struct EmailData<'a> {
-    to: Option<&'a str>,
-    subject: Option<&'a str>,
-    body: Option<&'a str>,
+    to: &'a str,
+    subject: &'a str,
+    body: &'a str,
+    is_dummy: bool,
 }
 
-pub fn new<'a>() -> impl Email<'a> {
+pub fn new<'a>(to: &'a str, subject: &'a str, body: &'a str) -> impl Email<'a> {
     EmailData {
-        to: None,
-        subject: None,
-        body: None,
+        to,
+        subject,
+        body,
+        is_dummy: false,
     }
 }
 
 impl<'a> Email<'a> for EmailData<'a> {
-    fn to(&mut self, to: &'a str) -> AppResult<&mut Self> {
-        self.to = Some(to);
-        Ok(self)
+    // Use it for test email
+    // You can test everything but the SMTP connection.
+    fn is_dummy(&mut self) -> &mut Self {
+        self.is_dummy = true;
+        self
     }
-    fn subject(&mut self, subject: &'a str) -> AppResult<&mut Self> {
-        self.subject = Some(subject);
-        Ok(self)
-    }
-    fn message(&mut self, message: &'a str) -> AppResult<&mut Self> {
-        self.body = Some(message);
-        Ok(self)
-    }
+    // Try send email. Return AppResult<()>
+    // TODO: Implement some kind of email POOL to manage
+    // connection fail and email stmp temp errors.
     fn send(&self) -> AppResult<()> {
-        // Check field content not empty
-        if self.to.is_none() || self.subject.is_none() || self.body.is_none() {
-            return Err(error::new(
-                "To, Subject and message fields need to have content.",
-            ));
+        // Validate TO email address
+        check_email(self.to)?;
+        // Check subject and body
+        if self.subject.len() == 0 || self.body.len() == 0 {
+            return Err(InternalError("Empty subject or body.".into()));
         }
-        // Check email address contains @
-        match self.to {
-            Some(to) => {
-                if !to.contains("@") {
-                    return Err(error::new(
-                        "Wrong TO email format.
-                         Not a valid email address.",
-                    ));
-                }
-            }
-            None => (),
+        if self.is_dummy {
+            return Ok(());
         }
-        let email: lettre_email::Email = match lettre_email::Email::builder()
-            .to(self.to.unwrap_or(""))
-            .from("from")
-            .subject(self.subject.unwrap_or(""))
-            .text(self.body.unwrap_or(""))
-            .build()
-        {
-            Ok(email) => email,
-            Err(err) => return Err(error::new("Error during creating email")),
-        };
+        // Lets build it up
+        let email: lettre_email::Email = lettre_email::Email::builder()
+            .to(self.to)
+            .from(env::var("SMTP_FROM_EMAIL")?)
+            .subject(self.subject)
+            .text(self.body)
+            .build()?;
 
-        let creds = Credentials::new("username".to_string(), "password".to_string());
-
-        // Open a remote connection to gmail
-        let mut mailer = SmtpClient::new_simple("client")
+        // Open a remote connection to SMTP server
+        SmtpClient::new_simple(&env::var("SMTP_SERVER_DOMAIN")?)
             .unwrap()
-            .credentials(creds)
-            .transport();
+            .credentials(Credentials::new(
+                env::var("SMTP_USERNAME")?,
+                env::var("SMTP_PASSWORD")?,
+            ))
+            .transport()
+            .send(email.into())?;
 
-        // Send the email
-        let result = mailer.send(email.into());
-
-        match result {
-            Ok(_) => return Ok(()),
-            Err(_) => return Err(error::new("Error while sending email.")),
-        }
+        Ok(())
     }
 }
 
-// TODO: Refactor to split email for production and test use.
-// For test use, it should behave like a real email service,
-// but just simulate the sending process.
-// In production, it should communicate with the email server
-// normally.
-pub fn send_new_email(
-    client: &str,
-    username: &str,
-    password: &str,
-    to: &str,
-    from: &str,
-    subject: &str,
-    body: &str,
-) -> Result<String, error::AppError> {
-    let email: lettre_email::Email = match lettre_email::Email::builder()
-        // Addresses can be specified by the tuple (email, alias)
-        .to(to)
-        // ... or by an address only
-        .from(from)
-        .subject(subject)
-        .text(body)
-        .build()
-    {
-        Ok(email) => email,
-        Err(_) => return Err(error::new("Error during creating email")),
-    };
+impl From<lettre_email::error::Error> for Error {
+    fn from(error: lettre_email::error::Error) -> Self {
+        InternalError(format!("{}", error))
+    }
+}
 
-    let creds = Credentials::new(username.to_string(), password.to_string());
+impl From<env::VarError> for Error {
+    fn from(error: env::VarError) -> Self {
+        InternalError(format!("{}", error))
+    }
+}
 
-    // Open a remote connection to gmail
-    let mut mailer = SmtpClient::new_simple(client)
-        .unwrap()
-        .credentials(creds)
-        .transport();
-
-    // Send the email
-    let result = mailer.send(email.into());
-
-    match result {
-        Ok(_) => Ok("bruhaha".into()),
-        Err(_) => Err(error::new("Error while sending email.")),
+impl From<lettre::smtp::error::Error> for Error {
+    fn from(error: lettre::smtp::error::Error) -> Self {
+        InternalError(format!("{}", error))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_send_email() {
-        use super::*;
-        // Ok, this is an idiotic test
-        // With dummy data of course this should fail.
-        assert_eq!(
-            send_new_email(
-                "smtp.gmail.com",
-                "*@gmail.com",
-                "*",
-                "*@gmail.com",
-                "*@gmail.com",
-                "demo",
-                "This is a demo email."
-            )
-            .is_ok(),
-            false
-        );
+        new("mezeipetister@gmail.com", "Subject", "Body")
+            .is_dummy()
+            .send()
+            .unwrap();
     }
 }

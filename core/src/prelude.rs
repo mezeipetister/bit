@@ -17,4 +17,4 @@
 
 use crate::error::*;
 
-pub type AppResult<T> = Result<T, AppError>;
+pub type AppResult<T> = Result<T, Error>;

@@ -17,87 +17,24 @@
 
 use std::fmt;
 
-/// ErrorCode table
-/// Contains all the managed error codes
-/// We can use it for multi language text
-/// translations.
-/// 
-/// 5XX =>  Format error
-///         Input data validation e.g.: email validation,
-///         missing field, input length, weak password.
-/// 
-/// XXX =>  Internal error
-/// 
-/// 9XX =>  Package error
-///         3rd party package error.
-#[rustfmt::skip]
-#[derive(Copy, Clone)]
-pub enum ErrorCode {
-    Empty               = 0,
-    // Errors from 3rd party crate
-    E500InternalError   = 500,
-}
-
-impl fmt::Debug for ErrorCode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", *self as i32)
-    }
-}
-
-impl fmt::Display for ErrorCode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", *self as i32)
-    }
-}
-
-pub struct AppError {
-    error_code: ErrorCode,
-    message: Option<String>,
+pub enum Error {
+    InternalError(String),
 }
 
 // Well formatted display text for users
 // TODO: Use error code and language translation for end-user error messages.
-impl fmt::Display for AppError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "ErrorCode: {}. Error message: {}",
-            self.error_code,
-            self.message.as_ref().unwrap_or(&"-".into()),
-        )
+        match self {
+            Error::InternalError(msg) => write!(f, "Internal error: {}", msg),
+        }
     }
 }
 
-impl fmt::Debug for AppError {
+impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "ErrorCode: {}. Error message: {}",
-            self.error_code,
-            self.message.as_ref().unwrap_or(&"-".into()),
-        )
-    }
-}
-
-/// New error with message
-pub fn new(message: &str) -> AppError {
-    AppError {
-        error_code: ErrorCode::Empty,
-        message: Some(message.into()),
-    }
-}
-
-/// New error with error code + message
-pub fn new_with_code(error_code: ErrorCode, message: &str) -> AppError {
-    AppError {
-        error_code: error_code,
-        message: Some(message.into()),
-    }
-}
-
-// AppError::from(&str);
-impl From<&'static str> for AppError {
-    fn from(error: &'static str) -> Self {
-        new(error)
+        match self {
+            Error::InternalError(msg) => write!(f, "Internal error: {}", msg),
+        }
     }
 }
