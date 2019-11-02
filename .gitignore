@@ -26,3 +26,5 @@ Cargo.lock
 
 # Skip node modules folder
 /node_modules
+
+ENV.sh

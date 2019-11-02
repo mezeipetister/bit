@@ -36,3 +36,29 @@ pub trait User {
     fn set_password(&mut self, password: &str) -> Result<(), String>;
     fn reset_password(&mut self) -> Result<(), String>;
 }
+
+/// Find user in users by ID.
+/// Return NONE if not exist, return &user if exists.
+pub fn get_user_by_id<'a, T: User>(users: &'a Vec<T>, id: &str) -> Option<&'a T> {
+    for user in users {
+        if let Some(user_id) = user.get_user_id() {
+            if user_id == id {
+                return Some(&user);
+            }
+        }
+    }
+    None
+}
+
+/// Find user by email
+/// Return NONE or &user.
+pub fn get_user_by_email<'a, T: User>(users: &'a mut Vec<T>, email: &str) -> Option<&'a mut T> {
+    for user in users {
+        if let Some(user_email) = user.get_user_email() {
+            if user_email == email {
+                return Some(&mut *user);
+            }
+        }
+    }
+    None
+}

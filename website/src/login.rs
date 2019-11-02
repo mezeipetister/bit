@@ -32,7 +32,7 @@ pub fn set_redirect_cookie(cookies: &mut Cookies, route: &Route) {
     cookies.add(Cookie::new("REDIRECT", format!("{}", route.uri.path())));
 }
 
-pub fn user_login(cookies: &mut Cookies, userid: &'static str) -> Redirect {
+pub fn user_login(cookies: &mut Cookies, userid: &str) -> Redirect {
     cookie_set_private(cookies, "USERID", userid);
     if let Some(redirect_to) = cookies.get("REDIRECT") {
         if redirect_to.value() == "/login" {
@@ -52,8 +52,8 @@ pub fn user_lock(cookies: &mut Cookies, route: &Route) {
     set_redirect_cookie(cookies, route);
 }
 
-pub fn cookie_set_message(cookies: &mut Cookies, message: &'static str) {
-    cookies.add_private(Cookie::new("message", message));
+pub fn cookie_set_message(cookies: &mut Cookies, message: &str) {
+    cookies.add_private(Cookie::new("message", message.to_owned()));
 }
 
 pub fn cookie_get_message(cookies: &mut Cookies) -> Option<String> {
@@ -67,12 +67,12 @@ pub fn cookie_get_message(cookies: &mut Cookies) -> Option<String> {
     }
 }
 
-pub fn cookie_set(cookies: &mut Cookies, key: &'static str, value: &'static str) {
-    cookies.add(Cookie::new(key, value));
+pub fn cookie_set(cookies: &mut Cookies, key: &str, value: &str) {
+    cookies.add(Cookie::new(key.to_owned(), value.to_owned()));
 }
 
-pub fn cookie_set_private(cookies: &mut Cookies, key: &'static str, value: &'static str) {
-    cookies.add_private(Cookie::new(key, value));
+pub fn cookie_set_private(cookies: &mut Cookies, key: &str, value: &str) {
+    cookies.add_private(Cookie::new(key.to_owned(), value.to_owned()));
 }
 
 pub fn cookie_get(cookies: &mut Cookies, key: &'static str) -> Option<String> {

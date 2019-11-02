@@ -27,6 +27,7 @@ pub mod layout;
 pub mod login;
 pub mod view;
 
+use core_lib::user;
 use core_lib::{storage::*, user::*};
 use layout::Layout;
 use login::*;
@@ -82,10 +83,27 @@ struct FormLogin {
 }
 
 #[post("/login", data = "<login>")]
-fn login_post(mut cookies: Cookies, login: Form<FormLogin>) -> Redirect {
+fn login_post(mut cookies: Cookies, login: Form<FormLogin>, data: State<DataLoad>) -> Redirect {
     if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
         return user_login(&mut cookies, "9");
     }
+
+    let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
+    let user: Option<&UserObject> = user::get_user_by_id(users, &login.username);
+
+    // If a valid username
+    if let Some(u) = user {
+        let password = &login.password;
+        let hash = &u.get_password_hash().unwrap_or("".to_owned());
+        let res = password::verify_password_from_hash(&password, &hash);
+        println!("{} - {}", password, hash);
+        if res.is_ok() {
+            if res.unwrap() == true {
+                return user_login(&mut cookies, &login.username);
+            }
+        }
+    }
+
     Redirect::to("/login/error")
 }
 
@@ -109,12 +127,28 @@ fn login_reset_password() -> Markup {
 struct FormResetPassword {
     email: String,
 }
-// TODO: Implement! Now its just dummy.
 #[post("/login/reset_password", data = "<form>")]
-fn login_reset_password_post(form: Form<FormResetPassword>) -> Redirect {
+fn login_reset_password_post(form: Form<FormResetPassword>, data: State<DataLoad>) -> Redirect {
     let _ = form.email;
     // Letd manage form.email
-    Redirect::to("/login/reset_password/success")
+    let users = &mut data.inner().users.lock().unwrap().data;
+    let user: Option<&mut UserObject> = user::get_user_by_email(&mut *users, &form.email);
+
+    if user.is_some() {
+        let u = &mut user.unwrap();
+        match &mut u.reset_password() {
+            Ok(()) => {
+                &u.save();
+                Redirect::to("/login/reset_password/success")
+            }
+            Err(msg) => {
+                println!("Error: {}", msg);
+                Redirect::to("/login/reset_password/error")
+            }
+        };
+    }
+
+    Redirect::to("/login/reset_password/error")
 }
 
 // TODO: Implement! Now its just dummy.
