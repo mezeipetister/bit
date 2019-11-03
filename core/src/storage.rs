@@ -17,6 +17,7 @@
 
 use crate::error::Error::*;
 use crate::prelude::*;
+use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
@@ -44,6 +45,7 @@ pub trait StorageObject {
     fn reload(&mut self) -> AppResult<()>;
     fn get_path(&self) -> Option<&str>;
     fn set_path(&mut self, path: &str) -> AppResult<()>;
+    fn get_date_created(&self) -> DateTime<Utc>;
 }
 
 pub struct Storage<T> {
@@ -89,7 +91,7 @@ impl<T> Storage<T> {
 /// ```
 pub fn load_storage<'a, T>(path: &'static str) -> AppResult<Storage<T>>
 where
-    for<'de> T: Deserialize<'de> + 'a,
+    for<'de> T: Deserialize<'de> + 'a + StorageObject,
 {
     let mut storage: Storage<T> = Storage {
         path,
@@ -127,6 +129,12 @@ where
                 .push(deserialize_object::<T>(&content_temp).unwrap());
         }
     }
+    // Sort data by date created
+    storage.data.sort_by(|a, b| {
+        a.get_date_created()
+            .partial_cmp(&b.get_date_created())
+            .unwrap()
+    });
     Ok(storage)
 }
 
@@ -382,6 +390,9 @@ mod tests {
                 self.path = path.into();
                 Ok(())
             }
+            fn get_date_created(&self) -> DateTime<Utc> {
+                Utc::now()
+            }
         }
         let mut storage = load_storage::<Example>("data/123423").unwrap();
         for item in 1..3 {
@@ -454,6 +465,9 @@ mod tests {
             fn set_path(&mut self, path: &str) -> AppResult<()> {
                 self.path = path.into();
                 Ok(())
+            }
+            fn get_date_created(&self) -> DateTime<Utc> {
+                Utc::now()
             }
         }
         // Lets create new storage

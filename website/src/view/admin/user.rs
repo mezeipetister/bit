@@ -16,20 +16,30 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::view::View;
-use crate::{User, UserV1};
+use crate::{StorageObject, User};
+use chrono::prelude::*;
 use maud::{html, Markup};
 
-pub struct ViewAdminUser<'a> {
-    users: &'a Vec<UserV1>,
+pub struct ViewAdminUser<'a, T>
+where
+    T: User + StorageObject,
+{
+    users: &'a Vec<T>,
 }
 
-impl<'a> ViewAdminUser<'a> {
-    pub fn new(users: &'a Vec<UserV1>) -> Self {
+impl<'a, T> ViewAdminUser<'a, T>
+where
+    T: User + StorageObject,
+{
+    pub fn new(users: &'a Vec<T>) -> Self {
         ViewAdminUser { users: users }
     }
 }
 
-impl<'a> View for ViewAdminUser<'a> {
+impl<'a, T> View for ViewAdminUser<'a, T>
+where
+    T: User + StorageObject,
+{
     fn render(&self) -> Markup {
         html! {
             section.section {
@@ -53,15 +63,23 @@ impl<'a> View for ViewAdminUser<'a> {
                                 td {(user.get_user_name())}
                                 td {(user.get_user_email())}
                                 td {
-                                    .button-group {
-                                        a.button.is-small {
-                                            span.icon {
-                                                i.fas.fa-key {}
-                                            }
-                                            span {"Reset password"}
-                                        }
-                                    }
+                                    (format!("{}-{}-{} {}:{}",
+                                    user.get_date_created().year(),
+                                    user.get_date_created().month(),
+                                    user.get_date_created().day(),
+                                    user.get_date_created().hour(),
+                                    user.get_date_created().minute()))
                                 }
+                                // td {
+                                //     .button-group {
+                                //         a.button.is-small {
+                                //             span.icon {
+                                //                 i.fas.fa-key {}
+                                //             }
+                                //             span {"Reset password"}
+                                //         }
+                                //     }
+                                // }
                             }
                         }
                     }

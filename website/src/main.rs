@@ -19,6 +19,7 @@
 
 #[macro_use]
 extern crate rocket;
+extern crate chrono;
 extern crate core_lib;
 extern crate serde_derive;
 

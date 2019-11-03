@@ -9,8 +9,8 @@ build:
 	cargo build
 
 dev:
-	. ./ENV.sh
-	cargo run --bin website
+	. ./ENV.sh; \
+	cargo run --bin website;
 
 test:
 	cargo test

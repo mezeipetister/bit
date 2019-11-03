@@ -22,6 +22,7 @@ use crate::prelude::*;
 use crate::storage;
 use crate::user::password::*;
 use crate::user::User;
+use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -32,6 +33,7 @@ pub struct UserV1 {
     email: String,
     phone: String,
     password_hash: String,
+    date_added: DateTime<Utc>,
 }
 
 impl UserV1 {
@@ -43,6 +45,7 @@ impl UserV1 {
             email,
             phone: "".into(),
             password_hash: "".into(),
+            date_added: Utc::now(),
         }
     }
 }
@@ -122,7 +125,11 @@ impl User for UserV1 {
         match email::new(
             &self.get_user_email(),
             "New password generated",
-            &format!("Your new password is: {}", &new_password),
+            &format!(
+                "Your username is: {}\nYour new password is: {}",
+                self.get_user_id(),
+                &new_password
+            ),
         )
         .send()
         {
@@ -166,6 +173,9 @@ impl storage::StorageObject for UserV1 {
     fn set_path(&mut self, path: &str) -> AppResult<()> {
         self.path = Some(path.into());
         Ok(())
+    }
+    fn get_date_created(&self) -> DateTime<Utc> {
+        self.date_added
     }
 }
 

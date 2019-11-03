@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 extern crate bcrypt;
+extern crate chrono;
 extern crate lettre;
 extern crate lettre_email;
 extern crate rand;
