@@ -140,11 +140,11 @@ fn login_reset_password_post(form: Form<FormResetPassword>, data: State<DataLoad
         match &mut u.reset_password() {
             Ok(()) => {
                 &u.save();
-                Redirect::to("/login/reset_password/success")
+                return Redirect::to("/login/reset_password/success");
             }
             Err(msg) => {
                 println!("Error: {}", msg);
-                Redirect::to("/login/reset_password/error")
+                return Redirect::to("/login/reset_password/error");
             }
         };
     }
