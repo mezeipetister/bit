@@ -16,15 +16,15 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::view::View;
-use crate::{User, UserObject};
+use crate::{User, UserV1};
 use maud::{html, Markup};
 
 pub struct ViewAdminUser<'a> {
-    users: &'a Vec<UserObject>,
+    users: &'a Vec<UserV1>,
 }
 
 impl<'a> ViewAdminUser<'a> {
-    pub fn new(users: &'a Vec<UserObject>) -> Self {
+    pub fn new(users: &'a Vec<UserV1>) -> Self {
         ViewAdminUser { users: users }
     }
 }
@@ -49,9 +49,9 @@ impl<'a> View for ViewAdminUser<'a> {
                     table.table.is-striped {
                         @for user in self.users {
                             tr {
-                                td {(user.get_user_id().unwrap_or("".to_owned()))}
-                                td {(user.get_user_name().unwrap_or("".to_owned()))}
-                                td {(user.get_user_email().unwrap_or("".to_owned()))}
+                                td {(user.get_user_id())}
+                                td {(user.get_user_name())}
+                                td {(user.get_user_email())}
                                 td {
                                     .button-group {
                                         a.button.is-small {

@@ -28,6 +28,7 @@ pub mod login;
 pub mod view;
 
 use core_lib::user;
+use core_lib::user::UserV1;
 use core_lib::{storage::*, user::*};
 use layout::Layout;
 use login::*;
@@ -88,15 +89,14 @@ fn login_post(mut cookies: Cookies, login: Form<FormLogin>, data: State<DataLoad
         return user_login(&mut cookies, "9");
     }
 
-    let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
-    let user: Option<&UserObject> = user::get_user_by_id(users, &login.username);
+    let users: &Vec<UserV1> = &data.inner().users.lock().unwrap().data;
+    let user: Option<&UserV1> = user::get_user_by_id(users, &login.username);
 
     // If a valid username
     if let Some(u) = user {
         let password = &login.password;
-        let hash = &u.get_password_hash().unwrap_or("".to_owned());
+        let hash = &u.get_password_hash();
         let res = password::verify_password_from_hash(&password, &hash);
-        println!("{} - {}", password, hash);
         if res.is_ok() {
             if res.unwrap() == true {
                 return user_login(&mut cookies, &login.username);
@@ -132,7 +132,7 @@ fn login_reset_password_post(form: Form<FormResetPassword>, data: State<DataLoad
     let _ = form.email;
     // Letd manage form.email
     let users = &mut data.inner().users.lock().unwrap().data;
-    let user: Option<&mut UserObject> = user::get_user_by_email(&mut *users, &form.email);
+    let user: Option<&mut UserV1> = user::get_user_by_email(&mut *users, &form.email);
 
     if user.is_some() {
         let u = &mut user.unwrap();
@@ -180,7 +180,7 @@ fn admin_user(
 ) -> Result<Markup, Redirect> {
     user_auth(&mut cookies, route)?;
 
-    let users: &Vec<UserObject> = &data.inner().users.lock().unwrap().data;
+    let users: &Vec<UserV1> = &data.inner().users.lock().unwrap().data;
     Ok(Layout::new()
         .set_title("Admin users")
         .render(ViewAdminUser::new(users).render()))
@@ -213,11 +213,7 @@ fn admin_user_new_post(
         Err(redirect) => return redirect,
     };
 
-    let mut new_user = UserObject::new();
-    new_user.set_user_id(form.id.as_ref()).unwrap();
-    new_user.set_user_name(form.name.as_ref()).unwrap();
-    new_user.set_user_email(form.email.as_ref()).unwrap();
-
+    let new_user = UserV1::new(form.id.clone(), form.name.clone(), form.email.clone());
     let mut user_storage = data.inner().users.lock().unwrap();
 
     let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).unwrap();
@@ -240,7 +236,7 @@ fn not_found(req: &Request<'_>) -> Markup {
 }
 
 struct DataLoad {
-    users: Mutex<Storage<UserObject>>,
+    users: Mutex<Storage<UserV1>>,
 }
 
 fn rocket(data: DataLoad) -> rocket::Rocket {
@@ -269,7 +265,7 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
 }
 
 fn main() {
-    let user_storage = load_storage::<UserObject>("data/users").unwrap();
+    let user_storage = load_storage::<UserV1>("data/users").unwrap();
     let data = DataLoad {
         users: Mutex::new(user_storage),
     };

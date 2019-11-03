@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::error::Error::*;
+use crate::prelude::*;
 use bcrypt::{hash, verify};
 use rand::Rng;
 
@@ -24,12 +26,14 @@ use rand::Rng;
 /// use core_lib::user::password::hash_password;
 /// let hash = hash_password("purple dog").unwrap();
 /// ```
-pub fn hash_password(password: &str) -> Result<String, String> {
+pub fn hash_password(password: &str) -> AppResult<String> {
     //let hashed = hash("hunter2", DEFAULT_COST)?;
     //let valid = verify("hunter2", &hashed)?;
     match hash(password, 6) {
         Ok(hash) => Ok(hash),
-        Err(_) => Err("Error while creating hash from password".to_owned()),
+        Err(_) => Err(InternalError(
+            "Error while creating hash from password".into(),
+        )),
     }
 }
 
@@ -43,10 +47,12 @@ pub fn hash_password(password: &str) -> Result<String, String> {
 ///                         "purple_dog",
 ///                         &hash).unwrap();
 /// ```
-pub fn verify_password_from_hash<'a>(password: &'a str, hash: &'a str) -> Result<bool, String> {
+pub fn verify_password_from_hash<'a>(password: &'a str, hash: &'a str) -> AppResult<bool> {
     match verify(password, &hash) {
         Ok(result) => Ok(result),
-        Err(_) => Err("Error while trying verify password from hash".to_owned()),
+        Err(_) => Err(InternalError(
+            "Error while trying verify password from hash".into(),
+        )),
     }
 }
 
@@ -57,7 +63,7 @@ pub fn verify_password_from_hash<'a>(password: &'a str, hash: &'a str) -> Result
 /// use core_lib::user::password::generate_random_password;
 /// let password = generate_random_password(None).unwrap();
 /// ```
-pub fn generate_random_password(length: Option<u32>) -> Result<String, String> {
+pub fn generate_random_password(length: Option<u32>) -> AppResult<String> {
     let mut rng = rand::thread_rng();
     let mut password = "".to_owned();
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -69,7 +75,11 @@ pub fn generate_random_password(length: Option<u32>) -> Result<String, String> {
         // Generate random character
         let random_ch = match chars.get(rng.gen_range(0, chars.len())) {
             Some(ch) => ch,
-            None => return Err("Error while generating random password!".to_owned()),
+            None => {
+                return Err(InternalError(
+                    "Error while generating random password!".into(),
+                ))
+            }
         };
         // Random uppercase
         // TODO: uppercase does not work!
@@ -90,7 +100,7 @@ pub fn generate_random_password(length: Option<u32>) -> Result<String, String> {
 /// use core_lib::user::password::validate_password;
 /// assert_eq!(validate_password("DEmoPassWord1234789").is_ok(), true);
 /// ```
-pub fn validate_password(password: &str) -> Result<(), String> {
+pub fn validate_password(password: &str) -> AppResult<()> {
     let min_password_len = 7;
     let min_character_lowercase = 2;
     let min_character_uppercase = 2;
@@ -119,14 +129,14 @@ pub fn validate_password(password: &str) -> Result<(), String> {
     {
         Ok(())
     } else {
-        Err(format!(
+        Err(InternalError(format!(
             "Password should be min {} length, should contain min {}
             lowercase letter, min {} uppercase letter, min {} number",
             min_password_len,
             min_character_lowercase,
             min_character_uppercase,
             min_numeric_character
-        ))
+        )))
     }
 }
 
@@ -145,10 +155,10 @@ mod tests {
     fn test_verify_password() {
         let password = "purple_dog";
         let hash = hash_password(password).unwrap();
-        assert_eq!(verify_password_from_hash(password, &hash), Ok(true));
+        assert_eq!(verify_password_from_hash(password, &hash).unwrap(), true);
         assert_eq!(
-            verify_password_from_hash("wrong_password", &hash),
-            Ok(false)
+            verify_password_from_hash("wrong_password", &hash).unwrap(),
+            false
         );
     }
 

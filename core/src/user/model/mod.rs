@@ -16,3 +16,4 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod user_v1;
+pub use user_v1::UserV1;

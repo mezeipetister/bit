@@ -17,241 +17,110 @@
 
 use crate::email;
 use crate::email::*;
+use crate::error::Error::*;
+use crate::prelude::*;
 use crate::storage;
 use crate::user::password::*;
 use crate::user::User;
 use serde::{Deserialize, Serialize};
-use std::env;
 
 #[derive(Serialize, Deserialize)]
-pub struct UserObject {
-    id: Option<String>,
+pub struct UserV1 {
+    id: String,
     path: Option<String>,
-    name: Option<String>,
-    address: Option<String>,
-    email: Option<String>,
-    phone: Option<String>,
-    password_hash: Option<String>,
+    name: String,
+    email: String,
+    phone: String,
+    password_hash: String,
 }
 
-impl UserObject {
-    /// # New user
-    /// generating new user with None default values.
-    /// ```rust
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// use core_lib::user::User;
-    /// let user = UserObject::new();
-    /// ```
-    pub fn new() -> Self {
-        UserObject {
-            id: None,
+impl UserV1 {
+    pub fn new(id: String, name: String, email: String) -> Self {
+        UserV1 {
+            id,
             path: None,
-            name: None,
-            address: None,
-            email: None,
-            phone: None,
-            password_hash: None,
+            name,
+            email,
+            phone: "".into(),
+            password_hash: "".into(),
         }
     }
 }
 
-impl User for UserObject {
-    /// # Get user ID
-    /// Some(String) or None
-    /// ```rust
-    /// use core_lib::user::model::user_v1::*;
-    /// use core_lib::user::User;
-    /// let mut user = UserObject::new();
-    /// user.set_user_id("example").unwrap();
-    /// let user_id = user.get_user_id();
-    /// ```
-    fn get_user_id(&self) -> Option<String> {
-        self.id.clone()
+impl User for UserV1 {
+    fn get_user_id(&self) -> &str {
+        &self.id
     }
-    /// # Set user ID
-    /// Result<(), String>
-    /// Minimum user ID length is 5 characters
-    /// ```rust
-    /// use core_lib::user::model::user_v1::*;
-    /// use core_lib::user::User;;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.set_user_id("demo_id"), Ok(()));
-    /// ```
-    fn set_user_id(&mut self, user_id: &str) -> Result<(), String> {
-        if self.id.is_some() {
-            Err("UserID already set! It can't be modified!".to_owned())
-        } else if user_id.len() <= 5 {
-            Err("UserID length should be bigger then 5 characters.".to_owned())
+    fn set_user_id(&mut self, user_id: String) -> AppResult<()> {
+        if user_id.len() <= 5 {
+            Err(InternalError(
+                "User ID must has lenght min 5 characters.".into(),
+            ))
         } else {
             // Here we set ID as all lowecase
-            self.id = Some(user_id.to_lowercase().to_string());
+            self.id = user_id.to_lowercase();
             Ok(())
         }
     }
-    /// # Get user name
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::*;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.get_user_name(), None);
-    /// user.set_user_name("demo_user").unwrap();
-    /// assert_eq!(user.get_user_name(), Some("demo_user".to_owned()));
-    /// ```
-    fn get_user_name(&self) -> Option<String> {
-        self.name.clone()
+    fn get_user_name(&self) -> &str {
+        &self.name
     }
-    /// # Set user name
-    /// Result<(), String>
-    /// Minimum character length is 5
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.set_user_name("Demo User"), Ok(()));
-    /// ```
-    fn set_user_name(&mut self, name: &str) -> Result<(), String> {
+    fn set_user_name(&mut self, name: String) -> AppResult<()> {
         if name.len() < 5 {
-            Err("User name must be longer then 5 character".to_owned())
+            Err(InternalError(
+                "User name must be longer then 5 character".into(),
+            ))
         } else {
-            self.name = Some(name.to_string());
+            self.name = name.to_string();
             Ok(())
         }
     }
-    /// # Get user address
-    /// Option<String>
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let user = UserObject::new();
-    /// assert_eq!(user.get_user_address(), None);
-    /// ```
-    fn get_user_address(&self) -> Option<String> {
-        self.address.clone()
+    fn get_user_email(&self) -> &str {
+        &self.email
     }
-    /// # Set user address
-    /// Result<(), String>
-    /// Minimum character length is 10
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.set_user_address("Lorem country Shiny city Beautiful street 35."), Ok(()));
-    /// ```
-    fn set_user_address(&mut self, address: &str) -> Result<(), String> {
-        if address.len() > 10 {
-            self.address = Some(address.to_owned());
-            Ok(())
-        } else {
-            Err("User address must be longer then 10 characters".to_owned())
-        }
-    }
-    /// # Get user email
-    /// Option<String>
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.get_user_email(), None);
-    /// ```
-    fn get_user_email(&self) -> Option<String> {
-        self.email.clone()
-    }
-    /// # Set user email
-    /// Result<(), String>
-    /// Minimum character length is 5 + must contains the following characters:
-    /// @(at sign) .(dot)
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.set_user_email("user@company.com"), Ok(()));
-    /// ```
-    fn set_user_email(&mut self, email: &str) -> Result<(), String> {
+    fn set_user_email(&mut self, email: String) -> AppResult<()> {
         if email.contains('@') && email.contains('.') && email.len() > 5 {
-            self.email = Some(email.to_owned());
+            self.email = email;
             Ok(())
         } else {
-            Err("Wrong email format! Email must contains the followings:
-            @ and . . Len must be higher then 5 characters"
-                .to_owned())
+            Err(InternalError(
+                "Wrong email format! Email must contains the followings: 
+                @ and . . Len must be higher then 5 characters"
+                    .into(),
+            ))
         }
     }
-    /// # Get user phone
-    /// Option<String>
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.get_user_phone(), None);
-    /// ```
-    fn get_user_phone(&self) -> Option<String> {
-        self.phone.clone()
+    fn get_user_phone(&self) -> &str {
+        &self.phone
     }
-    /// # Set user phone
-    /// Result<(), String>
-    /// Minimum character length is 5
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.set_user_phone("+749 (39) 4759 33279"), Ok(()));
-    /// ```
-    fn set_user_phone(&mut self, phone: &str) -> Result<(), String> {
+    fn set_user_phone(&mut self, phone: String) -> AppResult<()> {
         if phone.len() > 5 {
-            self.phone = Some(phone.to_owned());
+            self.phone = phone;
             Ok(())
         } else {
-            Err(
+            Err(InternalError(
                 "Phone number must be higher then 5 characters. It seems to be wrong format."
-                    .to_owned(),
-            )
+                    .into(),
+            ))
         }
     }
-    /// # Get user password as hash
-    /// Option<String>
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.get_password_hash(), None);
-    /// ```
-    fn get_password_hash(&self) -> Option<String> {
-        self.password_hash.clone()
+    fn get_password_hash(&self) -> &str {
+        &self.password_hash
     }
-    /// # Set user password
-    /// Result<(), String>
-    /// Password must have a valid format (minimum 7 characters long,
-    /// minimum 1 number, minimum 2 characters with lowercase, minimum 2 characters uppercase)
-    /// ```rust
-    /// use core_lib::user::User;
-    /// use core_lib::user::model::user_v1::UserObject;
-    /// let mut user = UserObject::new();
-    /// assert_eq!(user.set_password("PAssword1234789"), Ok(()));
-    /// ```
-    fn set_password(&mut self, password: &str) -> Result<(), String> {
-        let hash = match validate_password(password) {
-            Ok(_) => match hash_password(password) {
-                Ok(hash) => hash,
-                Err(msg) => return Err(msg),
-            },
-            Err(msg) => return Err(msg),
-        };
-        self.password_hash = Some(hash);
+    fn set_password(&mut self, password: String) -> AppResult<()> {
+        validate_password(&password)?;
+        self.password_hash = hash_password(&password)?;
         Ok(())
     }
 
     // TODO: Maybe should be at a higher level using User trait reference as input?
     // Maybe this?
     // => fn reset_password<T: User>(user: &T) -> Result<(), String> {...}
-    fn reset_password(&mut self) -> Result<(), String> {
-        let new_password = match generate_random_password(None) {
-            Ok(password) => password,
-            Err(msg) => return Err(msg),
-        };
-        let hash = hash_password(&new_password.clone()).unwrap();
-        self.password_hash = Some(hash);
+    fn reset_password(&mut self) -> AppResult<()> {
+        let new_password = generate_random_password(None)?;
+        self.password_hash = hash_password(&new_password)?;
         match email::new(
-            &self.get_user_email().unwrap_or("".to_owned()),
+            &self.get_user_email(),
             "New password generated",
             &format!("Your new password is: {}", &new_password),
         )
@@ -264,11 +133,10 @@ impl User for UserObject {
             // We should say its Ok(()) now, and in case of error, the email pool,
             // should manage the trials.
             Err(msg) => {
-                return Err(format!(
+                return Err(InternalError(format!(
                     "New password generated and set, but email send faild. Error message: {}",
                     msg
-                )
-                .to_owned())
+                )))
             }
         }
         Ok(())
@@ -278,18 +146,15 @@ impl User for UserObject {
 /**
  * StorageObject implementation for UserObject
  */
-impl storage::StorageObject for UserObject {
-    fn get_id(&self) -> Option<&str> {
-        match &self.id {
-            Some(id) => Some(id.as_ref()),
-            None => None,
-        }
+impl storage::StorageObject for UserV1 {
+    fn get_id(&self) -> &str {
+        &self.id
     }
-    fn save(&self) -> Result<(), String> {
+    fn save(&self) -> AppResult<()> {
         storage::save_storage_object(self)
     }
     // TODO: Fix this one!
-    fn reload(&mut self) -> Result<(), String> {
+    fn reload(&mut self) -> AppResult<()> {
         Ok(())
     }
     fn get_path(&self) -> Option<&str> {
@@ -298,8 +163,8 @@ impl storage::StorageObject for UserObject {
             None => None,
         }
     }
-    fn set_path(&mut self, path: &str) -> Result<(), String> {
-        self.path = Some(path.to_owned());
+    fn set_path(&mut self, path: &str) -> AppResult<()> {
+        self.path = Some(path.into());
         Ok(())
     }
 }
@@ -310,88 +175,74 @@ mod tests {
 
     #[test]
     fn test_user_id() {
-        let mut user: UserObject = UserObject::new();
+        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
         // At this point ID should be None;
-        assert_eq!(user.get_user_id(), None);
-        user.set_user_id("Demo_user").unwrap();
+        assert_eq!(user.get_user_id(), "demo");
         // This should return an Err(..)
         // Let's test is
-        assert_eq!(user.set_user_id("demo_user_new_set_new_id").is_err(), true);
+        assert_eq!(user.set_user_id("de".into()).is_err(), true);
         // Now the user should have Some("demo_user" as String) as ID.
         // Test that it's not overwritten, and all letter is lovercase
-        assert_eq!(user.get_user_id(), Some("demo_user".to_owned()));
+        assert_eq!(user.get_user_id(), "demo");
     }
 
     #[test]
     fn test_user_email() {
-        let mut user: UserObject = UserObject::new();
+        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
 
-        // Check assertions
-        assert_eq!(user.set_user_id("demo_user").is_ok(), true); // should be ok
-        assert_eq!(user.set_user_email("demo@demo.com").is_ok(), true); // should be ok
-        assert_eq!(user.set_user_email("wohoo").is_err(), true); // should be err
-        assert_eq!(user.set_user_email("demo@company.com").is_ok(), true); // should be ok
+        assert_eq!(user.set_user_email("demo@demo.com".into()).is_ok(), true); // should be ok
+        assert_eq!(user.set_user_email("wohoo".into()).is_err(), true); // should be err
+        assert_eq!(user.set_user_email("demo@company.com".into()).is_ok(), true); // should be ok
 
         // Check email wether email is correct
-        assert_eq!(user.get_user_email(), Some("demo@company.com".to_owned()));
+        assert_eq!(user.get_user_email(), "demo@company.com");
     }
 
     #[test]
     fn test_user_name() {
-        let mut user: UserObject = UserObject::new();
-        assert_eq!(user.get_user_name(), None);
-        assert_eq!(user.set_user_name("abc").is_err(), true); // should be err
-        assert_eq!(user.set_user_name("Demo User").is_ok(), true); // should be ok
-        assert_eq!(user.set_user_name("Hello World").is_ok(), true); // should be ok
-        assert_eq!(user.get_user_name(), Some("Hello World".to_owned())) // should be ok
-    }
-
-    #[test]
-    fn test_user_address() {
-        let mut user: UserObject = UserObject::new();
-        let address: &str = "747999 Demo Country, Great county, Hello World street 79.";
-        assert_eq!(user.get_user_address(), None);
-        assert_eq!(user.set_user_address(address).is_ok(), true); // should be ok
-        assert_eq!(user.set_user_address("addr").is_err(), true); // should be err
-        assert_eq!(user.get_user_address(), Some(address.to_owned()))
+        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+        assert_eq!(user.get_user_name(), "user");
+        assert_eq!(user.set_user_name("abc".into()).is_err(), true); // should be err
+        assert_eq!(user.set_user_name("Demo User".into()).is_ok(), true); // should be ok
+        assert_eq!(user.set_user_name("Hello World".into()).is_ok(), true); // should be ok
+        assert_eq!(user.get_user_name(), "Hello World"); // should be ok
     }
 
     #[test]
     fn test_user_phone() {
-        let mut user: UserObject = UserObject::new();
+        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
         let phone_number: &str = "+99 (701) 479 397129";
-        assert_eq!(user.get_user_phone(), None);
-        assert_eq!(user.set_user_phone(phone_number).is_ok(), true); // should be ok
-        assert_eq!(user.set_user_phone("phn").is_err(), true); // should be err
-        assert_eq!(user.get_user_phone(), Some(phone_number.to_owned()));
+        assert_eq!(user.get_user_phone(), "");
+        assert_eq!(user.set_user_phone(phone_number.into()).is_ok(), true); // should be ok
+        assert_eq!(user.set_user_phone("phn".into()).is_err(), true); // should be err
+        assert_eq!(user.get_user_phone(), phone_number);
     }
 
     #[test]
     fn test_user_set_password() {
-        let mut user: UserObject = UserObject::new();
+        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
         let password: &str = "HelloWorld749";
-        assert_eq!(user.get_password_hash(), None); // should be None
-        assert_eq!(user.set_password("pass").is_err(), true); // should be err
-        assert_eq!(user.set_password("PAss7").is_err(), true); // should be err
-        assert_eq!(user.set_password("password").is_err(), true); // should be err
-        assert_eq!(user.set_password("Password").is_err(), true); // should be err
-        assert_eq!(user.set_password("PAssword").is_err(), true); // should be err
-        assert_eq!(user.set_password("PAssword7").is_ok(), true); // should be ok
-        assert_eq!(user.set_password(password).is_ok(), true); // should be ok
+        assert_eq!(user.get_password_hash(), ""); // should be None
+        assert_eq!(user.set_password("pass".into()).is_err(), true); // should be err
+        assert_eq!(user.set_password("PAss7".into()).is_err(), true); // should be err
+        assert_eq!(user.set_password("password".into()).is_err(), true); // should be err
+        assert_eq!(user.set_password("Password".into()).is_err(), true); // should be err
+        assert_eq!(user.set_password("PAssword".into()).is_err(), true); // should be err
+        assert_eq!(user.set_password("PAssword7".into()).is_ok(), true); // should be ok
+        assert_eq!(user.set_password(password.into()).is_ok(), true); // should be ok
         assert_eq!(
-            verify_password_from_hash(password, user.get_password_hash().unwrap().as_ref())
-                .unwrap(),
+            verify_password_from_hash(password, user.get_password_hash()).unwrap(),
             true
         );
     }
-    #[test]
-    #[ignore]
-    fn test_reset_password() {
-        let mut user = UserObject::new();
-        user.set_user_email(&env::var("E_TO_TEST_EMAIL").unwrap())
-            .unwrap();
-        user.set_user_name(&env::var("E_TO_TEST_NAME").unwrap())
-            .unwrap();
-        assert_eq!(user.reset_password().is_ok(), true);
-    }
+    // #[test]
+    // #[ignore]
+    // fn test_reset_password() {
+    //     let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+    //     user.set_user_email(&env::var("E_TO_TEST_EMAIL").unwrap())
+    //         .unwrap();
+    //     user.set_user_name(&env::var("E_TO_TEST_NAME").unwrap())
+    //         .unwrap();
+    //     assert_eq!(user.reset_password().is_ok(), true);
+    // }
 }

@@ -19,32 +19,30 @@ pub mod login;
 pub mod model;
 pub mod password;
 
-pub use model::user_v1::UserObject;
+pub use model::UserV1;
+
+use crate::prelude::*;
 
 pub trait User {
-    fn get_user_id(&self) -> Option<String>;
-    fn set_user_id(&mut self, user_id: &str) -> Result<(), String>;
-    fn get_user_name(&self) -> Option<String>;
-    fn set_user_name(&mut self, name: &str) -> Result<(), String>;
-    fn get_user_address(&self) -> Option<String>;
-    fn set_user_address(&mut self, address: &str) -> Result<(), String>;
-    fn get_user_email(&self) -> Option<String>;
-    fn set_user_email(&mut self, email: &str) -> Result<(), String>;
-    fn get_user_phone(&self) -> Option<String>;
-    fn set_user_phone(&mut self, phone: &str) -> Result<(), String>;
-    fn get_password_hash(&self) -> Option<String>;
-    fn set_password(&mut self, password: &str) -> Result<(), String>;
-    fn reset_password(&mut self) -> Result<(), String>;
+    fn get_user_id(&self) -> &str;
+    fn set_user_id(&mut self, user_id: String) -> AppResult<()>;
+    fn get_user_name(&self) -> &str;
+    fn set_user_name(&mut self, name: String) -> AppResult<()>;
+    fn get_user_email(&self) -> &str;
+    fn set_user_email(&mut self, email: String) -> AppResult<()>;
+    fn get_user_phone(&self) -> &str;
+    fn set_user_phone(&mut self, phone: String) -> AppResult<()>;
+    fn get_password_hash(&self) -> &str;
+    fn set_password(&mut self, password: String) -> AppResult<()>;
+    fn reset_password(&mut self) -> AppResult<()>;
 }
 
 /// Find user in users by ID.
 /// Return NONE if not exist, return &user if exists.
 pub fn get_user_by_id<'a, T: User>(users: &'a Vec<T>, id: &str) -> Option<&'a T> {
     for user in users {
-        if let Some(user_id) = user.get_user_id() {
-            if user_id == id {
-                return Some(&user);
-            }
+        if user.get_user_id() == id {
+            return Some(&user);
         }
     }
     None
@@ -54,10 +52,8 @@ pub fn get_user_by_id<'a, T: User>(users: &'a Vec<T>, id: &str) -> Option<&'a T>
 /// Return NONE or &user.
 pub fn get_user_by_email<'a, T: User>(users: &'a mut Vec<T>, email: &str) -> Option<&'a mut T> {
     for user in users {
-        if let Some(user_email) = user.get_user_email() {
-            if user_email == email {
-                return Some(&mut *user);
-            }
+        if user.get_user_email() == email {
+            return Some(&mut *user);
         }
     }
     None

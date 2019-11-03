@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::error::Error::*;
+use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
@@ -37,11 +39,11 @@ use std::path::Path;
 /// Storage can hold any StorageObject<T>.
 /// Storage object ensures that an object can save and reload itself.
 pub trait StorageObject {
-    fn get_id(&self) -> Option<&str>;
-    fn save(&self) -> Result<(), String>;
-    fn reload(&mut self) -> Result<(), String>;
+    fn get_id(&self) -> &str;
+    fn save(&self) -> AppResult<()>;
+    fn reload(&mut self) -> AppResult<()>;
     fn get_path(&self) -> Option<&str>;
-    fn set_path(&mut self, path: &str) -> Result<(), String>;
+    fn set_path(&mut self, path: &str) -> AppResult<()>;
 }
 
 pub struct Storage<T> {
@@ -85,7 +87,7 @@ impl<T> Storage<T> {
 /// storage.remove();
 /// assert_eq!(storage.data.len(), 0);
 /// ```
-pub fn load_storage<'a, T>(path: &'static str) -> Result<Storage<T>, String>
+pub fn load_storage<'a, T>(path: &'static str) -> AppResult<Storage<T>>
 where
     for<'de> T: Deserialize<'de> + 'a,
 {
@@ -97,7 +99,10 @@ where
         match fs::create_dir_all(path) {
             Ok(_) => (),
             Err(msg) => {
-                return Err(format!("Storage path failed to create: {}", msg));
+                return Err(InternalError(format!(
+                    "Storage path failed to create: {}",
+                    msg
+                )));
             }
         }
     } else {
@@ -162,7 +167,7 @@ where
 /// assert_eq!(storage.data[1].name, "Purple Rainbow".to_owned());
 /// storage.remove();
 /// ```
-pub fn add_to_storage<T>(storage: &mut Storage<T>, mut storage_object: T) -> Result<(), String>
+pub fn add_to_storage<T>(storage: &mut Storage<T>, mut storage_object: T) -> AppResult<()>
 where
     T: StorageObject,
 {
@@ -213,24 +218,30 @@ where
 pub fn add_to_storage_and_return_ref<T>(
     storage: &mut Storage<T>,
     mut storage_object: T,
-) -> Result<&mut T, String>
+) -> AppResult<&mut T>
 where
     T: StorageObject,
 {
-    let id = storage_object.get_id().unwrap().to_owned();
-    storage_object.set_path(storage.path).unwrap();
+    // TODO: CHeck with test. Does it really work?
+    let id: String;
+    {
+        id = storage_object.get_id().into();
+    }
+    storage_object.set_path(storage.path)?;
     storage_object.save()?;
     storage.data.push(storage_object);
     let mut storage_result_index = 0;
     for item in &mut storage.data {
-        if item.get_id().unwrap() == id {
+        if item.get_id() == id {
             break;
         }
         storage_result_index += 1;
     }
     match storage.data.get_mut(storage_result_index) {
         Some(data_item) => Ok(data_item),
-        None => Err("Error while getting reference to the new storage item.".to_owned()),
+        None => Err(InternalError(
+            "Error while getting reference to the new storage item.".into(),
+        )),
     }
 }
 
@@ -248,10 +259,12 @@ where
 /// let serialized_object = serialize_object(&dog).unwrap();
 /// assert_eq!(serialized_object, "---\nid: 1\nname: Puppy Joe".to_owned());
 /// ```
-pub fn serialize_object<T: Serialize>(object: &T) -> Result<String, String> {
+pub fn serialize_object<T: Serialize>(object: &T) -> AppResult<String> {
     match serde_yaml::to_string(object) {
         Ok(result) => Ok(result),
-        Err(_) => Err("Error while data object serialisation.".to_owned()),
+        Err(_) => Err(InternalError(
+            "Error while data object serialisation.".into(),
+        )),
     }
 }
 
@@ -270,13 +283,15 @@ pub fn serialize_object<T: Serialize>(object: &T) -> Result<String, String> {
 /// ```
 /// IMPORTANT: deserializable struct currently cannot have &str field.
 //  TODO: Lifetime fix for `&str field type.
-pub fn deserialize_object<'a, T: ?Sized>(s: &str) -> Result<T, String>
+pub fn deserialize_object<'a, T: ?Sized>(s: &str) -> AppResult<T>
 where
     for<'de> T: Deserialize<'de> + 'a,
 {
     match serde_yaml::from_str(s) {
         Ok(t) => Ok(t),
-        Err(_) => Err("Error while data object deserialization.".to_owned()),
+        Err(_) => Err(InternalError(
+            "Error while data object deserialization.".into(),
+        )),
     }
 }
 
@@ -284,7 +299,7 @@ where
  * Save storage into object!
  * TODO: Doc comments + example code
  */
-pub fn save_storage_object<T>(storage_object: &T) -> Result<(), String>
+pub fn save_storage_object<T>(storage_object: &T) -> AppResult<()>
 where
     T: StorageObject + Serialize,
 {
@@ -292,7 +307,7 @@ where
     File::create(&format!(
         "{}/{}.yml",
         storage_object.get_path().unwrap(),
-        storage_object.get_id().unwrap(),
+        storage_object.get_id(),
     ))
     .unwrap()
     .write_all(serialize_object::<T>(storage_object).unwrap().as_bytes())
@@ -320,8 +335,8 @@ mod tests {
             age: 99,
         };
         assert_eq!(
-            serialize_object(&d),
-            Ok("---\nname: Lorem Ipsum\nage: 99".to_owned())
+            serialize_object(&d).unwrap(),
+            "---\nname: Lorem Ipsum\nage: 99".to_owned()
         );
     }
 
@@ -350,20 +365,21 @@ mod tests {
             }
         }
         impl StorageObject for Example {
-            fn get_id(&self) -> Option<&str> {
-                Some(&self.id)
+            fn get_id(&self) -> &str {
+                &self.id
             }
-            fn save(&self) -> Result<(), String> {
-                save_storage_object(self)
+            fn save(&self) -> AppResult<()> {
+                save_storage_object(self)?;
+                Ok(())
             }
-            fn reload(&mut self) -> Result<(), String> {
+            fn reload(&mut self) -> AppResult<()> {
                 Ok(())
             }
             fn get_path(&self) -> Option<&str> {
                 Some(&self.path)
             }
-            fn set_path(&mut self, path: &str) -> Result<(), String> {
-                self.path = path.to_owned();
+            fn set_path(&mut self, path: &str) -> AppResult<()> {
+                self.path = path.into();
                 Ok(())
             }
         }
@@ -422,20 +438,21 @@ mod tests {
             }
         }
         impl StorageObject for Example {
-            fn get_id(&self) -> Option<&str> {
-                Some(&self.id)
+            fn get_id(&self) -> &str {
+                &self.id
             }
-            fn save(&self) -> Result<(), String> {
-                save_storage_object(self)
+            fn save(&self) -> AppResult<()> {
+                save_storage_object(self)?;
+                Ok(())
             }
-            fn reload(&mut self) -> Result<(), String> {
+            fn reload(&mut self) -> AppResult<()> {
                 Ok(())
             }
             fn get_path(&self) -> Option<&str> {
                 Some(&self.path)
             }
-            fn set_path(&mut self, path: &str) -> Result<(), String> {
-                self.path = path.to_owned();
+            fn set_path(&mut self, path: &str) -> AppResult<()> {
+                self.path = path.into();
                 Ok(())
             }
         }
