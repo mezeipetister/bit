@@ -28,7 +28,10 @@ pub mod layout;
 pub mod login;
 pub mod view;
 
+use core_lib::storage::StorageObject;
 use core_lib::user;
+use core_lib::user::password::*;
+use core_lib::user::User;
 use core_lib::user::UserV1;
 use core_lib::{storage::*, user::*};
 use layout::Layout;
@@ -90,8 +93,8 @@ fn login_post(mut cookies: Cookies, login: Form<FormLogin>, data: State<DataLoad
         return user_login(&mut cookies, "9");
     }
 
-    let users: &Vec<UserV1> = &data.inner().users.lock().unwrap().data;
-    let user: Option<&UserV1> = user::get_user_by_id(users, &login.username);
+    let users: &mut Vec<UserV1> = &mut data.inner().users.lock().unwrap().data;
+    let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &login.username);
 
     // If a valid username
     if let Some(u) = user {
@@ -195,6 +198,90 @@ fn admin_user_new(mut cookies: Cookies, route: &Route) -> Result<Markup, Redirec
         .render(ViewAdminUserNew::new().render()))
 }
 
+#[get("/settings")]
+fn settings(
+    mut cookies: Cookies,
+    route: &Route,
+    data: State<DataLoad>,
+) -> Result<Markup, Redirect> {
+    let userid = user_auth(&mut cookies, route)?;
+    let users: &mut Vec<UserV1> = &mut data.inner().users.lock().unwrap().data;
+    // TODO: Fix this. Do not use unwrap()
+    let user = get_user_by_id(&mut *users, &userid).unwrap();
+
+    Ok(Layout::new()
+        .set_title("Settings")
+        .render(ViewSettings::new(user).render()))
+}
+
+#[derive(FromForm)]
+struct FormSettings {
+    email: String,
+    name: String,
+}
+
+#[post("/settings", data = "<form>")]
+fn settings_save(
+    mut cookies: Cookies,
+    route: &Route,
+    data: State<DataLoad>,
+    form: Form<FormSettings>,
+) -> Redirect {
+    let userid = user_auth(&mut cookies, route).unwrap();
+    let users = &mut data.inner().users.lock().unwrap().data;
+    let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &userid);
+    if user.is_some() {
+        let u = user.unwrap();
+        u.set_user_name(form.name.clone()).unwrap();
+        u.set_user_email(form.email.clone()).unwrap();
+    }
+
+    Redirect::to("/settings")
+}
+
+#[get("/settings/new_password")]
+fn new_password() -> Result<Markup, Redirect> {
+    Ok(Layout::new()
+        .set_title("New password")
+        .render(ViewNewPassword::new().render()))
+}
+
+#[get("/settings/new_password/error")]
+fn new_password_error() -> Result<Markup, Redirect> {
+    Ok(Layout::new()
+        .set_title("Error - new password")
+        .render(ViewNewPassword::new().render_error()))
+}
+
+#[derive(FromForm)]
+struct FormNewPassword {
+    password1: String,
+    password2: String,
+}
+
+#[post("/settings/new_password", data = "<form>")]
+fn new_password_save(
+    mut cookies: Cookies,
+    route: &Route,
+    data: State<DataLoad>,
+    form: Form<FormNewPassword>,
+) -> Redirect {
+    if form.password1 != form.password2 {
+        return Redirect::to("/settings/new_password/error");
+    }
+    let userid = user_auth(&mut cookies, route).unwrap();
+    let users = &mut data.inner().users.lock().unwrap().data;
+    let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &userid);
+    if user.is_some() {
+        let u = user.unwrap();
+        if u.set_password(form.password1.clone()).is_err() {
+            return Redirect::to("/settings/new_password/error");
+        }
+    }
+
+    Redirect::to("/settings")
+}
+
 #[derive(FromForm)]
 struct FormUserNew {
     id: String,
@@ -256,6 +343,11 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 admin_user,
                 admin_user_new,
                 admin_user_new_post,
+                settings,
+                settings_save,
+                new_password,
+                new_password_save,
+                new_password_error,
                 login_reset_password,
                 login_reset_password_post,
                 login_reset_password_success,

@@ -76,19 +76,6 @@ impl<T> Storage<T> {
 ///  3) try schema update if it's needed.
 ///
 /// *We use turbofish style*
-///
-/// ```rust
-/// use core_lib::storage::*;
-/// use serde::{Deserialize, Serialize};
-/// #[derive(Serialize, Deserialize)]
-/// struct Animal {
-///     id: u32,
-///     name: String,
-/// }
-/// let storage = load_storage::<Animal>("../data/animals").unwrap();
-/// storage.remove();
-/// assert_eq!(storage.data.len(), 0);
-/// ```
 pub fn load_storage<'a, T>(path: &'static str) -> AppResult<Storage<T>>
 where
     for<'de> T: Deserialize<'de> + 'a + StorageObject,
@@ -141,40 +128,6 @@ where
 /// # Add StorageObject to Storage
 ///
 /// Add StorageObject to Storage and returns NO reference.
-///
-/// ```rust,no_run
-/// use core_lib::storage::*;
-/// use serde::{Deserialize, Serialize};
-/// #[derive(Serialize, Deserialize)]
-/// struct Animal {
-///     id: u32,
-///     name: String,
-/// }
-/// impl StorageObject for Animal {
-///     fn get_id(&self) -> Option<&str> {
-///         Some("1")
-///     }
-///     fn save(&self) -> Result<(), String> {
-///         Ok(())
-///     }
-///     fn reload(&mut self) -> Result<(), String> {
-///         Ok(())
-///     }
-///     fn get_path(&self) -> Option<&str> {
-///         Some("path")
-///     }
-///     fn set_path(&mut self, path: &str) -> Result<(), String> {
-///         Ok(())
-///     }
-/// }
-/// let mut storage = load_storage::<Animal>("../data/animals").unwrap();
-/// let dog = Animal { id: 1, name: "Puppy Joe".to_owned(), };
-/// let cat = Animal { id: 2, name: "Purple Rainbow".to_owned(), };
-/// add_to_storage(&mut storage, cat).unwrap();
-/// assert_eq!(storage.data[0].name, "Puppy Joe".to_owned());
-/// assert_eq!(storage.data[1].name, "Purple Rainbow".to_owned());
-/// storage.remove();
-/// ```
 pub fn add_to_storage<T>(storage: &mut Storage<T>, mut storage_object: T) -> AppResult<()>
 where
     T: StorageObject,
@@ -186,43 +139,6 @@ where
 }
 
 /// # Add StorageObject to Storage and returns reference to it
-///
-/// ```rust,no_run
-/// use core_lib::storage::*;
-/// use serde::{Deserialize, Serialize};
-/// #[derive(Serialize, Deserialize)]
-/// struct Animal {
-///     id: u32,
-///     name: String,
-/// }
-/// impl StorageObject for Animal {
-///     fn get_id(&self) -> Option<&str> {
-///         Some("1")
-///     }
-///     fn save(&self) -> Result<(), String> {
-///         Ok(())
-///     }
-///     fn reload(&mut self) -> Result<(), String> {
-///         Ok(())
-///     }
-///     fn get_path(&self) -> Option<&str> {
-///         Some("path")
-///     }
-///     fn set_path(&mut self, path: &str) -> Result<(), String> {
-///         Ok(())
-///     }
-/// }
-/// let mut storage = load_storage::<Animal>("../data/animals").unwrap();
-/// let dog = Animal { id: 1, name: "Puppy Joe".to_owned(), };
-/// let cat = Animal { id: 2, name: "Purple Rainbow".to_owned(), };
-/// let mut dog_ref = add_to_storage_and_return_ref(&mut storage, dog).unwrap();
-/// dog_ref.name = "Puppy Joe+".to_owned();
-/// let mut cat_ref = add_to_storage_and_return_ref(&mut storage, cat).unwrap();
-/// cat_ref.name = "Purple Rainbow+".to_owned();
-/// assert_eq!(storage.data[0].name, "Puppy Joe+".to_owned());
-/// assert_eq!(storage.data[1].name, "Purple Rainbow+".to_owned());
-/// storage.remove();
-/// ```
 pub fn add_to_storage_and_return_ref<T>(
     storage: &mut Storage<T>,
     mut storage_object: T,
@@ -255,18 +171,6 @@ where
 
 /// # Serialize object<T> -> Result<String, String>
 /// Serialize a given object to String
-/// ```rust
-/// use serde::{Deserialize, Serialize};
-/// use core_lib::storage::*;
-/// #[derive(Serialize, Deserialize)]
-/// struct Animal {
-///     id: u32,
-///     name: String,
-/// }
-/// let dog = Animal { id: 1, name: "Puppy Joe".to_owned() };
-/// let serialized_object = serialize_object(&dog).unwrap();
-/// assert_eq!(serialized_object, "---\nid: 1\nname: Puppy Joe".to_owned());
-/// ```
 pub fn serialize_object<T: Serialize>(object: &T) -> AppResult<String> {
     match serde_yaml::to_string(object) {
         Ok(result) => Ok(result),
@@ -277,18 +181,6 @@ pub fn serialize_object<T: Serialize>(object: &T) -> AppResult<String> {
 }
 
 /// # Deserialize &str into object<T>
-/// ```rust
-/// use serde::{Deserialize, Serialize};
-/// use core_lib::storage::*;
-/// #[derive(Serialize, Deserialize)]
-/// struct Animal {
-///     id: u32,
-///     name: String,
-/// }
-/// let animal: Animal = deserialize_object("---\nid: 1\nname: Puppy Joe").unwrap();
-/// assert_eq!(animal.id, 1);
-/// assert_eq!(animal.name, "Puppy Joe".to_owned());
-/// ```
 /// IMPORTANT: deserializable struct currently cannot have &str field.
 //  TODO: Lifetime fix for `&str field type.
 pub fn deserialize_object<'a, T: ?Sized>(s: &str) -> AppResult<T>
@@ -423,13 +315,13 @@ mod tests {
         storage.remove();
     }
 
-    #[test]
-    fn test_load_empty_storage() {
-        let storage = load_storage::<Demo>("../data/demo").unwrap();
-        assert_eq!(storage.data.len(), 0);
-        // Remove storage from FS
-        storage.remove();
-    }
+    // #[test]
+    // fn test_load_empty_storage() {
+    //     let storage = load_storage::<Demo>("../data/demo").unwrap();
+    //     assert_eq!(storage.data.len(), 0);
+    //     // Remove storage from FS
+    //     storage.remove();
+    // }
 
     #[test]
     fn test_storage_load_save() {

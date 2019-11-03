@@ -39,10 +39,10 @@ pub trait User {
 
 /// Find user in users by ID.
 /// Return NONE if not exist, return &user if exists.
-pub fn get_user_by_id<'a, T: User>(users: &'a Vec<T>, id: &str) -> Option<&'a T> {
+pub fn get_user_by_id<'a, T: User>(users: &'a mut Vec<T>, id: &str) -> Option<&'a mut T> {
     for user in users {
         if user.get_user_id() == id {
-            return Some(&user);
+            return Some(&mut *user);
         }
     }
     None

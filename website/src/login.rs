@@ -19,13 +19,13 @@ use rocket::http::{Cookie, Cookies};
 use rocket::response::Redirect;
 use rocket::Route;
 
-pub fn user_auth(mut cookies: &mut Cookies, route: &Route) -> Result<(), Redirect> {
+pub fn user_auth(mut cookies: &mut Cookies, route: &Route) -> Result<String, Redirect> {
     if cookie_get_private(&mut cookies, "USERID").is_none() {
         // Set redirect cookie to return after successfull login
         set_redirect_cookie(cookies, route);
         return Err(Redirect::to("/login"));
     }
-    Ok(())
+    Ok(cookie_get_private(&mut cookies, "USERID").unwrap())
 }
 
 pub fn set_redirect_cookie(cookies: &mut Cookies, route: &Route) {

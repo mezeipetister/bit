@@ -42,7 +42,7 @@ impl Component for Navbar {
                     .navbar-end {
                         .navbar-item {
                             .buttons {
-                                a.button.is-light {
+                                a.button.is-light href="/settings" {
                                     span.icon.is-small {
                                         i.fa.fa-user-cog {}
                                     }

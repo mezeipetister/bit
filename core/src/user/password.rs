@@ -101,9 +101,9 @@ pub fn generate_random_password(length: Option<u32>) -> AppResult<String> {
 /// assert_eq!(validate_password("DEmoPassWord1234789").is_ok(), true);
 /// ```
 pub fn validate_password(password: &str) -> AppResult<()> {
-    let min_password_len = 7;
+    let min_password_len = 3;
     let min_character_lowercase = 2;
-    let min_character_uppercase = 2;
+    let min_character_uppercase = 1;
     let min_numeric_character = 1;
     let mut character_lowercase: u32 = 0;
     let mut character_uppercase: u32 = 0;
