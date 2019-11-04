@@ -232,8 +232,11 @@ fn settings_save(
     let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &userid);
     if user.is_some() {
         let u = user.unwrap();
-        u.set_user_name(form.name.clone()).unwrap();
-        u.set_user_email(form.email.clone()).unwrap();
+        u.update(|user| {
+            user.set_user_name(form.name.clone()).unwrap();
+            user.set_user_email(form.email.clone()).unwrap();
+        })
+        .unwrap();
     }
 
     Redirect::to("/settings")

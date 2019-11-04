@@ -39,13 +39,28 @@ use std::path::Path;
 ///
 /// Storage can hold any StorageObject<T>.
 /// Storage object ensures that an object can save and reload itself.
-pub trait StorageObject {
+pub trait StorageObject: Serialize + Sized {
     fn get_id(&self) -> &str;
-    fn save(&self) -> AppResult<()>;
     fn reload(&mut self) -> AppResult<()>;
     fn get_path(&self) -> Option<&str>;
     fn set_path(&mut self, path: &str) -> AppResult<()>;
     fn get_date_created(&self) -> DateTime<Utc>;
+    // Save autoimplementation
+    fn save(&self) -> AppResult<()>
+    where
+        Self: Serialize + Sized,
+    {
+        save_storage_object(self)
+    }
+    // Update auto implementation
+    fn update<F>(&mut self, mut f: F) -> AppResult<()>
+    where
+        F: FnMut(&mut Self),
+    {
+        f(self);
+        self.save()?;
+        Ok(())
+    }
 }
 
 pub struct Storage<T> {
@@ -201,7 +216,7 @@ where
  */
 pub fn save_storage_object<T>(storage_object: &T) -> AppResult<()>
 where
-    T: StorageObject + Serialize,
+    T: StorageObject + Serialize + Sized,
 {
     // TODO: Proper error handling please!
     File::create(&format!(

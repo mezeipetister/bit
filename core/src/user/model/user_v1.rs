@@ -158,9 +158,6 @@ impl storage::StorageObject for UserV1 {
     fn get_id(&self) -> &str {
         &self.id
     }
-    fn save(&self) -> AppResult<()> {
-        storage::save_storage_object(self)
-    }
     // TODO: Fix this one!
     fn reload(&mut self) -> AppResult<()> {
         Ok(())
