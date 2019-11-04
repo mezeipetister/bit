@@ -171,12 +171,12 @@ mod tests {
     }
     #[test]
     fn test_validate_password() {
-        assert_eq!(validate_password("pass").is_err(), true); // should be err
-        assert_eq!(validate_password("PAss1").is_err(), true); // should be err
-        assert_eq!(validate_password("password").is_err(), true); // should be err
-        assert_eq!(validate_password("Password").is_err(), true); // should be err
-        assert_eq!(validate_password("PASsword").is_err(), true); // should be err
-        assert_eq!(validate_password("Password12").is_err(), true); // should be err
+        assert_eq!(validate_password("pass").is_ok(), false); // should be err
+        assert_eq!(validate_password("PAss1").is_ok(), true); // should be err
+        assert_eq!(validate_password("password").is_ok(), false); // should be err
+        assert_eq!(validate_password("Password").is_ok(), false); // should be err
+        assert_eq!(validate_password("PASsword").is_ok(), false); // should be err
+        assert_eq!(validate_password("Password12").is_ok(), true); // should be err
         assert_eq!(validate_password("PAssword12").is_ok(), true); // should be ok
     }
 }

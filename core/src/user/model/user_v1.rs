@@ -233,11 +233,11 @@ mod tests {
         let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
         let password: &str = "HelloWorld749";
         assert_eq!(user.get_password_hash(), ""); // should be None
-        assert_eq!(user.set_password("pass".into()).is_err(), true); // should be err
-        assert_eq!(user.set_password("PAss7".into()).is_err(), true); // should be err
-        assert_eq!(user.set_password("password".into()).is_err(), true); // should be err
-        assert_eq!(user.set_password("Password".into()).is_err(), true); // should be err
-        assert_eq!(user.set_password("PAssword".into()).is_err(), true); // should be err
+        assert_eq!(user.set_password("pass".into()).is_ok(), false); // should be err
+        assert_eq!(user.set_password("PAss7".into()).is_ok(), true); // should be err
+        assert_eq!(user.set_password("password".into()).is_ok(), false); // should be err
+        assert_eq!(user.set_password("Password".into()).is_ok(), false); // should be err
+        assert_eq!(user.set_password("PAssword".into()).is_ok(), false); // should be err
         assert_eq!(user.set_password("PAssword7".into()).is_ok(), true); // should be ok
         assert_eq!(user.set_password(password.into()).is_ok(), true); // should be ok
         assert_eq!(
