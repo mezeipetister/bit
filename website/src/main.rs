@@ -277,6 +277,7 @@ fn new_password_save(
         if u.set_password(form.password1.clone()).is_err() {
             return Redirect::to("/settings/new_password/error");
         } else {
+            // TODO: Solve to must use save() after any modification!
             u.save().unwrap();
         }
     }

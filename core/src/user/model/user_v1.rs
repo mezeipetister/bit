@@ -25,6 +25,7 @@ use crate::user::User;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[must_use]
 #[derive(Serialize, Deserialize)]
 pub struct UserV1 {
     id: String,
