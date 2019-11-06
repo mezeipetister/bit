@@ -18,6 +18,7 @@
 use crate::DataLoad;
 use core_lib::user;
 use core_lib::user::User;
+use core_lib::user::UserV1;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
@@ -52,12 +53,16 @@ impl<'a, 'r> FromRequest<'a, 'r> for Login {
             None => return Outcome::Failure((Status::Unauthorized, ())),
         };
         // let user: &mut UserV1 = user::get_user_by_email(&mut *users, &form.email);
-        match user::get_user_by_id(&mut *users, &userid) {
-            Ok(user) => Outcome::Success(Login {
-                userid: userid,
-                name: user.get_user_name().into(),
-                email: user.get_user_email().into(),
-            }),
+        let u = user::get_user_by_id(&mut *users, &userid);
+        match u {
+            Ok(user) => {
+                let login = Login {
+                    userid: userid,
+                    name: user.get_user_name().into(),
+                    email: user.get_user_email().into(),
+                };
+                Outcome::Success(login)
+            }
             Err(_) => Outcome::Failure((Status::Unauthorized, ())),
             // 1 if is_valid(keys[0]) => Outcome::Success(ApiKey(keys[0].to_string())),
         }

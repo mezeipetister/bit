@@ -51,19 +51,14 @@ use std::sync::Mutex;
 use view::*;
 
 #[get("/demo")]
-fn demo(user: Login, route: &Route) -> Markup {
+fn demo(user: Login) -> Markup {
     Layout::new()
         .set_title(&format!("Hello - {}", user.name()))
         .render(ViewIndex::new().render())
 }
 
 #[get("/")]
-fn index(
-    flash: Option<FlashMessage>,
-    mut cookies: Cookies,
-    route: &Route,
-) -> Result<Markup, Redirect> {
-    user_auth(&mut cookies, route)?;
+fn index(_user: Login, flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
     Ok(Layout::new()
         .set_title("Welcome")
         .set_notification(flash)
@@ -80,9 +75,7 @@ fn login(flash: Option<FlashMessage>) -> Markup {
 }
 
 #[get("/logout")]
-fn logout(mut cookies: Cookies, route: &Route) -> Result<Redirect, Redirect> {
-    // Check wheter user is logged in
-    user_auth(&mut cookies, route)?;
+fn logout(_user: Login, mut cookies: Cookies, route: &Route) -> Result<Redirect, Redirect> {
     // Remove userid cookie
     user_logout(&mut cookies);
     // Redirect to /login page
@@ -159,13 +152,10 @@ fn login_reset_password_post(
  */
 #[get("/admin/user")]
 fn admin_user(
+    _user: Login,
     flash: Option<FlashMessage>,
-    mut cookies: Cookies,
-    route: &Route,
     data: State<DataLoad>,
 ) -> Result<Markup, Redirect> {
-    user_auth(&mut cookies, route)?;
-
     let users: &Vec<UserV1> = &data.inner().users.lock().unwrap().data;
     Ok(Layout::new()
         .set_title("Admin users")
@@ -174,12 +164,7 @@ fn admin_user(
 }
 
 #[get("/admin/user/new")]
-fn admin_user_new(
-    flash: Option<FlashMessage>,
-    mut cookies: Cookies,
-    route: &Route,
-) -> Result<Markup, Redirect> {
-    user_auth(&mut cookies, route)?;
+fn admin_user_new(_user: Login, flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
     Ok(Layout::new()
         .set_title("New user")
         .set_notification(flash)
@@ -188,15 +173,13 @@ fn admin_user_new(
 
 #[get("/settings")]
 fn settings(
+    user: Login,
     flash: Option<FlashMessage>,
-    mut cookies: Cookies,
-    route: &Route,
     data: State<DataLoad>,
 ) -> Result<Markup, Redirect> {
-    let userid = user_auth(&mut cookies, route)?;
     let users: &mut Vec<UserV1> = &mut data.inner().users.lock().unwrap().data;
     // TODO: Fix this. Do not use unwrap()
-    let user = get_user_by_id(&mut *users, &userid).unwrap();
+    let user = get_user_by_id(&mut *users, &user.userid()).unwrap();
 
     Ok(Layout::new()
         .set_title("Settings")
@@ -211,15 +194,9 @@ struct FormSettings {
 }
 
 #[post("/settings", data = "<form>")]
-fn settings_save(
-    mut cookies: Cookies,
-    route: &Route,
-    data: State<DataLoad>,
-    form: Form<FormSettings>,
-) -> FlashRedirect {
-    let userid = user_auth(&mut cookies, route).unwrap();
+fn settings_save(user: Login, data: State<DataLoad>, form: Form<FormSettings>) -> FlashRedirect {
     let users = &mut data.inner().users.lock().unwrap().data;
-    let user: &mut UserV1 = user::get_user_by_id(&mut *users, &userid).check("/settings")?;
+    let user: &mut UserV1 = user::get_user_by_id(&mut *users, &user.userid()).check("/settings")?;
     user.update(|user| {
         user.set_user_name(form.name.clone()).unwrap();
         user.set_user_email(form.email.clone()).unwrap();
@@ -230,7 +207,7 @@ fn settings_save(
 }
 
 #[get("/settings/new_password")]
-fn new_password(flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
+fn new_password(_user: Login, flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
     Ok(Layout::new()
         .set_title("New password")
         .set_notification(flash)
@@ -245,8 +222,7 @@ struct FormNewPassword {
 
 #[post("/settings/new_password", data = "<form>")]
 fn new_password_save(
-    mut cookies: Cookies,
-    route: &Route,
+    user: Login,
     data: State<DataLoad>,
     form: Form<FormNewPassword>,
 ) -> FlashRedirect {
@@ -256,10 +232,9 @@ fn new_password_save(
             "Passwords are not the same!",
         ));
     }
-    let userid = user_auth(&mut cookies, route).unwrap();
     let users = &mut data.inner().users.lock().unwrap().data;
     let user: &mut UserV1 =
-        user::get_user_by_id(&mut *users, &userid).check("/settings/new_password")?;
+        user::get_user_by_id(&mut *users, &user.userid()).check("/settings/new_password")?;
     user.set_password(form.password1.clone())
         .check("/settings/new_password")?;
     user.save().check("/settings/new_password")?;
@@ -276,13 +251,10 @@ struct FormUserNew {
 
 #[post("/admin/user/new", data = "<form>")]
 fn admin_user_new_post(
-    mut cookies: Cookies,
-    route: &Route,
+    _user: Login,
     form: Form<FormUserNew>,
     data: State<DataLoad>,
 ) -> FlashRedirect {
-    user_auth(&mut cookies, route).unwrap();
-
     let new_user = UserV1::new(form.id.clone(), form.name.clone(), form.email.clone());
     let mut user_storage = data.inner().users.lock().unwrap();
 
