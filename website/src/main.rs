@@ -30,7 +30,6 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
-use core_lib::prelude::AppResult;
 use core_lib::storage::StorageObject;
 use core_lib::user;
 use core_lib::user::User;

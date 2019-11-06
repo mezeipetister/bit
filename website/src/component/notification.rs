@@ -41,7 +41,7 @@ impl<'a, 'r> Component for Notification<'a, 'r> {
             @if let Some(msg) = &self.msg {
                 .container {
                     .notification.(self.get_class()) {
-                        button.delete {}
+                        // button.delete {}
                         {(msg.msg())}
                     }
                 }

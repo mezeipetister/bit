@@ -140,6 +140,22 @@ where
     Ok(storage)
 }
 
+// TODO: Documentation please
+pub fn storage_id_available<T>(storage: &Storage<T>, id_to_check: &str) -> AppResult<()>
+where
+    T: StorageObject,
+{
+    for item in &storage.data {
+        if item.get_id() == id_to_check {
+            return Err(InternalError(format!(
+                "{} is not available, already taken.",
+                id_to_check
+            )));
+        }
+    }
+    Ok(())
+}
+
 /// # Add StorageObject to Storage
 ///
 /// Add StorageObject to Storage and returns NO reference.
@@ -147,6 +163,8 @@ pub fn add_to_storage<T>(storage: &mut Storage<T>, mut storage_object: T) -> App
 where
     T: StorageObject,
 {
+    // Check if ID available
+    storage_id_available(&storage, &storage_object.get_id())?;
     storage_object.set_path(storage.path).unwrap();
     storage_object.save()?;
     storage.data.push(storage_object);
@@ -161,6 +179,8 @@ pub fn add_to_storage_and_return_ref<T>(
 where
     T: StorageObject,
 {
+    // Check if ID available
+    storage_id_available(&storage, &storage_object.get_id())?;
     // TODO: CHeck with test. Does it really work?
     let id: String;
     {

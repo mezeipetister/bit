@@ -69,7 +69,7 @@ where
                             }
                         }
                         .field {
-                            .button-group {
+                            .buttons {
                                 button.button."is-info"."is-outlined" type="submit" {"Save"}
                                 a.button."is-info"."is-outlined" href="/settings/new_password" {"Change password"}
                                 a.button."is-info"."is-outlined" href="." {"Cancel"}
