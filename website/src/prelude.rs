@@ -15,18 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-use maud::Markup;
+use rocket::response::{Flash, Redirect};
+use std::fmt::Display;
 
-pub mod footer;
-pub mod navbar;
-pub mod notification;
-pub mod tabbar;
+pub type FlashRedirect = Result<Redirect, Flash<Redirect>>;
 
-pub use footer::Footer;
-pub use navbar::Navbar;
-pub use notification::Notification;
-pub use tabbar::TabBar;
+pub trait Check<T> {
+    fn check(self, redirect_to: &str) -> Result<T, Flash<Redirect>>;
+}
 
-pub trait Component {
-    fn render(&self) -> Markup;
+impl<T, E> Check<T> for Result<T, E>
+where
+    E: Display,
+{
+    fn check(self, redirect_to: &str) -> Result<T, Flash<Redirect>> {
+        match self {
+            Ok(ok) => Ok(ok),
+            Err(msg) => Err(Flash::warning(
+                Redirect::to(redirect_to.to_owned()),
+                format!("{}", msg),
+            )),
+        }
+    }
 }

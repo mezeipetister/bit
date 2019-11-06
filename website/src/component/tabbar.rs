@@ -20,8 +20,14 @@ use maud::{html, Markup};
 
 pub struct TabBar {}
 
+impl TabBar {
+    pub fn new() -> Self {
+        TabBar {}
+    }
+}
+
 impl Component for TabBar {
-    fn default() -> Markup {
+    fn render(&self) -> Markup {
         html! {
             section.section {
                 .container {

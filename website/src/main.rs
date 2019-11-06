@@ -24,22 +24,25 @@ extern crate core_lib;
 extern crate serde_derive;
 
 pub mod component;
+pub mod guard;
 pub mod layout;
 pub mod login;
+pub mod prelude;
 pub mod view;
 
 use core_lib::storage::StorageObject;
 use core_lib::user;
-use core_lib::user::password::*;
 use core_lib::user::User;
 use core_lib::user::UserV1;
 use core_lib::{storage::*, user::*};
+use guard::*;
 use layout::Layout;
 use login::*;
 use maud::Markup;
+use prelude::{Check, FlashRedirect};
 use rocket::http::Cookies;
-use rocket::request::Form;
-use rocket::response::{NamedFile, Redirect};
+use rocket::request::{FlashMessage, Form};
+use rocket::response::{Flash, NamedFile, Redirect};
 use rocket::Request;
 use rocket::Route;
 use rocket::State;
@@ -48,25 +51,30 @@ use std::sync::Mutex;
 use view::*;
 
 #[get("/demo")]
-fn demo(mut cookies: Cookies, route: &Route) -> Result<Markup, Redirect> {
-    user_auth(&mut cookies, route)?;
-    Ok(Layout::new()
-        .set_title("Wohoo")
-        .render(ViewIndex::new().render()))
+fn demo(user: Login, route: &Route) -> Markup {
+    Layout::new()
+        .set_title(&format!("Hello - {}", user.name()))
+        .render(ViewIndex::new().render())
 }
 
 #[get("/")]
-fn index(mut cookies: Cookies, route: &Route) -> Result<Markup, Redirect> {
+fn index(
+    flash: Option<FlashMessage>,
+    mut cookies: Cookies,
+    route: &Route,
+) -> Result<Markup, Redirect> {
     user_auth(&mut cookies, route)?;
     Ok(Layout::new()
         .set_title("Welcome")
+        .set_notification(flash)
         .render(ViewIndex::new().render()))
 }
 
 #[get("/login")]
-fn login() -> Markup {
+fn login(flash: Option<FlashMessage>) -> Markup {
     Layout::new()
         .set_title("Login")
+        .set_notification(flash)
         .set_empty()
         .render(ViewLogin::new().render())
 }
@@ -88,41 +96,34 @@ struct FormLogin {
 }
 
 #[post("/login", data = "<login>")]
-fn login_post(mut cookies: Cookies, login: Form<FormLogin>, data: State<DataLoad>) -> Redirect {
+fn login_post(
+    mut cookies: Cookies,
+    login: Form<FormLogin>,
+    data: State<DataLoad>,
+) -> FlashRedirect {
+    // Temp login to admin
+    // TODO: Remove this part, vulnerable code
     if login.username == "admin".to_owned() && login.password == "admin".to_owned() {
-        return user_login(&mut cookies, "9");
+        return Ok(user_login(&mut cookies, "9"));
     }
 
     let users: &mut Vec<UserV1> = &mut data.inner().users.lock().unwrap().data;
-    let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &login.username);
+    let user: &mut UserV1 = user::get_user_by_id(&mut *users, &login.username).check("/login")?;
 
-    // If a valid username
-    if let Some(u) = user {
-        let password = &login.password;
-        let hash = &u.get_password_hash();
-        let res = password::verify_password_from_hash(&password, &hash);
-        if res.is_ok() {
-            if res.unwrap() == true {
-                return user_login(&mut cookies, &login.username);
-            }
-        }
+    let password = &login.password;
+    let hash = &user.get_password_hash();
+    if password::verify_password_from_hash(&password, &hash).check("/login")? {
+        return Ok(user_login(&mut cookies, &login.username));
     }
 
-    Redirect::to("/login/error")
-}
-
-#[get("/login/error")]
-fn login_error() -> Markup {
-    Layout::new()
-        .set_title("Login failed")
-        .set_empty()
-        .render(ViewLogin::new().render_error())
+    Err(Flash::error(Redirect::to("/login"), "Failed to login."))
 }
 
 #[get("/login/reset_password")]
-fn login_reset_password() -> Markup {
+fn login_reset_password(flash: Option<FlashMessage>) -> Markup {
     Layout::new()
         .set_title("Reset password")
+        .set_notification(flash)
         .set_empty()
         .render(ViewPasswordReset::new().render())
 }
@@ -132,45 +133,25 @@ struct FormResetPassword {
     email: String,
 }
 #[post("/login/reset_password", data = "<form>")]
-fn login_reset_password_post(form: Form<FormResetPassword>, data: State<DataLoad>) -> Redirect {
+fn login_reset_password_post(
+    form: Form<FormResetPassword>,
+    data: State<DataLoad>,
+) -> FlashRedirect {
     let _ = form.email;
     // Letd manage form.email
     let users = &mut data.inner().users.lock().unwrap().data;
-    let user: Option<&mut UserV1> = user::get_user_by_email(&mut *users, &form.email);
+    let user: &mut UserV1 = user::get_user_by_email(&mut *users, &form.email).check("/login")?;
 
-    if user.is_some() {
-        let u = &mut user.unwrap();
-        match &mut u.reset_password() {
-            Ok(()) => {
-                &u.save();
-                return Redirect::to("/login/reset_password/success");
-            }
-            Err(msg) => {
-                println!("Error: {}", msg);
-                return Redirect::to("/login/reset_password/error");
-            }
-        };
-    }
-
-    Redirect::to("/login/reset_password/error")
-}
-
-// TODO: Implement! Now its just dummy.
-#[get("/login/reset_password/success")]
-fn login_reset_password_success() -> Markup {
-    Layout::new()
-        .set_title("Reset password")
-        .set_empty()
-        .render(ViewPasswordReset::new().render_success())
-}
-
-// TODO: Implement! Now its just dummy.
-#[get("/login/reset_password/error")]
-fn login_reset_password_error() -> Markup {
-    Layout::new()
-        .set_title("Reset password")
-        .set_empty()
-        .render(ViewPasswordReset::new().render_error())
+    match &mut user.reset_password() {
+        Ok(()) => {
+            &user.save();
+            return Ok(Redirect::to("/login/reset_password/success"));
+        }
+        Err(msg) => {
+            println!("Error: {}", msg);
+            return Ok(Redirect::to("/login/reset_password/error"));
+        }
+    };
 }
 
 /**
@@ -178,6 +159,7 @@ fn login_reset_password_error() -> Markup {
  */
 #[get("/admin/user")]
 fn admin_user(
+    flash: Option<FlashMessage>,
     mut cookies: Cookies,
     route: &Route,
     data: State<DataLoad>,
@@ -187,19 +169,26 @@ fn admin_user(
     let users: &Vec<UserV1> = &data.inner().users.lock().unwrap().data;
     Ok(Layout::new()
         .set_title("Admin users")
+        .set_notification(flash)
         .render(ViewAdminUser::new(users).render()))
 }
 
 #[get("/admin/user/new")]
-fn admin_user_new(mut cookies: Cookies, route: &Route) -> Result<Markup, Redirect> {
+fn admin_user_new(
+    flash: Option<FlashMessage>,
+    mut cookies: Cookies,
+    route: &Route,
+) -> Result<Markup, Redirect> {
     user_auth(&mut cookies, route)?;
     Ok(Layout::new()
         .set_title("New user")
+        .set_notification(flash)
         .render(ViewAdminUserNew::new().render()))
 }
 
 #[get("/settings")]
 fn settings(
+    flash: Option<FlashMessage>,
     mut cookies: Cookies,
     route: &Route,
     data: State<DataLoad>,
@@ -211,6 +200,7 @@ fn settings(
 
     Ok(Layout::new()
         .set_title("Settings")
+        .set_notification(flash)
         .render(ViewSettings::new(user).render()))
 }
 
@@ -226,34 +216,25 @@ fn settings_save(
     route: &Route,
     data: State<DataLoad>,
     form: Form<FormSettings>,
-) -> Redirect {
+) -> FlashRedirect {
     let userid = user_auth(&mut cookies, route).unwrap();
     let users = &mut data.inner().users.lock().unwrap().data;
-    let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &userid);
-    if user.is_some() {
-        let u = user.unwrap();
-        u.update(|user| {
-            user.set_user_name(form.name.clone()).unwrap();
-            user.set_user_email(form.email.clone()).unwrap();
-        })
-        .unwrap();
-    }
+    let user: &mut UserV1 = user::get_user_by_id(&mut *users, &userid).check("/settings")?;
+    user.update(|user| {
+        user.set_user_name(form.name.clone()).unwrap();
+        user.set_user_email(form.email.clone()).unwrap();
+    })
+    .check("/settings")?;
 
-    Redirect::to("/settings")
+    Ok(Redirect::to("/settings"))
 }
 
 #[get("/settings/new_password")]
-fn new_password() -> Result<Markup, Redirect> {
+fn new_password(flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
     Ok(Layout::new()
         .set_title("New password")
+        .set_notification(flash)
         .render(ViewNewPassword::new().render()))
-}
-
-#[get("/settings/new_password/error")]
-fn new_password_error() -> Result<Markup, Redirect> {
-    Ok(Layout::new()
-        .set_title("Error - new password")
-        .render(ViewNewPassword::new().render_error()))
 }
 
 #[derive(FromForm)]
@@ -268,24 +249,22 @@ fn new_password_save(
     route: &Route,
     data: State<DataLoad>,
     form: Form<FormNewPassword>,
-) -> Redirect {
+) -> FlashRedirect {
     if form.password1 != form.password2 {
-        return Redirect::to("/settings/new_password/error");
+        return Err(Flash::error(
+            Redirect::to("/settings/new_password"),
+            "Passwords are not the same!",
+        ));
     }
     let userid = user_auth(&mut cookies, route).unwrap();
     let users = &mut data.inner().users.lock().unwrap().data;
-    let user: Option<&mut UserV1> = user::get_user_by_id(&mut *users, &userid);
-    if user.is_some() {
-        let u = user.unwrap();
-        if u.set_password(form.password1.clone()).is_err() {
-            return Redirect::to("/settings/new_password/error");
-        } else {
-            // TODO: Solve to must use save() after any modification!
-            u.save().unwrap();
-        }
-    }
+    let user: &mut UserV1 =
+        user::get_user_by_id(&mut *users, &userid).check("/settings/new_password")?;
+    user.set_password(form.password1.clone())
+        .check("/settings/new_password")?;
+    user.save().check("/settings/new_password")?;
 
-    Redirect::to("/settings")
+    Ok(Redirect::to("/settings"))
 }
 
 #[derive(FromForm)]
@@ -301,19 +280,16 @@ fn admin_user_new_post(
     route: &Route,
     form: Form<FormUserNew>,
     data: State<DataLoad>,
-) -> Redirect {
-    match user_auth(&mut cookies, route) {
-        Ok(_) => (),
-        Err(redirect) => return redirect,
-    };
+) -> FlashRedirect {
+    user_auth(&mut cookies, route).unwrap();
 
     let new_user = UserV1::new(form.id.clone(), form.name.clone(), form.email.clone());
     let mut user_storage = data.inner().users.lock().unwrap();
 
-    let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).unwrap();
-    u1.save().unwrap();
+    let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).check("/admin/user/new")?;
+    u1.save().check("/admin/user/new")?;
 
-    Redirect::to("/admin/user")
+    Ok(Redirect::to("/admin/user"))
 }
 
 #[get("/static/<file..>")]
@@ -323,10 +299,16 @@ pub fn static_file(file: PathBuf) -> Option<NamedFile> {
 
 #[catch(404)]
 fn not_found(req: &Request<'_>) -> Markup {
+    // println!("{:?}", req.headers());
     Layout::new()
         .set_title("404 not found")
         .set_empty()
         .render(View404::new(req.uri().path()).render())
+}
+
+#[catch(401)]
+fn unauthorized() -> Redirect {
+    Redirect::to("/login")
 }
 
 struct DataLoad {
@@ -344,7 +326,6 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 index,
                 login,
                 login_post,
-                login_error,
                 logout,
                 admin_user,
                 admin_user_new,
@@ -353,14 +334,11 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 settings_save,
                 new_password,
                 new_password_save,
-                new_password_error,
                 login_reset_password,
                 login_reset_password_post,
-                login_reset_password_success,
-                login_reset_password_error
             ],
         )
-        .register(catchers![not_found])
+        .register(catchers![not_found, unauthorized])
 }
 
 fn main() {

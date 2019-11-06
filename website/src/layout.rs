@@ -17,6 +17,7 @@
 
 use crate::component::*;
 use maud::{html, Markup, DOCTYPE};
+use rocket::request::FlashMessage;
 
 pub struct Layout<'a> {
     pub title: Option<&'a str>,
@@ -27,12 +28,13 @@ pub struct Layout<'a> {
     pub meta_robots: Option<&'a str>,
     pub meta_designer: Option<&'a str>,
     pub meta_publisher: Option<&'a str>,
+    pub notification: Option<Markup>,
     pub navbar: Option<Markup>,
     pub tabbar: Option<Markup>,
     pub footer: Option<Markup>,
 }
 
-impl<'a> Layout<'a> {
+impl<'a, 'r> Layout<'a> {
     pub fn new() -> Self {
         Layout {
             title: None,
@@ -43,9 +45,10 @@ impl<'a> Layout<'a> {
             meta_robots: None,
             meta_designer: None,
             meta_publisher: None,
-            navbar: Some(Navbar::default()),
-            tabbar: Some(TabBar::default()),
-            footer: Some(Footer::default()),
+            notification: None,
+            navbar: Some(Navbar::new().render()),
+            tabbar: Some(TabBar::new().render()),
+            footer: Some(Footer::new().render()),
         }
     }
     pub fn set_title(&mut self, title: &'a str) -> &'a mut Layout {
@@ -70,6 +73,10 @@ impl<'a> Layout<'a> {
         self.footer = None;
         self
     }
+    pub fn set_notification(&mut self, msg: Option<FlashMessage<'a, 'r>>) -> &'a mut Layout {
+        self.notification = Some(Notification::new(msg).render());
+        self
+    }
     pub fn render(&self, body: Markup) -> Markup {
         html! {
             (DOCTYPE)
@@ -84,6 +91,7 @@ impl<'a> Layout<'a> {
                 body {
                     (self.navbar.as_ref().unwrap_or(&html!{}))
                     (self.tabbar.as_ref().unwrap_or(&html!{}))
+                    (self.notification.as_ref().unwrap_or(&html!{}))
                     (body)
                     (self.footer.as_ref().unwrap_or(&html!{}))
                     script defer? src="/static/script.js" {}

@@ -3,7 +3,7 @@
 
 release:
 	cargo build --release
-	strip target/release/bit
+	strip target/release/website
 
 build:
 	cargo build

@@ -66,3 +66,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return Array.prototype.slice.call(document.querySelectorAll(selector), 0);
     }
 });
+
+// Close notification
+document.addEventListener('DOMContentLoaded', () => {
+    (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+        $notification = $delete.parentNode.parentNode;
+        $delete.addEventListener('click', () => {
+            $notification.parentNode.removeChild($notification);
+        });
+    });
+});

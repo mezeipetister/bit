@@ -21,6 +21,7 @@ pub mod password;
 
 pub use model::UserV1;
 
+use crate::error::Error::*;
 use crate::prelude::*;
 
 pub trait User {
@@ -39,22 +40,22 @@ pub trait User {
 
 /// Find user in users by ID.
 /// Return NONE if not exist, return &user if exists.
-pub fn get_user_by_id<'a, T: User>(users: &'a mut Vec<T>, id: &str) -> Option<&'a mut T> {
+pub fn get_user_by_id<'a, T: User>(users: &'a mut Vec<T>, id: &str) -> AppResult<&'a mut T> {
     for user in users {
         if user.get_user_id() == id {
-            return Some(&mut *user);
+            return Ok(&mut *user);
         }
     }
-    None
+    Err(InternalError("User not found".into()))
 }
 
 /// Find user by email
 /// Return NONE or &user.
-pub fn get_user_by_email<'a, T: User>(users: &'a mut Vec<T>, email: &str) -> Option<&'a mut T> {
+pub fn get_user_by_email<'a, T: User>(users: &'a mut Vec<T>, email: &str) -> AppResult<&'a mut T> {
     for user in users {
         if user.get_user_email() == email {
-            return Some(&mut *user);
+            return Ok(&mut *user);
         }
     }
-    None
+    Err(InternalError("User not found".into()))
 }

@@ -20,8 +20,14 @@ use maud::{html, Markup};
 
 pub struct Footer {}
 
+impl Footer {
+    pub fn new() -> Self {
+        Footer {}
+    }
+}
+
 impl Component for Footer {
-    fn default() -> Markup {
+    fn render(&self) -> Markup {
         html! {
             footer.footer {
                 .content.has-text-centered {

@@ -20,8 +20,14 @@ use maud::{html, Markup};
 
 pub struct Navbar {}
 
+impl Navbar {
+    pub fn new() -> Self {
+        Navbar {}
+    }
+}
+
 impl Component for Navbar {
-    fn default() -> Markup {
+    fn render(&self) -> Markup {
         html! {
             nav.navbar.is-light role="navigation" aria-label="main navigation" {
                 .navbar-brand {

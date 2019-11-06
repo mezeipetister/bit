@@ -41,7 +41,7 @@ impl View for ViewNewPassword {
                         .field {
                             label.label {"New password"}
                             .control {
-                                input.input type="password" name="password1" placeholder="e.g. strong_password";
+                                input.input type="password" name="password1" placeholder="e.g. strong_password" autofocus?;
                             }
                         }
                         .field {

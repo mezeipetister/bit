@@ -52,6 +52,15 @@
     </nav>
     <section class="section">
         <div class="container">
+            <div class="columns">
+                <div class="column is-6-desktop is-offset-3-desktop">
+                    <div class="notification is-warning">
+                        <button class="delete"></button>
+                        <strong>Wrong email format.</strong>
+                        <br> Please use a valid email address.
+                    </div>
+                </div>
+            </div>
             <div class="tabs is-centered is-boxed">
                 <ul>
                     <li class="is-active">
@@ -93,6 +102,15 @@
     Transaction PAGE -->
     <section class="section">
         <div class="container">
+            <!-- <div class="columns">
+                <div class="column is-6-desktop is-offset-3-desktop">
+                    <div class="notification is-danger">
+                        <button class="delete"></button>
+                        <strong>Wrong email format.</strong>
+                        <br> Please use a valid email address.
+                    </div>
+                </div>
+            </div> -->
             <p class="title is-spaced">Transaction</p>
             <table class="table is-bordered is-striped is-hoverable is-fullwidth">
                 <thead>
@@ -1240,6 +1258,16 @@
             function getAll(selector) {
                 return Array.prototype.slice.call(document.querySelectorAll(selector), 0);
             }
+        });
+
+        // Close notification
+        document.addEventListener('DOMContentLoaded', () => {
+            (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+                $notification = $delete.parentNode;
+                $delete.addEventListener('click', () => {
+                    $notification.parentNode.removeChild($notification);
+                });
+            });
         });
     </script>
 </body>
