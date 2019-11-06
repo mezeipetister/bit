@@ -18,7 +18,6 @@
 use crate::DataLoad;
 use core_lib::user;
 use core_lib::user::User;
-use core_lib::user::UserV1;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
@@ -42,19 +41,21 @@ impl Login {
     }
 }
 
+// TODO: ERROR: An instance of `Cookies` must be dropped before another can be retrieved.
 impl<'a, 'r> FromRequest<'a, 'r> for Login {
     type Error = ();
 
     fn from_request(request: &'a Request<'r>) -> request::Outcome<Login, ()> {
+        // Add LOGIN REDIRECT IF PATH EXIST
         let data = request.guard::<State<DataLoad>>()?;
         let users = &mut data.inner().users.lock().unwrap().data;
         let userid = match &request.cookies().get_private("USERID") {
             Some(userid) => userid.value().to_owned(),
-            None => return Outcome::Failure((Status::Unauthorized, ())),
+            None => {
+                return Outcome::Failure((Status::Unauthorized, ()));
+            }
         };
-        // let user: &mut UserV1 = user::get_user_by_email(&mut *users, &form.email);
-        let u = user::get_user_by_id(&mut *users, &userid);
-        match u {
+        match user::get_user_by_id(&mut *users, &userid) {
             Ok(user) => {
                 let login = Login {
                     userid: userid,
@@ -64,7 +65,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for Login {
                 Outcome::Success(login)
             }
             Err(_) => Outcome::Failure((Status::Unauthorized, ())),
-            // 1 if is_valid(keys[0]) => Outcome::Success(ApiKey(keys[0].to_string())),
         }
     }
 }

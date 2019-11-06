@@ -55,9 +55,9 @@ pub trait StorageObject: Serialize + Sized {
     // Update auto implementation
     fn update<F>(&mut self, mut f: F) -> AppResult<()>
     where
-        F: FnMut(&mut Self),
+        F: FnMut(&mut Self) -> AppResult<()>,
     {
-        f(self);
+        f(self)?;
         self.save()?;
         Ok(())
     }

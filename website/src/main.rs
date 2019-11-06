@@ -30,6 +30,7 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
+use core_lib::prelude::AppResult;
 use core_lib::storage::StorageObject;
 use core_lib::user;
 use core_lib::user::User;
@@ -44,7 +45,6 @@ use rocket::http::Cookies;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, NamedFile, Redirect};
 use rocket::Request;
-use rocket::Route;
 use rocket::State;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -58,11 +58,11 @@ fn demo(user: Login) -> Markup {
 }
 
 #[get("/")]
-fn index(_user: Login, flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
+fn index(user: Login, flash: Option<FlashMessage>) -> Result<Markup, Redirect> {
     Ok(Layout::new()
         .set_title("Welcome")
         .set_notification(flash)
-        .render(ViewIndex::new().render()))
+        .render(ViewIndex::new().set_name(user.name()).render()))
 }
 
 #[get("/login")]
@@ -75,7 +75,7 @@ fn login(flash: Option<FlashMessage>) -> Markup {
 }
 
 #[get("/logout")]
-fn logout(_user: Login, mut cookies: Cookies, route: &Route) -> Result<Redirect, Redirect> {
+fn logout(_user: Login, mut cookies: Cookies) -> Result<Redirect, Redirect> {
     // Remove userid cookie
     user_logout(&mut cookies);
     // Redirect to /login page
@@ -198,11 +198,11 @@ fn settings_save(user: Login, data: State<DataLoad>, form: Form<FormSettings>) -
     let users = &mut data.inner().users.lock().unwrap().data;
     let user: &mut UserV1 = user::get_user_by_id(&mut *users, &user.userid()).check("/settings")?;
     user.update(|user| {
-        user.set_user_name(form.name.clone()).unwrap();
-        user.set_user_email(form.email.clone()).unwrap();
+        user.set_user_name(form.name.clone())?;
+        user.set_user_email(form.email.clone())?;
+        Ok(())
     })
     .check("/settings")?;
-
     Ok(Redirect::to("/settings"))
 }
 
@@ -279,8 +279,12 @@ fn not_found(req: &Request<'_>) -> Markup {
 }
 
 #[catch(401)]
-fn unauthorized() -> Redirect {
-    Redirect::to("/login")
+fn unauthorized(req: &Request<'_>) -> Flash<Redirect> {
+    Flash::new(
+        Redirect::to("/login"),
+        "LOGIN_REDIRECT_TO",
+        req.route().unwrap().uri.path(),
+    )
 }
 
 struct DataLoad {

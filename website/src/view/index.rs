@@ -18,21 +18,27 @@
 use crate::view::View;
 use maud::{html, Markup};
 
-pub struct ViewIndex {}
+pub struct ViewIndex<'a> {
+    name: &'a str,
+}
 
-impl ViewIndex {
+impl<'a> ViewIndex<'a> {
     pub fn new() -> Self {
-        ViewIndex {}
+        ViewIndex { name: "" }
+    }
+    pub fn set_name(&mut self, name: &'a str) -> &mut Self {
+        self.name = name;
+        self
     }
 }
 
-impl View for ViewIndex {
+impl<'a> View for ViewIndex<'a> {
     fn render(&self) -> Markup {
         html! {
             section.section {
                 .container {
                     p."title"."is-3" { "Hello World "}
-                    p."subtitle"."is-4" { "Your name is: EMPTY" }
+                    p."subtitle"."is-4" { "Your name is: "(self.name)"" }
                     p.content {
                         "lorem ipsum dolorem set ami"
                     }

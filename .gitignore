@@ -28,3 +28,4 @@ Cargo.lock
 /node_modules
 
 ENV.sh
+secret.pem
