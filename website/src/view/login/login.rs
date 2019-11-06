@@ -38,24 +38,26 @@ impl View for ViewLogin {
                         "and project information system"
                     }
                     form action="/login" method="POST" autocomplete="off" {
-                        .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
-                            .field {
-                                label.label { "Username" }
-                                .control {
-                                    input.input type="text" name="username" placeholder="e.g. John Smith" autofocus? autocomplete="off";
+                        .columns {
+                            .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
+                                .field {
+                                    label.label { "Username" }
+                                    .control {
+                                        input.input type="text" name="username" placeholder="e.g. John Smith" autofocus? autocomplete="off";
+                                    }
                                 }
-                            }
-                            .field {
-                                label.label { "Password" }
-                                .control {
-                                    input.input type="password" name="password" placeholder="strong password" autocomplete="off";
+                                .field {
+                                    label.label { "Password" }
+                                    .control {
+                                        input.input type="password" name="password" placeholder="strong password" autocomplete="off";
+                                    }
                                 }
-                            }
-                            .field {
-                                .control {
-                                    .buttons {
-                                        button.button.is-info.is-outlined type="submit" href="/login" { "Login" }
-                                        a.button href="/login/reset_password" { "Forget password" }
+                                .field {
+                                    .control {
+                                        .buttons {
+                                            button.button.is-info.is-outlined type="submit" href="/login" { "Login" }
+                                            a.button href="/login/reset_password" { "Forget password" }
+                                        }
                                     }
                                 }
                             }

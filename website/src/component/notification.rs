@@ -40,9 +40,13 @@ impl<'a, 'r> Component for Notification<'a, 'r> {
         html! {
             @if let Some(msg) = &self.msg {
                 .container {
-                    .notification.(self.get_class()) {
-                        // button.delete {}
-                        {(msg.msg())}
+                    .columns {
+                        .column."is-6-desktop"."is-offset-3-desktop" {
+                            .notification.(self.get_class()) {
+                                // button.delete {}
+                                {(msg.msg())}
+                            }
+                        }
                     }
                 }
             }
