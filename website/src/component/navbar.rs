@@ -30,35 +30,37 @@ impl Component for Navbar {
     fn render(&self) -> Markup {
         html! {
             nav.navbar.is-light role="navigation" aria-label="main navigation" {
-                .navbar-brand {
-                    a.navbar-item href="/" {
-                        span.title {"BIT"}
+                .container {
+                    .navbar-brand {
+                        a.navbar-item href="/" {
+                            span.title {"BIT"}
+                        }
+                        a.navbar-burger.burger role="button" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample" {
+                            span aria-hidden="true" {}
+                            span aria-hidden="true" {}
+                            span aria-hidden="true" {}
+                        }
                     }
-                    a.navbar-burger.burger role="button" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample" {
-                        span aria-hidden="true" {}
-                        span aria-hidden="true" {}
-                        span aria-hidden="true" {}
-                    }
-                }
-                #navbarBasicExample.navbar-menu {
-                    .navbar-start {
-                        a.navbar-item { "Repositories" }
-                        a.navbar-item { "Documentation" }
-                    }
-                    .navbar-end {
-                        .navbar-item {
-                            .buttons {
-                                a.button.is-light href="/settings" {
-                                    span.icon.is-small {
-                                        i.fa.fa-user-cog {}
+                    #navbarBasicExample.navbar-menu {
+                        .navbar-start {
+                            // a.navbar-item { "Repositories" }
+                            // a.navbar-item { "Documentation" }
+                        }
+                        .navbar-end {
+                            .navbar-item {
+                                .buttons {
+                                    a.button.is-light href="/settings" {
+                                        span.icon.is-small {
+                                            i.fa.fa-user-cog {}
+                                        }
+                                        span { "Settings" }
                                     }
-                                    span { "Settings" }
-                                }
-                                a.button.is-light href="/logout" accesskey="l" {
-                                    span.icon.is-small {
-                                        i.fa.fa-sign-out-alt {}
+                                    a.button.is-light href="/logout" accesskey="l" {
+                                        span.icon.is-small {
+                                            i.fa.fa-sign-out-alt {}
+                                        }
+                                        span { "Log out" }
                                     }
-                                    span { "Log out" }
                                 }
                             }
                         }

@@ -1,10 +1,20 @@
 @charset "utf-8"
 
-@import "../node_modules/bulma/bulma"
-
 .is-error
     @extend .is-warning
 
 // .section
 //     @extend .section
 //     padding: 1.5rem
+
+// $desktop: 760px
+$widescreen-enabled: false
+$fullhd-enabled: false
+
+// Import only what you need from Bulma
+@import "../node_modules/bulma/sass/utilities/_all.sass"
+@import "../node_modules/bulma/sass/base/_all.sass"
+@import "../node_modules/bulma/sass/elements/_all.sass"
+@import "../node_modules/bulma/sass/form/_all.sass"
+@import "../node_modules/bulma/sass/components/_all.sass"
+@import "../node_modules/bulma/sass/layout/_all.sass"
