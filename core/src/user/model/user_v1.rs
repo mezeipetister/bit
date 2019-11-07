@@ -37,8 +37,38 @@ pub struct UserV1 {
 }
 
 impl UserV1 {
-    pub fn new(id: String, name: String, email: String) -> Self {
-        UserV1 {
+    pub fn new(id: String, name: String, email: String) -> AppResult<Self> {
+        // English characters, numbers and _
+        let allowed_characters: Vec<char> = vec![
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', '_',
+        ];
+        // Min ID length
+        let id_min_chars: usize = 4;
+        // Max ID lenght
+        let id_max_chars: usize = 20;
+        // Validate User ID length
+        if id.len() > id_max_chars || id.len() < id_min_chars {
+            return Err(InternalError(format!(
+                "User ID length should be between {} and {}",
+                id_min_chars, id_max_chars
+            )));
+        }
+        // Validate User ID characters
+        if id
+            .chars()
+            .filter(|c| allowed_characters.contains(c) == false)
+            .collect::<Vec<char>>()
+            .len()
+            > 0
+        {
+            return Err(InternalError(format!(
+                "Wrong user ID format. Allowed characters: {}",
+                allowed_characters.into_iter().collect::<String>()
+            )));
+        };
+        Ok(UserV1 {
             id,
             path: None,
             name,
@@ -46,7 +76,7 @@ impl UserV1 {
             phone: "".into(),
             password_hash: "".into(),
             date_added: Utc::now(),
-        }
+        })
     }
 }
 
@@ -54,6 +84,7 @@ impl User for UserV1 {
     fn get_user_id(&self) -> &str {
         &self.id
     }
+    // TODO: Remove this, as User ID is unmutable
     fn set_user_id(&mut self, user_id: String) -> AppResult<()> {
         if user_id.len() <= 5 {
             Err(InternalError(

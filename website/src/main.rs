@@ -254,7 +254,8 @@ fn admin_user_new_post(
     form: Form<FormUserNew>,
     data: State<DataLoad>,
 ) -> FlashRedirect {
-    let new_user = UserV1::new(form.id.clone(), form.name.clone(), form.email.clone());
+    let new_user = UserV1::new(form.id.clone(), form.name.clone(), form.email.clone())
+        .check("/admin/user/new")?;
     let mut user_storage = data.inner().users.lock().unwrap();
 
     let u1 = add_to_storage_and_return_ref(&mut user_storage, new_user).check("/admin/user/new")?;
