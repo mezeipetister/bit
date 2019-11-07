@@ -37,7 +37,11 @@ pub struct UserV1 {
 }
 
 impl UserV1 {
-    pub fn new(id: String, name: String, email: String) -> AppResult<Self> {
+    pub fn new(mut id: String, name: String, mut email: String) -> AppResult<Self> {
+        // Conver ID into lowercase anyway.
+        id = id.to_lowercase();
+        // Convert email address into lowercase anyway.
+        email = email.to_lowercase();
         // English characters, numbers and _
         let allowed_characters: Vec<char> = vec![
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
@@ -48,6 +52,15 @@ impl UserV1 {
         let id_min_chars: usize = 4;
         // Max ID lenght
         let id_max_chars: usize = 20;
+        // Min email length
+        let email_min_chars: usize = 3;
+        // Max email length
+        let email_max_chars: usize = 50;
+        // Min name length
+        let name_min_chars: usize = 2;
+        // Max name length
+        let name_max_chars: usize = 40;
+        // Max email length
         // Validate User ID length
         if id.len() > id_max_chars || id.len() < id_min_chars {
             return Err(InternalError(format!(
@@ -68,6 +81,27 @@ impl UserV1 {
                 allowed_characters.into_iter().collect::<String>()
             )));
         };
+        // Validate Email length
+        if email.len() > email_max_chars || email.len() < email_min_chars {
+            return Err(InternalError(format!(
+                "Email address length should be between {} and {}",
+                email_min_chars, email_max_chars
+            )));
+        }
+        // Validate Email content
+        if email.contains("@") == false || email.contains(".") == false {
+            return Err(InternalError(format!(
+                "Invalid Email address. It should contains the following chars: @ and .(dot)"
+            )));
+        }
+        // Validate Name length
+        if name.len() > name_max_chars || name.len() < name_min_chars {
+            return Err(InternalError(format!(
+                "Name length should be between {} and {}",
+                name_min_chars, name_max_chars
+            )));
+        }
+
         Ok(UserV1 {
             id,
             path: None,
@@ -213,7 +247,8 @@ mod tests {
 
     #[test]
     fn test_user_id() {
-        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+        let mut user: UserV1 =
+            UserV1::new("demo".into(), "user".into(), "demo@user.com".into()).unwrap();
         // At this point ID should be None;
         assert_eq!(user.get_user_id(), "demo");
         // This should return an Err(..)
@@ -226,7 +261,8 @@ mod tests {
 
     #[test]
     fn test_user_email() {
-        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+        let mut user: UserV1 =
+            UserV1::new("demo".into(), "user".into(), "demo@user.com".into()).unwrap();
 
         assert_eq!(user.set_user_email("demo@demo.com".into()).is_ok(), true); // should be ok
         assert_eq!(user.set_user_email("wohoo".into()).is_err(), true); // should be err
@@ -238,7 +274,8 @@ mod tests {
 
     #[test]
     fn test_user_name() {
-        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+        let mut user: UserV1 =
+            UserV1::new("demo".into(), "user".into(), "demo@user.com".into()).unwrap();
         assert_eq!(user.get_user_name(), "user");
         assert_eq!(user.set_user_name("abc".into()).is_err(), true); // should be err
         assert_eq!(user.set_user_name("Demo User".into()).is_ok(), true); // should be ok
@@ -248,7 +285,8 @@ mod tests {
 
     #[test]
     fn test_user_phone() {
-        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+        let mut user: UserV1 =
+            UserV1::new("demo".into(), "user".into(), "demo@user.com".into()).unwrap();
         let phone_number: &str = "+99 (701) 479 397129";
         assert_eq!(user.get_user_phone(), "");
         assert_eq!(user.set_user_phone(phone_number.into()).is_ok(), true); // should be ok
@@ -258,7 +296,8 @@ mod tests {
 
     #[test]
     fn test_user_set_password() {
-        let mut user: UserV1 = UserV1::new("demo".into(), "user".into(), "demo@user.com".into());
+        let mut user: UserV1 =
+            UserV1::new("demo".into(), "user".into(), "demo@user.com".into()).unwrap();
         let password: &str = "HelloWorld749";
         assert_eq!(user.get_password_hash(), ""); // should be None
         assert_eq!(user.set_password("pass".into()).is_ok(), false); // should be err
