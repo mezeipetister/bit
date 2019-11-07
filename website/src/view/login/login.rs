@@ -39,7 +39,7 @@ impl View for ViewLogin {
                     }
                     form action="/login" method="POST" autocomplete="off" {
                         .columns {
-                            .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
+                            .column."is-6-mobile"."is-offset-3-mobile"."is-6-desktop"."is-offset-3-desktop" {
                                 .field {
                                     label.label { "Username" }
                                     .control {
@@ -57,35 +57,6 @@ impl View for ViewLogin {
                                         .buttons {
                                             button.button.is-info.is-outlined type="submit" href="/login" { "Login" }
                                             a.button href="/login/reset_password" { "Forget password" }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    fn render_error(&self) -> Markup {
-        html! {
-            section.section {
-                .container {
-                    p.has-text-centered.title.is-spaced { "Login failed" }
-                    p.subtitle.has-text-centered."is-size-6" {
-                        "Oooops!"
-                        br;
-                        "Wrong username or password."
-                    }
-                    .columns.is-mobile {
-                        .column."is-6-mobile"."is-offset-3-mobile"."is-4-desktop"."is-offset-4-desktop" {
-                            .field {
-                                .control.has-text-centered {
-                                    .button-group {
-                                        form action="/login" method="GET" {
-                                            button.button autofocus? {
-                                                "Try again"
-                                            }
                                         }
                                     }
                                 }

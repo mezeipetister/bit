@@ -41,7 +41,7 @@ impl<'a, 'r> Component for Notification<'a, 'r> {
             @if let Some(msg) = &self.msg {
                 .container {
                     .columns {
-                        .column."is-6-desktop"."is-offset-3-desktop" {
+                        .column {
                             .notification.(self.get_class()) {
                                 // button.delete {}
                                 {(msg.msg())}
