@@ -44,9 +44,9 @@ where
         html! {
             section.section {
                 .container {
-                    .column.is-mobile {
+                    .columns."is-mobile" {
                         .column {
-                            p."is-size-3" { "Settings" }
+                            p."is-size-3" {"Settings"}
                         }
                     }
                     .field {
