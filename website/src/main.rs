@@ -183,6 +183,7 @@ fn settings(
     Ok(Layout::new()
         .set_title("Settings")
         .set_notification(flash)
+        .disable_tabbar()
         .render(ViewSettings::new(user).render()))
 }
 
@@ -210,6 +211,7 @@ fn new_password(_user: Login, flash: Option<FlashMessage>) -> Result<Markup, Red
     Ok(Layout::new()
         .set_title("New password")
         .set_notification(flash)
+        .disable_tabbar()
         .render(ViewNewPassword::new().render()))
 }
 
