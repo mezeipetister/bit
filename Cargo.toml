@@ -1,6 +1,19 @@
 [workspace]
 
 members = [
-"bit_core",
-"bit_cli"
+    "core",
+    "website",
 ]
+
+[profile.release]
+opt-level = 'z'  # Optimize for size.
+lto = true
+codegen-units = 1
+panic = 'abort'
+
+[profile.dev]
+lto = false
+debug = true
+codegen-units = 16
+panic = 'abort'
+overflow-checks = true

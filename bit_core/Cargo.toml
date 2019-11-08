@@ -1,8 +1,0 @@
-[package]
-name = "bit_core"
-version = "0.1.0"
-authors = ["Peter Mezei <mezeipetister@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-chrono = "*"

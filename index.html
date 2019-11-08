@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BIT</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+
+<body>
+    <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+                <span class="title">BIT</span>
+            </a>
+
+            <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
+                data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item">Repositories</a>
+                <a class="navbar-item">Documentation</a>
+            </div>
+
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button is-light">
+                            <span class="icon is-small">
+                                <i class="fa fa-user-cog"></i>
+                            </span>
+                            <span>Settings</span>
+                        </a>
+                        <a class="button is-light">
+                            <span class="icon is-small">
+                                <i class="fa fa-sign-out-alt"></i>
+                            </span>
+                            <span>Log out</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-6-desktop is-offset-3-desktop">
+                    <div class="notification is-warning">
+                        <button class="delete"></button>
+                        <strong>Wrong email format.</strong>
+                        <br> Please use a valid email address.
+                    </div>
+                </div>
+            </div>
+            <div class="tabs is-centered is-boxed">
+                <ul>
+                    <li class="is-active">
+                        <a>
+                            <span class="icon is-small"><i class="fa fa-tachometer-alt" aria-hidden="true"></i></span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a>
+                            <span class="icon is-small"><i class="fa fa-history" aria-hidden="true"></i></span>
+                            <span>Commits</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a>
+                            <span class="icon is-small"><i class="fa fa-list-alt" aria-hidden="true"></i></span>
+                            <span>Accounts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a>
+                            <span class="icon is-small"><i class="fa fa-project-diagram" aria-hidden="true"></i></span>
+                            <span>Projects</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a>
+                            <span class="icon is-small"><i class="fa fa-user-friends" aria-hidden="true"></i></span>
+                            <span>Team</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 
+    Transaction PAGE -->
+    <section class="section">
+        <div class="container">
+            <!-- <div class="columns">
+                <div class="column is-6-desktop is-offset-3-desktop">
+                    <div class="notification is-danger">
+                        <button class="delete"></button>
+                        <strong>Wrong email format.</strong>
+                        <br> Please use a valid email address.
+                    </div>
+                </div>
+            </div> -->
+            <p class="title is-spaced">Transaction</p>
+            <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>C</th>
+                        <th>D</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#1</td>
+                        <td>161</td>
+                        <td>3841</td>
+                        <td>14.500</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Accounts PAGE -->
+    <section class="section">
+        <div class="container">
+            <p class="content is-size-3">
+                Accounts
+            </p>
+            <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+                <col width="50">
+                <col width="*">
+                <col width="200">
+                <col width="50">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Stats</th>
+                        <th>#</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a>38</a></td>
+                        <td>
+                            <p class="is-size-6">
+                                Pénzeszközök
+                            </p>
+                        </td>
+                        <td>
+                            -
+                        </td>
+                        <td class="has-text-right">
+                            <div class="dropdown is-right">
+                                <div class="dropdown-trigger">
+                                    <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
+                                        <span>Action</span>
+                                        <span class="icon is-small">
+                                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                                    <div class="dropdown-content">
+                                        <a href="#" class="dropdown-item">
+                                            Edit item
+                                        </a>
+                                        <hr class="dropdown-divider">
+                                        <a href="#" class="dropdown-item">
+                                            Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><a>384</a></td>
+                        <td>
+                            <p class="is-size-6">
+                                Bankszámla
+                            </p>
+                        </td>
+                        <td>
+                            <p class="is-size-7">
+                                <a>349</a> transaction in <a>290 events</a> in <a>170 commits</a>
+                            </p>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="dropdown is-right">
+                                <div class="dropdown-trigger">
+                                    <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu">
+                                        <span>Action</span>
+                                        <span class="icon is-small">
+                                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                                    <div class="dropdown-content">
+                                        <a href="#" class="dropdown-item">
+                                            Edit item
+                                        </a>
+                                        <hr class="dropdown-divider">
+                                        <a href="#" class="dropdown-item">
+                                            Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Commit -->
+    <section class="section">
+        <div class="container">
+            <p class="content">
+                <span class="is-size-3">Commit</span>
+                <span class="has-text-grey-light is-small"> / 234dfsdf34rfsdvsd43</span>
+            </p>
+
+            <div class="field">
+                <label class="label">Description</label>
+                <div class="control">
+                    <textarea class="textarea" placeholder="What is this transaction about?"></textarea>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label is-normal">
+                    <label class="label">Credit</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <p class="control has-icons-left">
+                            <input class="input" type="text" placeholder="161 / Autó vásárlás">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label is-normal">
+                    <label class="label">Debit</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <p class="control has-icons-left">
+                            <input class="input" type="text" placeholder="384 / Peti bankszámla">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label is-normal">
+                    <label class="label">Amount</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <p class="control has-icons-left">
+                            <input class="input" type="text" placeholder="3700">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-money-check-alt"></i>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label is-normal">
+                    <label class="label">Others</label>
+                </div>
+                <div class="field-body">
+                    <div class="field is-grouped">
+                        <p class="control has-icons-left">
+                            <input class="input" type="text" placeholder="Project">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-briefcase"></i>
+                            </span>
+                        </p>
+                        <p class="control has-icons-left">
+                            <input class="input" type="text" placeholder="Tags">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-info">Add+</button>
+                </div>
+                <div class="control">
+                    <button class="button is-info is-outlined">Add to commit</button>
+                </div>
+                <div class="control">
+                    <button class="button is-light">Close</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <container>
+            <table class="table is-striped">
+                <col width="30">
+                <col width="250">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Desciprtion</th>
+                        <th>C</th>
+                        <th>D</th>
+                        <th>Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Áfa</td>
+                        <td>161</td>
+                        <td>384</td>
+                        <td>3700</td>
+                        <td>
+                            <button class="button is-small">Edit</button>
+                            <button class="button is-small">Remove</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Áfa</td>
+                        <td>161</td>
+                        <td>384</td>
+                        <td>3700</td>
+                        <td>
+                            <button class="button is-small">Edit</button>
+                            <button class="button is-small">Remove</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </container>
+    </section>
+
+    <!-- 
+    Push Commit -->
+    <section class="section">
+        <div class="container">
+            <p>
+                <span class="is-size-3">Commit</span>
+                <span class="has-text-grey-light is-small"> / 234dfsdf34rfsdvsd43</span>
+            </p>
+            <div class="level is-mobile">
+                <div class="level-left">
+                    <div class="level-item">
+                        17 transaction
+                    </div>
+                    <div class="level-item has-text-success">
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-arrow-up"></i>
+                        </span>
+                        47.000 HUF
+                    </div>
+                    <div class="level-item has-text-danger">
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-arrow-down"></i>
+                        </span>
+                        47.000 HUF
+                    </div>
+                </div>
+            </div>
+            <p class="has-text-grey">
+
+            </p>
+
+            <div class="field">
+                <label class="label">Description</label>
+                <div class="control">
+                    <textarea class="textarea" placeholder="What is this transaction about?"></textarea>
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-success is-outlined">Push commit</button>
+                </div>
+                <div class="control">
+                    <button class="button is-light">Close</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    List Commit -->
+    <section class="section">
+        <div class="container">
+            <p class="content">
+                <span class="is-size-3">Commits</span>
+            </p>
+            <table class="table is-striped">
+                <tbody>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@mezeipetister</a>
+                            <br>
+                            2 days ago
+                        </td>
+                        <td>Mai napi könyvelésem</td>
+                        <td>
+                            <div class="columns has-text-success is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    47.000 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <div class="button-group">
+                                        <button class="button is-small is-success">Accept</button>
+                                        <button class="button is-small is-warning">Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@beganyikriszta</a>
+                            <br>
+                            2 days ago
+                        </td>
+                        <td>Vegyes napló</td>
+                        <td>
+                            <div class="columns has-text-success is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    149.450 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <p class="is-size-7 has-text-grey">Accepted yesterday by</p>
+                                    <p class="is-size-7 has-text-grey">@mezeipetister</p>
+                                </div>
+                                <div class="column">
+                                    <span class="icon is-small is-left has-text-success">
+                                        <i class="far fa-check-circle has-text-weight-medium"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@mezeipetister</a>
+                            <br>
+                            5 days ago
+                        </td>
+                        <td>Vegyes napló</td>
+                        <td>
+                            <div class="columns has-text-danger is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    149.450 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <p class="is-size-7 has-text-grey">Rejected yesterday by</p>
+                                    <p class="is-size-7 has-text-grey">@beganyikriszta</p>
+                                </div>
+                                <div class="column">
+                                    <span class="icon is-small is-left has-text-danger">
+                                        <i class="far fa-exclamation has-text-weight-medium"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="is-size-7">
+                            <a>@beganyikriszta</a>
+                            <br>
+                            7 days ago
+                        </td>
+                        <td>ÉCS könyvelés</td>
+                        <td>
+                            <div class="columns has-text-success is-size-6 is-vcentered is-mobile">
+                                <div class="column is-1">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    17.899 HUF
+                                </div>
+                            </div>
+                        </td>
+                        <td class="has-text-right">
+                            <div class="columns is-mobile is-vcentered">
+                                <div class="column">
+                                    <p class="is-size-7 has-text-grey">Accepted yesterday by</p>
+                                    <p class="is-size-7 has-text-grey">@mezeipetister</p>
+                                </div>
+                                <div class="column">
+                                    <span class="icon is-small is-left has-text-success">
+                                        <i class="far fa-check-circle has-text-weight-medium"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <nav class="pagination is-small" role="navigation" aria-label="pagination">
+                <a class="pagination-previous">Previous</a>
+                <a class="pagination-next">Next page</a>
+                <ul class="pagination-list">
+                    <li><a class="pagination-link" aria-label="Goto page 1">1</a></li>
+                    <li><a class="pagination-link" aria-label="Goto page 1">2</a></li>
+                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                    <li><a class="pagination-link" aria-label="Goto page 45">10</a></li>
+                    <li><a class="pagination-link is-current" aria-label="Page 46" aria-current="page">11</a></li>
+                    <li><a class="pagination-link" aria-label="Goto page 47">12</a></li>
+                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                    <li><a class="pagination-link" aria-label="Goto page 86">19</a></li>
+                    <li><a class="pagination-link" aria-label="Goto page 86">20</a></li>
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Users -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="content is-size-3">Users</p>
+                </div>
+                <div class="column has-text-right">
+                    <button class="button">
+                        <span class="icon is-small">
+                            <i class="far fa-plus-square"></i>
+                        </span>
+                        <span>Add user</span>
+                    </button>
+                </div>
+            </div>
+            <table class="table is-striped">
+                <tr>
+                    <td>@mezeipetister</td>
+                    <td>Mezei Péter</td>
+                    <td>mezeipetister@gmail.com</td>
+                    <td>
+                        <div class="button-group">
+                            <a class="button is-small">
+                                <span class="icon">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <span>Reset password</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>@beganyikriszta</td>
+                    <td>Mezeiné Bégányi Krisztina</td>
+                    <td>beganyikriszta@gmail.com</td>
+                    <td>
+                        <div class="button-group">
+                            <a class="button is-small">
+                                <span class="icon">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <span>Reset password</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Users Add new user -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="is-size-3">Users</p>
+                    <p class="subtitle">Add new user</p>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g johnsmith">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                    <input class="input" type="email" placeholder="e.g. alexsmith@gmail.com">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g John Smith">
+                </div>
+            </div>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined">Add user</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Users - Add user SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">User added</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Password has been created and sent! <br>
+                User need check inbox and <br>
+                activate the account.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Users - Reset password -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Reset password</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Password has been sent! <br>
+                Check inbox.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Team -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="content is-size-3">Team</p>
+                </div>
+                <div class="column has-text-right">
+                    <button class="button">
+                        <span class="icon is-small">
+                            <i class="far fa-plus-square"></i>
+                        </span>
+                        <span>Add member</span>
+                    </button>
+                </div>
+            </div>
+            <table class="table is-striped">
+                <tr>
+                    <td>@mezeipetister</td>
+                    <td>Mezei Péter</td>
+                    <td>
+                        <div class="button-group">
+                            <a class="button is-small">
+                                <span class="icon">
+                                    <i class="fas fa-trash-alt"></i>
+                                </span>
+                                <span>Remove</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>@beganyikriszta</td>
+                    <td>Mezeiné Bégányi Krisztina</td>
+                    <td>
+                        <div class="button-group">
+                            <a class="button is-small">
+                                <span class="icon">
+                                    <i class="fas fa-trash-alt"></i>
+                                </span>
+                                <span>Remove</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Team add member-->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="content is-size-3">Team</p>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Username or email</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g johnsmith">
+                </div>
+            </div>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined">Add user</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Team add member SUCCESS-->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Highfive!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Team member <strong>@mezeipetister</strong>
+                <br> successfully added.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Team add member ERROR-->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Ooooch! Error.</p>
+            <p class="subtitle has-text-centered is-size-6">
+                <strong>@mezeipetister</strong> is not our user.
+                <br> Please check the username or <br> register the user.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Try again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Login -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Login</p>
+            <p class="subtitle has-text-centered is-size-6">BIT online financial <br> and project information system</p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <label class="label">Username</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="e.g John Smith">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Password</label>
+                        <div class="control">
+                            <input class="input" type="password" placeholder="strong password">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="button-group">
+                                <button class="button is-info is-outlined">Login</button>
+                                <button class="button">Forget password</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Login ERROR -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Login failed!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Oooops! <br>
+                Wrong username or password.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Try again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Reset password -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Reset password</p>
+            <p class="subtitle has-text-centered is-size-6">Please type your email address. <br>
+                We are going to create a new password and <br> send it to your email address.</p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input" type="text" placeholder="e.g john.smith@company.com">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Send me a new password</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Reset password SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Reset password</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Your password has been sent! <br>
+                Please check your inbox.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Login</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Reset password ERROR -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Reset password</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Oooops! <br>
+                We do not know your email address.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Try again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Profile settings -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="is-size-3">Settings</p>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                    <input class="input is-static" type="text" placeholder="e.g johnsmith" value="@johnsmith" readonly>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                    <input class="input" type="email" placeholder="e.g. alexsmith@gmail.com"
+                        value="alexsmith@gmail.com">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="e.g John Smith" value="John Smith">
+                </div>
+            </div>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined">Save</button>
+                    <button class="button">Change password</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Profile settings SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Good job!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Your settings are saved.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Profile settings ERROR -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Ooops... Error!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                An error occured. <br>
+                Wrong email format.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Try again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!--     
+    Profile NEW PASSWORD -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <p class="is-size-3">Settings / Password</p>
+                    <p class="subtitle">Please type your new password twice.</p>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">New password</label>
+                <div class="control">
+                    <input class="input" type="password" placeholder="e.g. strong_password">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">New password again</label>
+                <div class="control">
+                    <input class="input" type="password" placeholder="e.g. strong_password">
+                </div>
+            </div>
+            <div class="field">
+                <div class="button-group">
+                    <button class="button is-info is-outlined">Change password</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Reset password SUCCESS -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Safety first!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                Your password has been changed!
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    Profile NEW PASSWORD ERROR -->
+    <section class="section">
+        <div class="container">
+            <p class="has-text-centered title is-spaced">Oooops! Error!</p>
+            <p class="subtitle has-text-centered is-size-6">
+                You need stronger password.
+            </p>
+            <div class="columns is-mobile">
+                <div class="column is-6-mobile is-offset-3-mobile is-4-desktop is-offset-4-desktop">
+                    <div class="field">
+                        <div class="control has-text-centered">
+                            <div class="button-group">
+                                <button class="button">Try again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <!-- 
+    FOOTER -->
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p class="small has-text-weight-light">
+                <strong>BIT</strong> by <a href="https://github.com/mezeipetister" target="_blank" accesskey="r">Peter
+                    Mezei</a>. The
+                source code is
+                licensed
+                <a href="https://opensource.org/licenses/GPL-2.0" target="_blank">GNU GPLv2</a>. <br> This
+                project is
+                available under <a href="https://github.com/mezeipetister/bit"
+                    target="_blank">github.com/mezeipetister/bit</a>.
+            </p>
+            <p>
+                <a href="https://bulma.io">
+                    <img src="https://bulma.io/images/made-with-bulma.png" alt="Made with Bulma" width="128"
+                        height="24">
+                </a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- BULMA SCRIPT FOR MENUS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Get all "navbar-burger" elements
+            const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(el => {
+                    el.addEventListener('click', () => {
+
+                        // Get the target from the "data-target" attribute
+                        const target = el.dataset.target;
+                        const $target = document.getElementById(target);
+
+                        // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+                        el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+
+        // Script for dropdowns!
+        'use strict';
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Dropdowns
+
+            var $dropdowns = getAll('.dropdown:not(.is-hoverable)');
+
+            if ($dropdowns.length > 0) {
+                $dropdowns.forEach(function ($el) {
+                    $el.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                        $el.classList.toggle('is-active');
+                    });
+                });
+
+                document.addEventListener('click', function (event) {
+                    closeDropdowns();
+                });
+            }
+
+            function closeDropdowns() {
+                $dropdowns.forEach(function ($el) {
+                    $el.classList.remove('is-active');
+                });
+            }
+
+            // Close dropdowns if ESC pressed
+            document.addEventListener('keydown', function (event) {
+                var e = event || window.event;
+                if (e.keyCode === 27) {
+                    closeDropdowns();
+                }
+            });
+
+            // Functions
+
+            function getAll(selector) {
+                return Array.prototype.slice.call(document.querySelectorAll(selector), 0);
+            }
+        });
+
+        // Close notification
+        document.addEventListener('DOMContentLoaded', () => {
+            (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+                $notification = $delete.parentNode;
+                $delete.addEventListener('click', () => {
+                    $notification.parentNode.removeChild($notification);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

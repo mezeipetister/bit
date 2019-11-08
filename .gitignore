@@ -17,3 +17,15 @@ Cargo.lock
 *.*~
 /target
 #**/*.rs.bk
+
+# Skip data folder if does exist
+/data
+
+# Clion ide file
+.idea
+
+# Skip node modules folder
+/node_modules
+
+ENV.sh
+secret.pem

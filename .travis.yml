@@ -1,3 +1,11 @@
+dist: xenial
+
 language: rust
+
 rust:
-  - 1.33.0
+  - nightly
+
+cache: cargo
+  
+script:
+  - make test

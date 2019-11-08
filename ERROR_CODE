@@ -1,0 +1,31 @@
+# 1 HTTP Error
+
+# 2 HTTP Error
+
+# 3 HTTP Error
+
+# 4 HTTP Error
+
+    404 - Page not found
+
+# 5 HTTP Error
+
+# 6 IO Error
+
+Errors related to IO tasks
+
+    601 - File not found
+    602 - Folder not found
+    603 - Permission denied
+
+# 7 Package Error
+
+# 8 Format error
+
+    801 Invalid format
+    802 Missing variable. Variable is not set.
+
+# 9 Other Error
+
+Errors related to other kind of errors.
+Usually rare, or rarely used errors.
