@@ -20,6 +20,7 @@ extern crate lettre;
 extern crate lettre_email;
 extern crate rand;
 
+pub mod balance;
 pub mod check;
 pub mod email;
 pub mod error;
@@ -27,6 +28,7 @@ pub mod prelude;
 pub mod storage;
 pub mod user;
 
+pub use balance::*;
 pub use check::*;
 pub use error::*;
 pub use user::login::*;
