@@ -30,6 +30,7 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
+use core_lib::model::*;
 use core_lib::storage::StorageObject;
 use core_lib::user;
 use core_lib::user::User;
@@ -289,10 +290,6 @@ fn unauthorized(req: &Request<'_>) -> Flash<Redirect> {
     )
 }
 
-struct DataLoad {
-    users: Mutex<Storage<UserV1>>,
-}
-
 fn rocket(data: DataLoad) -> rocket::Rocket {
     rocket::ignite()
         .manage(data)
@@ -319,10 +316,15 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
         .register(catchers![not_found, unauthorized])
 }
 
+struct DataLoad {
+    users: Mutex<Storage<UserV1>>,
+    accounts: Mutex<Storage<Account1>>,
+}
+
 fn main() {
-    let user_storage = load_storage::<UserV1>("data/users").unwrap();
     let data = DataLoad {
-        users: Mutex::new(user_storage),
+        users: Mutex::new(load_storage::<UserV1>("data/users").unwrap()),
+        accounts: Mutex::new(load_storage::<Account1>("data/accounts").unwrap()),
     };
     rocket(data).launch();
 }

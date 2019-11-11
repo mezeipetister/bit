@@ -31,7 +31,7 @@ impl Component for TabBar {
         html! {
             section.section {
                 .container {
-                    .tabs.is-centered.is-boxed {
+                    .tabs.is-centered {
                         ul {
                             li.is-active {
                                 a href="/dashboard" {

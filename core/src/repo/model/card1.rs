@@ -14,22 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
-extern crate bcrypt;
-extern crate chrono;
-extern crate lettre;
-extern crate lettre_email;
-extern crate rand;
 
-pub mod check;
-pub mod email;
-pub mod error;
-pub mod prelude;
-pub mod repo;
-pub mod storage;
-pub mod user;
-
-pub use check::*;
-pub use error::*;
-pub use repo::*;
-pub use user::login::*;
-pub use user::password::*;
+use crate::balance::*;
+use crate::prelude::*;
+use chrono::prelude::*;

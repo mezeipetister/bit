@@ -15,11 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::balance::*;
+use crate::prelude::*;
 use chrono::prelude::*;
 
-pub struct Transaction {
+pub struct Transaction1 {
     // Transaction ID
     id: String,
+    subject: String,
     debit: String,
     credit: String,
     amount: String,
@@ -29,7 +32,6 @@ pub struct Transaction {
     // Duedate should be a part of event details
     // duedate: Date<Utc>,
     created_by: String,
-    description: String,
     event_id: String,
     // commit_id: String,
     // If commit accepted, is_accepted field is true.
@@ -37,31 +39,4 @@ pub struct Transaction {
     // At this point, any event transaction will be a part
     // of ledger immediately.
     // is_ledger_memeber: bool,
-}
-
-pub struct Event {
-    id: String,
-    title: String,
-    description: String,
-    reference: String,
-    created_by: String,
-    date_created: DateTime<Utc>,
-    date_settlement: Date<Utc>,
-    date_posting: Date<Utc>,
-    duedate: Date<Utc>,
-}
-
-pub struct Account {
-    id: String,
-    name: String,
-    description: String,
-    created_by: String,
-    date_created: DateTime<Utc>,
-    is_inverse: bool,
-    // Can we use it as an active ID to account?
-    // True yes, false no
-    is_working: bool,
-    // Can we use transaction match
-    is_matching: bool,
-    is_balance_zero: bool,
 }
