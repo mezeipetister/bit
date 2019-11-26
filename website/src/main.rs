@@ -33,6 +33,7 @@ pub mod view;
 
 use crate::core_lib::Account;
 use crate::prelude::CheckError;
+use crate::prelude::FlashOk;
 use core_lib::prelude::AppResult;
 use core_lib::user;
 use core_lib::user::User;
@@ -163,6 +164,56 @@ fn accounts_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
         .render(ViewAccount::new(&data.inner().accounts).render())
 }
 
+// Accounts
+#[get("/accounts/<account_id>")]
+fn accounts_edit_get(
+    flash: Option<FlashMessage>,
+    data: State<DataLoad>,
+    account_id: String,
+) -> FlashOk {
+    Ok(Layout::new()
+        .set_title("Accounts")
+        .set_notification(flash)
+        .render(
+            ViewAccountEdit::new(
+                data.inner()
+                    .accounts
+                    .get_by_id(&account_id)
+                    .check("/accounts")?,
+            )
+            .render(),
+        ))
+}
+
+#[derive(FromForm)]
+struct FormAccountEdit {
+    account_name: String,
+    account_description: String,
+    is_working: bool,
+    is_inverse: bool,
+}
+#[post("/accounts/<account_id>", data = "<form>")]
+fn accounts_edit_post(
+    _user: Login,
+    form: Form<FormAccountEdit>,
+    data: State<DataLoad>,
+    account_id: String,
+) -> FlashRedirect {
+    let account_id = account_id.trim();
+    data.inner()
+        .accounts
+        .get_by_id(&account_id)
+        .check(&format!("/accounts/{}", account_id))?
+        .update(|a| {
+            (*a).set_description(&form.account_description)?;
+            (*a).set_name(&form.account_name)?;
+            (*a).set_inverse(form.is_inverse)?;
+            (*a).set_working(form.is_working)
+        })
+        .check(&format!("/accounts/{}", account_id))?;
+    Ok(Redirect::to(format!("/accounts/{}", account_id)))
+}
+
 // Accounts new
 #[get("/accounts/new")]
 fn accounts_new_get(flash: Option<FlashMessage>) -> Markup {
@@ -173,31 +224,31 @@ fn accounts_new_get(flash: Option<FlashMessage>) -> Markup {
 }
 
 #[derive(FromForm)]
-struct FormAccountNew {
+struct FormAccount {
     account_id: String,
     account_name: String,
     account_description: String,
+    is_working: bool,
+    is_inverse: bool,
 }
 #[post("/accounts/new", data = "<form>")]
-fn accounts_new_post(
-    user: Login,
-    form: Form<FormAccountNew>,
-    data: State<DataLoad>,
-) -> FlashRedirect {
+fn accounts_new_post(user: Login, form: Form<FormAccount>, data: State<DataLoad>) -> FlashRedirect {
     let new_account = Account1::new(&form.account_id, &user.userid()).check("/accounts/new")?;
     data.inner()
         .accounts
         .add_to_storage(new_account)
-        .check("accounts/new")?;
+        .check("/accounts/new")?;
     data.inner()
         .accounts
         .get_by_id(&form.account_id)
         .unwrap()
         .update(|a| {
             (*a).set_description(&form.account_description)?;
-            (*a).set_name(&form.account_name)
+            (*a).set_name(&form.account_name)?;
+            (*a).set_inverse(form.is_inverse)?;
+            (*a).set_working(form.is_working)
         })
-        .check("accounts/new")?;
+        .check("/accounts/new")?;
     Ok(Redirect::to("/accounts"))
 }
 
@@ -353,6 +404,8 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login_post,
                 logout,
                 accounts_get,
+                accounts_edit_get,
+                accounts_edit_post,
                 accounts_new_get,
                 accounts_new_post,
                 admin_user,

@@ -16,53 +16,72 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::view::View;
-// use core_lib::Account;
+use core_lib::Account;
 use maud::{html, Markup};
-// use storaget::*;
+use storaget::*;
 
-pub struct ViewAccountNew {}
+pub struct ViewAccountEdit<T>
+where
+    T: Account,
+{
+    account: DataObject<T>,
+}
 
-impl ViewAccountNew {
-    pub fn new() -> Self {
-        ViewAccountNew {}
+impl<T> ViewAccountEdit<T>
+where
+    T: Account,
+{
+    pub fn new(account: DataObject<T>) -> Self {
+        ViewAccountEdit { account }
     }
 }
 
-impl View for ViewAccountNew {
+impl<T> View for ViewAccountEdit<T>
+where
+    T: Account,
+{
     fn render(&self) -> Markup {
         html! {
             section.section {
                 .container.content {
-                    h2.title {"New account"}
-                    form method="POST" action="/accounts/new" {
+                    h2.title {(self.account.get(|a| a.get_name().to_owned()))}
+                    form method="POST" action=(format!("/accounts/{}", self.account.get(|a|a.get_id().to_owned()))) {
                         .field {
                             label.label {"Account ID"}
                             .control {
-                                input.input type="text" name="account_id" placeholder="e.g.: 161" autofocus?;
+                                input.input type="text" name="account_id" placeholder="e.g.: 161" autofocus? value=(self.account.get(|a| a.get_id().to_owned())) disabled?;
                             }
                         }
                         .field {
                             label.label {"Account name"}
                             .control {
-                                input.input type="text" name="account_name" placeholder="e.g.: Investment";
+                                input.input type="text" name="account_name" placeholder="e.g.: Investment" value=(self.account.get(|a| a.get_name().to_owned()));
                             }
                         }
                         .field {
                             label.label {"Account description"}
                             .control {
-                                input.input type="text" name="account_description" placeholder="e.g.: Hello world";
+                                input.input type="text" name="account_description" placeholder="e.g.: Hello world" value=(self.account.get(|a| a.get_description().to_owned()));
                             }
                         }
                         .field {
                             label.label {"Is working?"}
                             .control {
-                                input type="checkbox" name="is_working";
+                                @if self.account.get(|a| a.is_working()) {
+                                    input type="checkbox" name="is_working" checked?;
+                                } @else {
+                                    input type="checkbox" name="is_working";
+                                }
                             }
                         }
                         .field {
                             label.label {"Is inverse?"}
                             .control {
-                                input type="checkbox" name="is_inverse";
+                                @if self.account.get(|a| a.is_inverse()) {
+                                    input type="checkbox" name="is_inverse" checked?;
+                                } @else {
+                                    input type="checkbox" name="is_inverse";
+                                }
                             }
                         }
                         .buttons {

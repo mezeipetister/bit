@@ -21,6 +21,8 @@ use storaget::*;
 
 pub trait Account: StorageObject {
     /// Get account name
+    fn set_id(&mut self, id: &str) -> AppResult<()>;
+    /// Get account name
     fn get_name(&self) -> String;
     /// Set account name, returns AppResult<()>
     fn set_name(&mut self, name: &str) -> AppResult<()>;

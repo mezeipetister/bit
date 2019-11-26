@@ -20,23 +20,25 @@ use core_lib::Account;
 use maud::{html, Markup};
 use storaget::*;
 
-pub struct ViewAccount<'a, T>
+pub struct ViewAccount<T>
 where
     T: Account,
 {
-    accounts: &'a Storage<T>,
+    accounts: Vec<DataObject<T>>,
 }
 
-impl<'a, T> ViewAccount<'a, T>
+impl<T> ViewAccount<T>
 where
     T: Account,
 {
-    pub fn new(accounts: &'a Storage<T>) -> Self {
-        ViewAccount { accounts }
+    pub fn new(accounts: &Storage<T>) -> Self {
+        let mut acc = accounts.into_data_objects();
+        acc.sort_by_key(|a| a.get(|a| a.get_id().to_owned()));
+        ViewAccount { accounts: acc }
     }
 }
 
-impl<'a, T> View for ViewAccount<'a, T>
+impl<T> View for ViewAccount<T>
 where
     T: Account,
 {
@@ -68,9 +70,12 @@ where
                             }
                         }
                         tbody {
-                            @for account in self.accounts {
+                            @for account in &self.accounts {
                                 tr {
-                                    td {(account.get(|a| a.get_id().to_owned()))}
+                                    td {
+                                        a href=(format!("/accounts/{}", account.get(|a| a.get_id().to_owned())))
+                                         {(account.get(|a| a.get_id().to_owned()))}
+                                    }
                                     td {(account.get(|a| a.get_name().to_owned()))}
                                     td {(account.get(|a| a.get_description().to_owned()))}
                                     td {"-"}

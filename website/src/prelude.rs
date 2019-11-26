@@ -16,10 +16,12 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use core_lib::Error;
+use maud::Markup;
 use rocket::response::{Flash, Redirect};
 use std::fmt::Display;
 
 pub type FlashRedirect = Result<Redirect, Flash<Redirect>>;
+pub type FlashOk = Result<Markup, Flash<Redirect>>;
 
 pub trait Check<T> {
     fn check(self, redirect_to: &str) -> Result<T, Flash<Redirect>>;

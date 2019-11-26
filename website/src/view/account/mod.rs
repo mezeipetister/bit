@@ -16,6 +16,8 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod account;
+pub mod account_edit;
 pub mod account_new;
 pub use account::*;
+pub use account_edit::*;
 pub use account_new::*;

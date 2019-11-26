@@ -47,6 +47,11 @@ impl Account1 {
 }
 
 impl Account for Account1 {
+    fn set_id(&mut self, id: &str) -> AppResult<()> {
+        let id = id.trim();
+        self.id = id.into();
+        Ok(())
+    }
     /// Get account name
     fn get_name(&self) -> String {
         (&self.name).into()
