@@ -20,7 +20,6 @@ use crate::prelude::*;
 use chrono::prelude::*;
 
 pub struct Transaction1 {
-    // Transaction ID
     id: String,
     subject: String,
     debit: String,

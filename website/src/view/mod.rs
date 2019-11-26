@@ -17,12 +17,14 @@
 
 use maud::Markup;
 
+pub mod account;
 pub mod admin;
 pub mod index;
 pub mod login;
 pub mod not_found_404;
 pub mod settings;
 
+pub use account::*;
 pub use admin::*;
 pub use index::*;
 pub use login::*;

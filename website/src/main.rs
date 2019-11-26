@@ -31,11 +31,14 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
+use crate::core_lib::Account;
+use crate::prelude::CheckError;
 use core_lib::prelude::AppResult;
 use core_lib::user;
 use core_lib::user::User;
 use core_lib::user::UserV1;
 use core_lib::user::*;
+use core_lib::Account1;
 use guard::*;
 use layout::Layout;
 use login::*;
@@ -104,11 +107,10 @@ fn login_post(
         return Ok(user_login(&mut cookies, "9"));
     }
 
-    let user = &data
-        .inner()
-        .users
-        .get_by_id(&login.username)
-        .check("/login")?;
+    let user = &data.inner().users.get_by_id(&login.username).check_error(
+        core_lib::Error::InternalError("User not found".to_owned()),
+        "/login",
+    )?;
 
     let password = &login.password;
     let hash = user.get(|u| u.get_password_hash().to_owned());
@@ -150,6 +152,53 @@ fn login_reset_password_post(
             return Ok(Redirect::to("/login/reset_password/error"));
         }
     };
+}
+
+// Accounts
+#[get("/accounts")]
+fn accounts_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    Layout::new()
+        .set_title("Accounts")
+        .set_notification(flash)
+        .render(ViewAccount::new(&data.inner().accounts).render())
+}
+
+// Accounts new
+#[get("/accounts/new")]
+fn accounts_new_get(flash: Option<FlashMessage>) -> Markup {
+    Layout::new()
+        .set_title("Accounts")
+        .set_notification(flash)
+        .render(ViewAccountNew::new().render())
+}
+
+#[derive(FromForm)]
+struct FormAccountNew {
+    account_id: String,
+    account_name: String,
+    account_description: String,
+}
+#[post("/accounts/new", data = "<form>")]
+fn accounts_new_post(
+    user: Login,
+    form: Form<FormAccountNew>,
+    data: State<DataLoad>,
+) -> FlashRedirect {
+    let new_account = Account1::new(&form.account_id, &user.userid()).check("/accounts/new")?;
+    data.inner()
+        .accounts
+        .add_to_storage(new_account)
+        .check("accounts/new")?;
+    data.inner()
+        .accounts
+        .get_by_id(&form.account_id)
+        .unwrap()
+        .update(|a| {
+            (*a).set_description(&form.account_description)?;
+            (*a).set_name(&form.account_name)
+        })
+        .check("accounts/new")?;
+    Ok(Redirect::to("/accounts"))
 }
 
 /**
@@ -303,6 +352,9 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login,
                 login_post,
                 logout,
+                accounts_get,
+                accounts_new_get,
+                accounts_new_post,
                 admin_user,
                 admin_user_new,
                 admin_user_new_post,
@@ -325,13 +377,13 @@ struct Usr {
 
 struct DataLoad {
     users: Storage<UserV1>,
-    // accounts: Storage<Account1>,
+    accounts: Storage<Account1>,
 }
 
 fn main() -> StorageResult<()> {
     let data = DataLoad {
         users: Storage::load_or_init::<UserV1>("data/users")?,
-        // accounts: Storage::load_or_init::<Account1>("data/accounts")?,
+        accounts: Storage::load_or_init::<Account1>("data/accounts")?,
     };
     rocket(data).launch();
     Ok(())

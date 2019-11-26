@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use core_lib::Error;
 use rocket::response::{Flash, Redirect};
 use std::fmt::Display;
 
@@ -22,6 +23,10 @@ pub type FlashRedirect = Result<Redirect, Flash<Redirect>>;
 
 pub trait Check<T> {
     fn check(self, redirect_to: &str) -> Result<T, Flash<Redirect>>;
+}
+
+pub trait CheckError<T> {
+    fn check_error(self, err: Error, redirect_to: &str) -> Result<T, Flash<Redirect>>;
 }
 
 impl<T, E> Check<T> for Result<T, E>
@@ -34,6 +39,21 @@ where
             Err(msg) => Err(Flash::warning(
                 Redirect::to(redirect_to.to_owned()),
                 format!("{}", msg),
+            )),
+        }
+    }
+}
+
+impl<T, E> CheckError<T> for Result<T, E>
+where
+    E: Display,
+{
+    fn check_error(self, err: Error, redirect_to: &str) -> Result<T, Flash<Redirect>> {
+        match self {
+            Ok(ok) => Ok(ok),
+            Err(_) => Err(Flash::warning(
+                Redirect::to(redirect_to.to_owned()),
+                format!("{}", err),
             )),
         }
     }
