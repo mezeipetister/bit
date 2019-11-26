@@ -16,8 +16,8 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::prelude::*;
-use crate::storage::StorageObject;
 use chrono::prelude::*;
+use storaget::*;
 
 pub trait Account: StorageObject {
     /// Set account ID, returns AppResult<()>

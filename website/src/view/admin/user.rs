@@ -16,29 +16,31 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::view::View;
-use crate::{StorageObject, User};
+use crate::User;
 use chrono::prelude::*;
+use core_lib::prelude::DateCreated;
 use maud::{html, Markup};
+use storaget::*;
 
 pub struct ViewAdminUser<'a, T>
 where
-    T: User + StorageObject,
+    T: User,
 {
-    users: &'a Vec<T>,
+    users: &'a Storage<T>,
 }
 
 impl<'a, T> ViewAdminUser<'a, T>
 where
-    T: User + StorageObject,
+    T: User,
 {
-    pub fn new(users: &'a Vec<T>) -> Self {
+    pub fn new(users: &'a Storage<T>) -> Self {
         ViewAdminUser { users: users }
     }
 }
 
 impl<'a, T> View for ViewAdminUser<'a, T>
 where
-    T: User + StorageObject,
+    T: User + DateCreated,
 {
     fn render(&self) -> Markup {
         html! {
@@ -59,16 +61,16 @@ where
                     table.table.is-striped {
                         @for user in self.users {
                             tr {
-                                td {(user.get_user_id())}
-                                td {(user.get_user_name())}
-                                td {(user.get_user_email())}
+                                td {(user.get(|u| u.get_user_id().to_owned()))}
+                                td {(user.get(|u| u.get_user_name().to_owned()))}
+                                td {(user.get(|u| u.get_user_email().to_owned()))}
                                 td {
                                     (format!("{}-{}-{} {}:{}",
-                                    user.get_date_created().year(),
-                                    user.get_date_created().month(),
-                                    user.get_date_created().day(),
-                                    user.get_date_created().hour(),
-                                    user.get_date_created().minute()))
+                                    user.get(|u| u.get_date_created().year()),
+                                    user.get(|u| u.get_date_created().month()),
+                                    user.get(|u| u.get_date_created().day()),
+                                    user.get(|u| u.get_date_created().hour()),
+                                    user.get(|u| u.get_date_created().minute())))
                                 }
                                 // td {
                                 //     .button-group {

@@ -23,8 +23,9 @@ pub use model::UserV1;
 
 use crate::error::Error::*;
 use crate::prelude::*;
+use storaget::*;
 
-pub trait User {
+pub trait User: StorageObject {
     fn get_user_id(&self) -> &str;
     fn set_user_id(&mut self, user_id: String) -> AppResult<()>;
     fn get_user_name(&self) -> &str;
@@ -40,21 +41,23 @@ pub trait User {
 
 /// Find user in users by ID.
 /// Return NONE if not exist, return &user if exists.
-pub fn get_user_by_id<'a, T: User>(users: &'a mut Vec<T>, id: &str) -> AppResult<&'a mut T> {
-    for user in users {
-        if user.get_user_id() == id {
-            return Ok(&mut *user);
-        }
-    }
-    Err(InternalError("User not found".into()))
+pub fn get_user_by_id<'a, T>(users: &'a Storage<T>, id: &str) -> AppResult<DataObject<T>>
+where
+    T: User,
+{
+    let user = users.get_by_id(id)?;
+    Ok(user)
 }
 
 /// Find user by email
 /// Return NONE or &user.
-pub fn get_user_by_email<'a, T: User>(users: &'a mut Vec<T>, email: &str) -> AppResult<&'a mut T> {
+pub fn get_user_by_email<'a, T>(users: &'a Storage<T>, email: &str) -> AppResult<DataObject<T>>
+where
+    T: User,
+{
     for user in users {
-        if user.get_user_email() == email {
-            return Ok(&mut *user);
+        if user.get(|u| u.get_user_email() == email) {
+            return Ok(user);
         }
     }
     Err(InternalError("User not found".into()))

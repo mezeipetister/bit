@@ -17,11 +17,11 @@
 
 use crate::prelude::*;
 use crate::repo::*;
-use crate::storage;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
+use storaget::*;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Account1 {
     path: Option<String>,
     id: String,
@@ -108,25 +108,30 @@ impl Account for Account1 {
 /**
  * StorageObject implementation for Account
  */
-impl storage::StorageObject for Account1 {
+// impl storage::StorageObject for Account1 {
+//     fn get_id(&self) -> &str {
+//         &self.id
+//     }
+//     // TODO: Fix this one!
+//     fn reload(&mut self) -> AppResult<()> {
+//         Ok(())
+//     }
+//     fn get_path(&self) -> Option<&str> {
+//         match &self.path {
+//             Some(path) => Some(path.as_ref()),
+//             None => None,
+//         }
+//     }
+//     fn set_path(&mut self, path: &str) -> AppResult<()> {
+//         self.path = Some(path.into());
+//         Ok(())
+//     }
+//     fn get_date_created(&self) -> DateTime<Utc> {
+//         self.date_created
+//     }
+// }
+impl StorageObject for Account1 {
     fn get_id(&self) -> &str {
         &self.id
-    }
-    // TODO: Fix this one!
-    fn reload(&mut self) -> AppResult<()> {
-        Ok(())
-    }
-    fn get_path(&self) -> Option<&str> {
-        match &self.path {
-            Some(path) => Some(path.as_ref()),
-            None => None,
-        }
-    }
-    fn set_path(&mut self, path: &str) -> AppResult<()> {
-        self.path = Some(path.into());
-        Ok(())
-    }
-    fn get_date_created(&self) -> DateTime<Utc> {
-        self.date_created
     }
 }

@@ -48,19 +48,18 @@ impl<'a, 'r> FromRequest<'a, 'r> for Login {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<Login, ()> {
         // Add LOGIN REDIRECT IF PATH EXIST
         let data = request.guard::<State<DataLoad>>()?;
-        let users = &mut data.inner().users.lock().unwrap().data;
         let userid = match &request.cookies().get_private("USERID") {
             Some(userid) => userid.value().to_owned(),
             None => {
                 return Outcome::Failure((Status::Unauthorized, ()));
             }
         };
-        match user::get_user_by_id(&mut *users, &userid) {
+        match user::get_user_by_id(&data.inner().users, &userid) {
             Ok(user) => {
                 let login = Login {
                     userid: userid,
-                    name: user.get_user_name().into(),
-                    email: user.get_user_email().into(),
+                    name: user.get(|u| u.get_user_name().into()),
+                    email: user.get(|u| u.get_user_email().into()),
                 };
                 Outcome::Success(login)
             }

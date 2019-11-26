@@ -19,13 +19,13 @@ extern crate chrono;
 extern crate lettre;
 extern crate lettre_email;
 extern crate rand;
+extern crate storaget;
 
 pub mod check;
 pub mod email;
 pub mod error;
 pub mod prelude;
 pub mod repo;
-pub mod storage;
 pub mod user;
 
 pub use check::*;

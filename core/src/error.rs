@@ -16,6 +16,7 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::fmt;
+use storaget;
 
 pub enum Error {
     InternalError(String),
@@ -36,5 +37,12 @@ impl fmt::Debug for Error {
         match self {
             Error::InternalError(msg) => write!(f, "Internal error: {}", msg),
         }
+    }
+}
+
+// storaget::Error => core_lib::Error
+impl From<storaget::Error> for Error {
+    fn from(_: storaget::Error) -> Self {
+        Error::InternalError("Storage error".into())
     }
 }

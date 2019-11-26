@@ -16,5 +16,10 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::error::*;
+use chrono::prelude::*;
 
 pub type AppResult<T> = Result<T, Error>;
+
+pub trait DateCreated {
+    fn get_date_created(&self) -> DateTime<Utc>;
+}
