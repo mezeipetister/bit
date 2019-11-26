@@ -14,22 +14,29 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
-extern crate bcrypt;
-extern crate chrono;
-extern crate lettre;
-extern crate lettre_email;
-extern crate rand;
-extern crate storaget;
 
-pub mod check;
-pub mod email;
-pub mod error;
-pub mod prelude;
-pub mod repo;
-pub mod user;
+use crate::balance::*;
+use crate::prelude::*;
+use chrono::prelude::*;
 
-pub use check::*;
-pub use error::*;
-pub use repo::*;
-pub use user::login::*;
-pub use user::password::*;
+pub struct Transaction1 {
+    // Transaction ID
+    id: String,
+    subject: String,
+    debit: String,
+    credit: String,
+    amount: String,
+    date_created: DateTime<Utc>,
+    date_settlement: Date<Utc>,
+    // date_posting: Date<Utc>,
+    // Duedate should be a part of event details
+    // duedate: Date<Utc>,
+    created_by: String,
+    event_id: String,
+    // commit_id: String,
+    // If commit accepted, is_accepted field is true.
+    // Only true when it is a part of the ledger.
+    // At this point, any event transaction will be a part
+    // of ledger immediately.
+    // is_ledger_memeber: bool,
+}

@@ -15,10 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::core_lib::storage::StorageObject;
 use crate::core_lib::user::User;
 use crate::view::View;
 use maud::{html, Markup};
+use storaget::*;
 
 pub struct ViewSettings<'a, T>
 where
@@ -44,9 +44,9 @@ where
         html! {
             section.section {
                 .container {
-                    .column.is-mobile {
+                    .columns."is-mobile" {
                         .column {
-                            p."is-size-3" { "Settings" }
+                            p."is-size-3" {"Settings"}
                         }
                     }
                     .field {
