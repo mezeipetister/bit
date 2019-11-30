@@ -96,6 +96,12 @@ impl Transaction for Transaction1 {
     fn get_debit_credit(&self) -> (String, String) {
         (self.debit.clone(), self.credit.clone())
     }
+    fn get_debit(&self) -> String {
+        self.debit.clone()
+    }
+    fn get_credit(&self) -> String {
+        self.credit.clone()
+    }
     fn get_amount(&self) -> u32 {
         self.amount
     }

@@ -16,31 +16,38 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::view::View;
-use core_lib::Account;
+use core_lib::{Account, Transaction};
 use maud::{html, Markup};
 use storaget::*;
 
-pub struct ViewAccount<T>
+pub struct ViewAccount<'a, T, U>
 where
     T: Account,
+    U: Transaction,
 {
     accounts: Vec<DataObject<T>>,
+    transactions: &'a Storage<U>,
 }
 
-impl<T> ViewAccount<T>
+impl<'a, T, U> ViewAccount<'a, T, U>
 where
     T: Account,
+    U: Transaction,
 {
-    pub fn new(accounts: &Storage<T>) -> Self {
+    pub fn new(accounts: &Storage<T>, transactions: &'a Storage<U>) -> Self {
         let mut acc = accounts.into_data_objects();
         acc.sort_by_key(|a| a.get(|a| a.get_id().to_owned()));
-        ViewAccount { accounts: acc }
+        ViewAccount {
+            accounts: acc,
+            transactions,
+        }
     }
 }
 
-impl<T> View for ViewAccount<T>
+impl<'a, T, U> View for ViewAccount<'a, T, U>
 where
     T: Account,
+    U: Transaction,
 {
     fn render(&self) -> Markup {
         html! {
@@ -78,7 +85,11 @@ where
                                     }
                                     td {(account.get(|a| a.get_name().to_owned()))}
                                     td {(account.get(|a| a.get_description().to_owned()))}
-                                    td {"-"}
+                                    td {(&self.transactions.into_iter().filter(|o|o.get(|a| {
+                                            a.get_credit() == account.get(|a| a.get_id().to_owned())
+                                            || a.get_debit() == account.get(|a| a.get_id().to_owned())
+                                        })).collect::<Vec<_>>().len()
+                                    )}
                                 }
                             }
                         }

@@ -164,7 +164,7 @@ fn accounts_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
     Layout::new()
         .set_title("Accounts")
         .set_notification(flash)
-        .render(ViewAccount::new(&data.inner().accounts).render())
+        .render(ViewAccount::new(&data.inner().accounts, &data.inner().transactions).render())
 }
 
 // Accounts

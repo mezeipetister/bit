@@ -24,6 +24,8 @@ use storaget::*;
 pub trait Transaction: StorageObject {
     fn get_subject(&self) -> String;
     fn get_debit_credit(&self) -> (String, String);
+    fn get_debit(&self) -> String;
+    fn get_credit(&self) -> String;
     fn get_amount(&self) -> u32;
     fn get_date_created(&self) -> NaiveDateTime;
     fn get_date_settlement(&self) -> NaiveDate;
