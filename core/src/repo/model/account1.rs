@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::error;
+use crate::error::Error;
 use crate::prelude::*;
 use crate::repo::*;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
-use storaget::*;
+use storaget::StorageObject;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Account1 {
@@ -37,7 +37,7 @@ impl Account1 {
     pub fn new(id: &str, userid: &str) -> AppResult<Self> {
         for c in id.chars().into_iter() {
             if !c.is_numeric() {
-                return Err(error::Error::InternalError(
+                return Err(Error::InternalError(
                     "Account ID must be numberic".to_owned(),
                 ));
             }

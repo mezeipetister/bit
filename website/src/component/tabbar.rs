@@ -33,7 +33,7 @@ impl Component for TabBar {
                 .container {
                     .tabs.is-centered {
                         ul {
-                            li.is-active {
+                            li {
                                 a href="/dashboard" {
                                     span.icon.is-small {
                                         i.fa.fa-tachometer-alt aria-hidden="true" {}

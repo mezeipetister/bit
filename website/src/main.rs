@@ -31,15 +31,17 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
-use crate::core_lib::Account;
+use crate::core_lib::{Account, Transaction};
 use crate::prelude::CheckError;
 use crate::prelude::FlashOk;
+use chrono::prelude::*;
 use core_lib::prelude::AppResult;
 use core_lib::user;
 use core_lib::user::User;
 use core_lib::user::UserV1;
 use core_lib::user::*;
 use core_lib::Account1;
+use core_lib::Transaction1;
 use guard::*;
 use layout::Layout;
 use login::*;
@@ -51,6 +53,7 @@ use rocket::response::{Flash, NamedFile, Redirect};
 use rocket::Request;
 use rocket::State;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use storaget::*;
 use view::*;
 
@@ -252,6 +255,69 @@ fn accounts_new_post(user: Login, form: Form<FormAccount>, data: State<DataLoad>
     Ok(Redirect::to("/accounts"))
 }
 
+// Transaction new
+#[get("/transactions/new")]
+fn transaction_new_get(flash: Option<FlashMessage>) -> Markup {
+    Layout::new()
+        .set_title("New transaction")
+        .set_notification(flash)
+        .render(ViewTransactionNew::new().render())
+}
+
+#[derive(FromForm)]
+struct FormTransaction {
+    transaction_subject: String,
+    transaction_debit: String,
+    transaction_credit: String,
+    transaction_amount: u32,
+    transaction_date_settlement: String,
+}
+// Transaction new post
+#[post("/transactions/new", data = "<form>")]
+fn transaction_new_post(
+    user: Login,
+    form: Form<FormTransaction>,
+    data: State<DataLoad>,
+) -> FlashRedirect {
+    let new_transaction = Transaction1::new(
+        form.transaction_subject.clone(),
+        form.transaction_debit.clone(),
+        form.transaction_credit.clone(),
+        form.transaction_amount,
+        NaiveDate::from_str(&form.transaction_date_settlement).check_error(
+            core_lib::error::Error::InternalError("Wrong date parse".to_owned()),
+            "/transactions/new",
+        )?,
+        user.userid().to_owned(),
+        &data.inner().accounts,
+    )
+    .check("/transactions/new")?;
+    data.inner()
+        .transactions
+        .add_to_storage(new_transaction)
+        .check("/transactions/new")?;
+    Ok(Redirect::to("/transactions"))
+}
+
+// Transaction new
+#[get("/transactions")]
+fn transaction_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    println!("{:?}", &data.inner().transactions.data());
+    Layout::new()
+        .set_title("New transaction")
+        .set_notification(flash)
+        .render(ViewTransaction::new(&data.inner().transactions).render())
+}
+
+// Dashboard
+#[get("/dashboard")]
+fn dashboard_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    Layout::new()
+        .set_title("Dashboard")
+        .set_notification(flash)
+        .render(ViewDashboard::new(&data.inner().transactions).render())
+}
+
 /**
  * USERS
  */
@@ -408,6 +474,10 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 accounts_edit_post,
                 accounts_new_get,
                 accounts_new_post,
+                transaction_get,
+                transaction_new_get,
+                transaction_new_post,
+                dashboard_get,
                 admin_user,
                 admin_user_new,
                 admin_user_new_post,
@@ -422,21 +492,17 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
         .register(catchers![not_found, unauthorized])
 }
 
-#[derive(Debug)]
-struct Usr {
-    id: String,
-    name: String,
-}
-
 struct DataLoad {
     users: Storage<UserV1>,
     accounts: Storage<Account1>,
+    transactions: Storage<Transaction1>,
 }
 
 fn main() -> StorageResult<()> {
     let data = DataLoad {
         users: Storage::load_or_init::<UserV1>("data/users")?,
         accounts: Storage::load_or_init::<Account1>("data/accounts")?,
+        transactions: Storage::load_or_init::<Transaction1>("data/transactions")?,
     };
     rocket(data).launch();
     Ok(())

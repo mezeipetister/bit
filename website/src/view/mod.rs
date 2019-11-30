@@ -19,17 +19,21 @@ use maud::Markup;
 
 pub mod account;
 pub mod admin;
+pub mod dashboard;
 pub mod index;
 pub mod login;
 pub mod not_found_404;
 pub mod settings;
+pub mod transaction;
 
 pub use account::*;
 pub use admin::*;
+pub use dashboard::*;
 pub use index::*;
 pub use login::*;
 pub use not_found_404::*;
 pub use settings::*;
+pub use transaction::*;
 
 pub trait View {
     fn render(&self) -> Markup;
