@@ -42,11 +42,11 @@ impl Component for TabBar {
                                 }
                             }
                             li {
-                                a href="/events" {
+                                a href="/transactions" {
                                     span.icon.is-small {
-                                        i.fa.fa-history aria-hidden="true" {}
+                                        i.fa.fa-receipt aria-hidden="true" {}
                                     }
-                                    span { "Events" }
+                                    span { "Transactions" }
                                 }
                             }
                             li {

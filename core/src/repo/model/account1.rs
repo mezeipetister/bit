@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::error;
 use crate::prelude::*;
 use crate::repo::*;
 use chrono::prelude::*;
@@ -34,6 +35,13 @@ pub struct Account1 {
 
 impl Account1 {
     pub fn new(id: &str, userid: &str) -> AppResult<Self> {
+        for c in id.chars().into_iter() {
+            if !c.is_numeric() {
+                return Err(error::Error::InternalError(
+                    "Account ID must be numberic".to_owned(),
+                ));
+            }
+        }
         Ok(Account1 {
             id: id.trim().to_owned(),
             name: "".into(),
