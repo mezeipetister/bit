@@ -41,6 +41,14 @@ impl Component for TabBar {
                                     span { "Dashboard" }
                                 }
                             }
+                            // li {
+                            //     a href="/ledger" {
+                            //         span.icon.is-small {
+                            //             i.fa.fa-book aria-hidden="true" {}
+                            //         }
+                            //         span { "Ledger" }
+                            //     }
+                            // }
                             li {
                                 a href="/transactions" {
                                     span.icon.is-small {

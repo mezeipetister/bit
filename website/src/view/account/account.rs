@@ -70,6 +70,16 @@ where
                     table.table.is-striped {
                         thead {
                             tr {
+                                th {
+                                    span.icon.is-small.has-text-grey {
+                                        i.fa.fa-exchange-alt aria-hidden="true" title="Is inverse" {}
+                                    }
+                                }
+                                th {
+                                    span.icon.is-small.has-text-success {
+                                        i.far.fa-check-circle aria-hidden="true" title="Is working" {}
+                                    }
+                                }
                                 th {"#"}
                                 th {"Name"}
                                 th {"Description"}
@@ -79,6 +89,20 @@ where
                         tbody {
                             @for account in &self.accounts {
                                 tr {
+                                    td {
+                                        @if account.get(|a| a.is_inverse()) {
+                                            span.icon.is-small.has-text-grey {
+                                                i.fa.fa-exchange-alt aria-hidden="true" title="Is inverse" {}
+                                            }
+                                        }
+                                    }
+                                    td {
+                                        @if account.get(|a| a.is_working()) {
+                                            span.icon.is-small.has-text-success {
+                                                i.far.fa-check-circle aria-hidden="true" title="Is working" {}
+                                            }
+                                        }
+                                    }
                                     td {
                                         a href=(format!("/accounts/{}", account.get(|a| a.get_id().to_owned())))
                                          {(account.get(|a| a.get_id().to_owned()))}

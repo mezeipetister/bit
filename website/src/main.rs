@@ -21,6 +21,7 @@
 extern crate rocket;
 extern crate chrono;
 extern crate core_lib;
+extern crate num_format;
 extern crate serde_derive;
 extern crate storaget;
 
@@ -31,7 +32,7 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
-use crate::core_lib::{Account, Transaction};
+use crate::core_lib::Account;
 use crate::prelude::CheckError;
 use crate::prelude::FlashOk;
 use chrono::prelude::*;

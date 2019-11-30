@@ -19,6 +19,7 @@ use crate::view::View;
 use chrono::prelude::*;
 use core_lib::Transaction;
 use maud::{html, Markup};
+use num_format::{Locale, ToFormattedString};
 use storaget::*;
 
 pub struct ViewTransaction<T>
@@ -87,7 +88,7 @@ where
                                         "/"
                                         (transaction.get(|a| a.get_debit_credit().1))
                                     }
-                                    td {(transaction.get(|a| a.get_amount()))}
+                                    td {(format!("HUF {}", transaction.get(|a| a.get_amount().to_formatted_string(&Locale::hu))))}
                                     td {(format!("{}-{}-{}",    transaction.get(|a| a.get_date_settlement().year()),
                                                                 transaction.get(|a| a.get_date_settlement().month()),
                                                                 transaction.get(|a| a.get_date_settlement().day())))}
