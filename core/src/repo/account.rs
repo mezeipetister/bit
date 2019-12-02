@@ -20,18 +20,18 @@ use chrono::prelude::*;
 use storaget::*;
 
 pub trait Account: StorageObject {
-    /// Set account ID, returns AppResult<()>
+    /// Get account name
     fn set_id(&mut self, id: &str) -> AppResult<()>;
     /// Get account name
-    fn get_name(&self) -> &str;
+    fn get_name(&self) -> String;
     /// Set account name, returns AppResult<()>
     fn set_name(&mut self, name: &str) -> AppResult<()>;
     /// Get account description, returns AppResult<()>
-    fn get_description(&self) -> &str;
+    fn get_description(&self) -> String;
     /// Set account description, returns AppResult<()>
     fn set_description(&mut self, description: &str) -> AppResult<()>;
     /// Get account creation time
-    fn get_created_by(&self) -> &str;
+    fn get_created_by(&self) -> String;
     /// Get created date
     fn get_date_created(&self) -> DateTime<Utc>;
     /// Query is inverse? Return bool

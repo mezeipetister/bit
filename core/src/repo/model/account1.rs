@@ -15,31 +15,35 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::error::Error;
 use crate::prelude::*;
 use crate::repo::*;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
-use storaget::*;
+use storaget::StorageObject;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Account1 {
-    path: Option<String>,
     id: String,
     name: String,
     description: String,
     created_by: String,
     date_created: DateTime<Utc>,
     is_inverse: bool,
-    // Can we use it as an active ID to account?
-    // True yes, false no
     is_working: bool,
 }
 
 impl Account1 {
     pub fn new(id: &str, userid: &str) -> AppResult<Self> {
+        for c in id.chars().into_iter() {
+            if !c.is_numeric() {
+                return Err(Error::InternalError(
+                    "Account ID must be numberic".to_owned(),
+                ));
+            }
+        }
         Ok(Account1 {
-            path: None,
-            id: id.into(),
+            id: id.trim().to_owned(),
             name: "".into(),
             description: "".into(),
             created_by: userid.into(),
@@ -51,14 +55,14 @@ impl Account1 {
 }
 
 impl Account for Account1 {
-    // TODO: check id and use error!
     fn set_id(&mut self, id: &str) -> AppResult<()> {
+        let id = id.trim();
         self.id = id.into();
         Ok(())
     }
     /// Get account name
-    fn get_name(&self) -> &str {
-        &self.name
+    fn get_name(&self) -> String {
+        (&self.name).into()
     }
     // TODO: name validation and error!
     /// Set account name, returns AppResult<()>
@@ -67,8 +71,8 @@ impl Account for Account1 {
         Ok(())
     }
     /// Get account description, returns AppResult<()>
-    fn get_description(&self) -> &str {
-        &self.description
+    fn get_description(&self) -> String {
+        (&self.description).into()
     }
     // TODO: Description validation and error!
     /// Set account description, returns AppResult<()>
@@ -77,8 +81,8 @@ impl Account for Account1 {
         Ok(())
     }
     /// Get account creation time
-    fn get_created_by(&self) -> &str {
-        &self.created_by
+    fn get_created_by(&self) -> String {
+        (&self.created_by).into()
     }
     /// Get created date
     fn get_date_created(&self) -> DateTime<Utc> {

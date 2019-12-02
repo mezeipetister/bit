@@ -21,6 +21,8 @@
 extern crate rocket;
 extern crate chrono;
 extern crate core_lib;
+extern crate ifeq;
+extern crate num_format;
 extern crate serde_derive;
 extern crate storaget;
 
@@ -31,11 +33,18 @@ pub mod login;
 pub mod prelude;
 pub mod view;
 
+use crate::core_lib::Account;
+use crate::core_lib::Transaction;
+use crate::prelude::CheckError;
+use crate::prelude::FlashOk;
+use chrono::prelude::*;
 use core_lib::prelude::AppResult;
 use core_lib::user;
 use core_lib::user::User;
 use core_lib::user::UserV1;
 use core_lib::user::*;
+use core_lib::Account1;
+use core_lib::Transaction1;
 use guard::*;
 use layout::Layout;
 use login::*;
@@ -47,6 +56,7 @@ use rocket::response::{Flash, NamedFile, Redirect};
 use rocket::Request;
 use rocket::State;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use storaget::*;
 use view::*;
 
@@ -104,11 +114,10 @@ fn login_post(
         return Ok(user_login(&mut cookies, "9"));
     }
 
-    let user = &data
-        .inner()
-        .users
-        .get_by_id(&login.username)
-        .check("/login")?;
+    let user = &data.inner().users.get_by_id(&login.username).check_error(
+        core_lib::Error::InternalError("User not found".to_owned()),
+        "/login",
+    )?;
 
     let password = &login.password;
     let hash = user.get(|u| u.get_password_hash().to_owned());
@@ -150,6 +159,197 @@ fn login_reset_password_post(
             return Ok(Redirect::to("/login/reset_password/error"));
         }
     };
+}
+
+// Accounts
+#[get("/accounts")]
+fn accounts_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    Layout::new()
+        .set_title("Accounts")
+        .set_notification(flash)
+        .render(ViewAccount::new(&data.inner().accounts, &data.inner().transactions).render())
+}
+
+// Accounts
+#[get("/accounts/<account_id>")]
+fn accounts_edit_get(
+    flash: Option<FlashMessage>,
+    data: State<DataLoad>,
+    account_id: String,
+) -> FlashOk {
+    Ok(Layout::new()
+        .set_title("Accounts")
+        .set_notification(flash)
+        .render(
+            ViewAccountEdit::new(
+                data.inner()
+                    .accounts
+                    .get_by_id(&account_id)
+                    .check("/accounts")?,
+            )
+            .render(),
+        ))
+}
+
+#[derive(FromForm)]
+struct FormAccountEdit {
+    account_name: String,
+    account_description: String,
+    is_working: bool,
+    is_inverse: bool,
+}
+#[post("/accounts/<account_id>", data = "<form>")]
+fn accounts_edit_post(
+    _user: Login,
+    form: Form<FormAccountEdit>,
+    data: State<DataLoad>,
+    account_id: String,
+) -> FlashRedirect {
+    let account_id = account_id.trim();
+    data.inner()
+        .accounts
+        .get_by_id(&account_id)
+        .check(&format!("/accounts/{}", account_id))?
+        .update(|a| {
+            (*a).set_description(&form.account_description)?;
+            (*a).set_name(&form.account_name)?;
+            (*a).set_inverse(form.is_inverse)?;
+            (*a).set_working(form.is_working)
+        })
+        .check(&format!("/accounts/{}", account_id))?;
+    Ok(Redirect::to(format!("/accounts/{}", account_id)))
+}
+
+// Accounts new
+#[get("/accounts/new")]
+fn accounts_new_get(flash: Option<FlashMessage>) -> Markup {
+    Layout::new()
+        .set_title("Accounts")
+        .set_notification(flash)
+        .render(ViewAccountNew::new().render())
+}
+
+#[derive(FromForm)]
+struct FormAccount {
+    account_id: String,
+    account_name: String,
+    account_description: String,
+    is_working: bool,
+    is_inverse: bool,
+}
+#[post("/accounts/new", data = "<form>")]
+fn accounts_new_post(user: Login, form: Form<FormAccount>, data: State<DataLoad>) -> FlashRedirect {
+    let new_account = Account1::new(&form.account_id, &user.userid()).check("/accounts/new")?;
+    data.inner()
+        .accounts
+        .add_to_storage(new_account)
+        .check("/accounts/new")?;
+    data.inner()
+        .accounts
+        .get_by_id(&form.account_id)
+        .unwrap()
+        .update(|a| {
+            (*a).set_description(&form.account_description)?;
+            (*a).set_name(&form.account_name)?;
+            (*a).set_inverse(form.is_inverse)?;
+            (*a).set_working(form.is_working)
+        })
+        .check("/accounts/new")?;
+    Ok(Redirect::to("/accounts"))
+}
+
+// Transaction new
+#[get("/transactions/new")]
+fn transaction_new_get(flash: Option<FlashMessage>) -> Markup {
+    Layout::new()
+        .set_title("New transaction")
+        .set_notification(flash)
+        .render(ViewTransactionNew::new().render())
+}
+
+#[derive(FromForm)]
+struct FormTransaction {
+    transaction_subject: String,
+    transaction_debit: String,
+    transaction_credit: String,
+    transaction_amount: u32,
+    transaction_date_settlement: String,
+}
+// Transaction new post
+#[post("/transactions/new", data = "<form>")]
+fn transaction_new_post(
+    user: Login,
+    form: Form<FormTransaction>,
+    data: State<DataLoad>,
+) -> FlashRedirect {
+    let new_transaction = Transaction1::new(
+        form.transaction_subject.clone(),
+        form.transaction_debit.clone(),
+        form.transaction_credit.clone(),
+        form.transaction_amount,
+        NaiveDate::from_str(&form.transaction_date_settlement).check_error(
+            core_lib::error::Error::InternalError("Wrong date parse".to_owned()),
+            "/transactions/new",
+        )?,
+        user.userid().to_owned(),
+        &data.inner().accounts,
+    )
+    .check("/transactions/new")?;
+    data.inner()
+        .transactions
+        .add_to_storage(new_transaction)
+        .check("/transactions/new")?;
+    Ok(Redirect::to("/transactions"))
+}
+
+// Transaction new
+#[get("/transactions")]
+fn transaction_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    Layout::new()
+        .set_title("New transaction")
+        .set_notification(flash)
+        .render(ViewTransaction::new(&data.inner().transactions).render())
+}
+
+// Dashboard
+#[get("/dashboard")]
+fn dashboard_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    let filter_date = Utc::today().naive_utc();
+    let mut ledger: Vec<(String, String, u32, u32, i32)> = Vec::new();
+    for account in data.inner().accounts.into_iter() {
+        let account_id = account.get(|a| a.get_id().to_owned());
+        account.update(|a| {
+            if a.is_working() {
+                let mut debit_total = 0;
+                let mut credit_total = 0;
+                debit_total = data
+                    .inner()
+                    .transactions
+                    .into_iter()
+                    .filter(|a| a.get(|a| (*a).get_date_settlement() <= filter_date))
+                    .filter(|a| a.get(|a| (*a).get_debit() == account_id))
+                    .fold(0, |sum, i| sum + i.get(|i| (*i).get_amount()));
+                credit_total = data
+                    .inner()
+                    .transactions
+                    .into_iter()
+                    .filter(|a| a.get(|a| (*a).get_date_settlement() <= filter_date))
+                    .filter(|a| a.get(|a| (*a).get_credit() == account_id))
+                    .fold(0, |sum, i| sum + i.get(|i| (*i).get_amount()));
+                ledger.push((
+                    a.get_id().into(),
+                    a.get_name(),
+                    debit_total,
+                    credit_total,
+                    debit_total as i32 - credit_total as i32,
+                ));
+            }
+        })
+    }
+    Layout::new()
+        .set_title("Dashboard")
+        .set_notification(flash)
+        .render(ViewDashboard::new(ledger).render())
 }
 
 /**
@@ -303,6 +503,15 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 login,
                 login_post,
                 logout,
+                accounts_get,
+                accounts_edit_get,
+                accounts_edit_post,
+                accounts_new_get,
+                accounts_new_post,
+                transaction_get,
+                transaction_new_get,
+                transaction_new_post,
+                dashboard_get,
                 admin_user,
                 admin_user_new,
                 admin_user_new_post,
@@ -317,21 +526,17 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
         .register(catchers![not_found, unauthorized])
 }
 
-#[derive(Debug)]
-struct Usr {
-    id: String,
-    name: String,
-}
-
 struct DataLoad {
     users: Storage<UserV1>,
-    // accounts: Storage<Account1>,
+    accounts: Storage<Account1>,
+    transactions: Storage<Transaction1>,
 }
 
 fn main() -> StorageResult<()> {
     let data = DataLoad {
         users: Storage::load_or_init::<UserV1>("data/users")?,
-        // accounts: Storage::load_or_init::<Account1>("data/accounts")?,
+        accounts: Storage::load_or_init::<Account1>("data/accounts")?,
+        transactions: Storage::load_or_init::<Transaction1>("data/transactions")?,
     };
     rocket(data).launch();
     Ok(())

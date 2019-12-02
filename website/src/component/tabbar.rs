@@ -33,7 +33,7 @@ impl Component for TabBar {
                 .container {
                     .tabs.is-centered {
                         ul {
-                            li.is-active {
+                            li {
                                 a href="/dashboard" {
                                     span.icon.is-small {
                                         i.fa.fa-tachometer-alt aria-hidden="true" {}
@@ -41,12 +41,20 @@ impl Component for TabBar {
                                     span { "Dashboard" }
                                 }
                             }
+                            // li {
+                            //     a href="/ledger" {
+                            //         span.icon.is-small {
+                            //             i.fa.fa-book aria-hidden="true" {}
+                            //         }
+                            //         span { "Ledger" }
+                            //     }
+                            // }
                             li {
-                                a href="/commits" {
+                                a href="/transactions" {
                                     span.icon.is-small {
-                                        i.fa.fa-history aria-hidden="true" {}
+                                        i.fa.fa-receipt aria-hidden="true" {}
                                     }
-                                    span { "Commits" }
+                                    span { "Transactions" }
                                 }
                             }
                             li {

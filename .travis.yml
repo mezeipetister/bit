@@ -5,7 +5,7 @@ language: rust
 rust:
   - nightly
 
-cache: cargo
+# cache: cargo
 
 # Packages for Coveralls.io
 addons:

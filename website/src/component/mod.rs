@@ -20,11 +20,13 @@ use maud::Markup;
 pub mod footer;
 pub mod navbar;
 pub mod notification;
+pub mod pagination;
 pub mod tabbar;
 
 pub use footer::Footer;
 pub use navbar::Navbar;
 pub use notification::Notification;
+pub use pagination::Pagination;
 pub use tabbar::TabBar;
 
 pub trait Component {

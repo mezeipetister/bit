@@ -16,15 +16,8 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod account;
-pub mod card;
-pub mod event;
-pub mod model;
-pub mod team;
-pub mod transaction;
-
+pub mod account_edit;
+pub mod account_new;
 pub use account::*;
-pub use card::*;
-pub use event::*;
-pub use model::*;
-pub use team::*;
-pub use transaction::*;
+pub use account_edit::*;
+pub use account_new::*;
