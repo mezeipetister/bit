@@ -25,9 +25,10 @@ pub struct ViewDashboard {
 }
 
 impl ViewDashboard {
-    pub fn new(ledger: Vec<(String, String, u32, u32, i32)>) -> Self {
+    pub fn new(mut ledger: Vec<(String, String, u32, u32, i32)>) -> Self {
         // let mut acc = transactions.into_data_objects();
         // acc.sort_by_key(|a| a.get(|a| a.get_id().to_owned()));
+        ledger.sort_by_key(|a| a.0.to_owned());
         ViewDashboard { ledger }
     }
 }
