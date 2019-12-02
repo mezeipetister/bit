@@ -18,30 +18,21 @@
 use crate::view::View;
 use core_lib::Transaction;
 use maud::{html, Markup};
-use storaget::*;
+use num_format::{Locale, ToFormattedString};
 
-pub struct ViewDashboard<T>
-where
-    T: Transaction,
-{
-    transactions: Vec<DataObject<T>>,
+pub struct ViewDashboard {
+    ledger: Vec<(String, String, u32, u32, i32)>,
 }
 
-impl<T> ViewDashboard<T>
-where
-    T: Transaction,
-{
-    pub fn new(transactions: &Storage<T>) -> Self {
-        let mut acc = transactions.into_data_objects();
-        acc.sort_by_key(|a| a.get(|a| a.get_id().to_owned()));
-        ViewDashboard { transactions: acc }
+impl ViewDashboard {
+    pub fn new(ledger: Vec<(String, String, u32, u32, i32)>) -> Self {
+        // let mut acc = transactions.into_data_objects();
+        // acc.sort_by_key(|a| a.get(|a| a.get_id().to_owned()));
+        ViewDashboard { ledger }
     }
 }
 
-impl<T> View for ViewDashboard<T>
-where
-    T: Transaction,
-{
+impl View for ViewDashboard {
     fn render(&self) -> Markup {
         html! {
             section.section {
@@ -58,10 +49,6 @@ where
                         //     }
                         // }
                     }
-                }
-                .container {
-                    "Total transaction number: "
-                    (self.transactions.len())
                 }
                 // .container {
                 //     table.table.is-striped {
@@ -88,6 +75,35 @@ where
                 //         }
                 //     }
                 // }
+            }
+            section.section {
+                .container.content {
+                    h2.is-spaced {"Ledger"}
+                    table.table.is-striped {
+                        thead {
+                            tr {
+                                th {"#"}
+                                th {"Name"}
+                                th {"Debit total"}
+                                th {"Credit total"}
+                                th {"Balance"}
+                            }
+                        }
+                        tbody {
+                            @for account in &self.ledger {
+                                tr {
+                                    td {
+                                        a href=(format!("/accounts/{}", &account.0)) {(&account.0)}
+                                    }
+                                    td {(&account.1)}
+                                    td {(&account.2.to_formatted_string(&Locale::hu))}
+                                    td {(&account.3.to_formatted_string(&Locale::hu))}
+                                    td {(&account.4.to_formatted_string(&Locale::hu))}
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

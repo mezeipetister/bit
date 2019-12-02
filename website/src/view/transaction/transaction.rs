@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::component::*;
 use crate::view::View;
 use chrono::prelude::*;
 use core_lib::Transaction;
@@ -100,6 +101,8 @@ where
                             }
                         }
                     }
+                    // Insert pagination component
+                    (Pagination::new(vec![1,2,3,4], 1,2).render())
                 }
             }
         }

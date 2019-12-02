@@ -21,6 +21,7 @@
 extern crate rocket;
 extern crate chrono;
 extern crate core_lib;
+extern crate ifeq;
 extern crate num_format;
 extern crate serde_derive;
 extern crate storaget;
@@ -33,6 +34,7 @@ pub mod prelude;
 pub mod view;
 
 use crate::core_lib::Account;
+use crate::core_lib::Transaction;
 use crate::prelude::CheckError;
 use crate::prelude::FlashOk;
 use chrono::prelude::*;
@@ -303,7 +305,6 @@ fn transaction_new_post(
 // Transaction new
 #[get("/transactions")]
 fn transaction_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
-    println!("{:?}", &data.inner().transactions.data());
     Layout::new()
         .set_title("New transaction")
         .set_notification(flash)
@@ -313,10 +314,42 @@ fn transaction_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup
 // Dashboard
 #[get("/dashboard")]
 fn dashboard_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+    let filter_date = Utc::today().naive_utc();
+    let mut ledger: Vec<(String, String, u32, u32, i32)> = Vec::new();
+    for account in data.inner().accounts.into_iter() {
+        let account_id = account.get(|a| a.get_id().to_owned());
+        account.update(|a| {
+            if a.is_working() {
+                let mut debit_total = 0;
+                let mut credit_total = 0;
+                debit_total = data
+                    .inner()
+                    .transactions
+                    .into_iter()
+                    .filter(|a| a.get(|a| (*a).get_date_settlement() <= filter_date))
+                    .filter(|a| a.get(|a| (*a).get_debit() == account_id))
+                    .fold(0, |sum, i| sum + i.get(|i| (*i).get_amount()));
+                credit_total = data
+                    .inner()
+                    .transactions
+                    .into_iter()
+                    .filter(|a| a.get(|a| (*a).get_date_settlement() <= filter_date))
+                    .filter(|a| a.get(|a| (*a).get_credit() == account_id))
+                    .fold(0, |sum, i| sum + i.get(|i| (*i).get_amount()));
+                ledger.push((
+                    a.get_id().into(),
+                    a.get_name(),
+                    debit_total,
+                    credit_total,
+                    debit_total as i32 - credit_total as i32,
+                ));
+            }
+        })
+    }
     Layout::new()
         .set_title("Dashboard")
         .set_notification(flash)
-        .render(ViewDashboard::new(&data.inner().transactions).render())
+        .render(ViewDashboard::new(ledger).render())
 }
 
 /**

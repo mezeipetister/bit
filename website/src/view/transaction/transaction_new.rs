@@ -69,7 +69,7 @@ impl View for ViewTransactionNew {
                         .field {
                             label.label {"Settlement date"}
                             .control {
-                                input.input type="date" name="transaction_date_settlement" placeholder="e.g.: 2020-01-01" required? value=(today);
+                                input.input type="text" name="transaction_date_settlement" placeholder="e.g.: 2020-01-01" required? value=(today);
                             }
                         }
                         .buttons {
