@@ -320,8 +320,8 @@ fn dashboard_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
         let account_id = account.get(|a| a.get_id().to_owned());
         account.update(|a| {
             if a.is_working() {
-                let mut debit_total = 0;
-                let mut credit_total = 0;
+                let debit_total: u32;
+                let credit_total: u32;
                 debit_total = data
                     .inner()
                     .transactions

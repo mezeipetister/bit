@@ -16,7 +16,7 @@
 // along with Project A.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::view::View;
-use core_lib::Transaction;
+// use core_lib::Transaction;
 use maud::{html, Markup};
 use num_format::{Locale, ToFormattedString};
 
