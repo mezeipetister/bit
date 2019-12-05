@@ -1,7 +1,8 @@
 # Base file
 FROM rustlang/rust:nightly
 
-COPY . .
+WORKDIR /app
+COPY . /app/
 
 # Common tasks
 #RUN apt-get update
