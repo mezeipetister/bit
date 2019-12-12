@@ -55,6 +55,7 @@ use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, NamedFile, Redirect};
 use rocket::Request;
 use rocket::State;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use storaget::*;
@@ -303,49 +304,55 @@ fn transaction_new_post(
 }
 
 // Transaction new
-#[get("/transactions")]
-fn transaction_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
+#[get("/transactions?<page>")]
+fn transaction_get(
+    flash: Option<FlashMessage>,
+    data: State<DataLoad>,
+    page: Option<usize>,
+) -> Markup {
+    let mut transactions = data.inner().transactions.into_data_objects();
+    transactions.sort_by_key(|t| (*t).get(|t| t.get_date_settlement()));
+    transactions.reverse();
+
+    let page = match page {
+        Some(p) => p,
+        None => 0,
+    };
+
+    let res: Vec<_> = transactions.chunks(10).collect();
+
     Layout::new()
         .set_title("New transaction")
         .set_notification(flash)
-        .render(ViewTransaction::new(&data.inner().transactions).render())
+        .render(ViewTransaction::new(res.get(page).unwrap()).render())
 }
 
 // Dashboard
 #[get("/dashboard")]
 fn dashboard_get(flash: Option<FlashMessage>, data: State<DataLoad>) -> Markup {
     let filter_date = Utc::today().naive_utc();
+    // ID, name, debit_total, credit_total, total
     let mut ledger: Vec<(String, String, u32, u32, i32)> = Vec::new();
-    for account in data.inner().accounts.into_iter() {
-        let account_id = account.get(|a| a.get_id().to_owned());
-        account.update(|a| {
+    data.inner().accounts.into_iter().for_each(|a| {
+        a.exec(|a| {
             if a.is_working() {
-                let debit_total: u32;
-                let credit_total: u32;
-                debit_total = data
-                    .inner()
-                    .transactions
-                    .into_iter()
-                    .filter(|a| a.get(|a| (*a).get_date_settlement() <= filter_date))
-                    .filter(|a| a.get(|a| (*a).get_debit() == account_id))
-                    .fold(0, |sum, i| sum + i.get(|i| (*i).get_amount()));
-                credit_total = data
-                    .inner()
-                    .transactions
-                    .into_iter()
-                    .filter(|a| a.get(|a| (*a).get_date_settlement() <= filter_date))
-                    .filter(|a| a.get(|a| (*a).get_credit() == account_id))
-                    .fold(0, |sum, i| sum + i.get(|i| (*i).get_amount()));
-                ledger.push((
-                    a.get_id().into(),
-                    a.get_name(),
-                    debit_total,
-                    credit_total,
-                    debit_total as i32 - credit_total as i32,
-                ));
+                ledger.push((a.get_id().to_owned(), a.get_name(), 0, 0, 0));
             }
         })
-    }
+    });
+    data.inner().transactions.into_iter().for_each(|a| {
+        a.exec(|a| {
+            for account in &mut ledger {
+                if (*a).get_date_settlement() <= filter_date && (*a).get_debit() == account.0 {
+                    account.2 += (*a).get_amount();
+                }
+                if (*a).get_date_settlement() <= filter_date && (*a).get_credit() == account.0 {
+                    account.3 += (*a).get_amount();
+                }
+                account.4 = account.2 as i32 - account.3 as i32;
+            }
+        })
+    });
     Layout::new()
         .set_title("Dashboard")
         .set_notification(flash)

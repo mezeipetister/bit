@@ -43,7 +43,7 @@ impl Component for Pagination {
                 ul.pagination-list {
                     @for item in &self.pages {
                         li {
-                            a.pagination-link.is-current href=(format!("{}", item)) aria-label=(format!("Page {}", item)) aria-current="page" {(item)}
+                            a.pagination-link.is-current href=(format!("?page={}", item)) aria-label=(format!("Page {}", item)) aria-current="page" {(item)}
                         }
                     }
                 }

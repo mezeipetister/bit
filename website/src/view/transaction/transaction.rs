@@ -23,25 +23,23 @@ use maud::{html, Markup};
 use num_format::{Locale, ToFormattedString};
 use storaget::*;
 
-pub struct ViewTransaction<T>
+pub struct ViewTransaction<'a, T>
 where
     T: Transaction,
 {
-    transactions: Vec<DataObject<T>>,
+    transactions: &'a [DataObject<T>],
 }
 
-impl<T> ViewTransaction<T>
+impl<'a, T> ViewTransaction<'a, T>
 where
     T: Transaction,
 {
-    pub fn new(transactions: &Storage<T>) -> Self {
-        ViewTransaction {
-            transactions: transactions.into_data_objects(),
-        }
+    pub fn new(transactions: &'a [DataObject<T>]) -> Self {
+        ViewTransaction { transactions }
     }
 }
 
-impl<T> View for ViewTransaction<T>
+impl<'a, T> View for ViewTransaction<'a, T>
 where
     T: Transaction,
 {
@@ -76,7 +74,7 @@ where
                             }
                         }
                         tbody {
-                            @for transaction in &self.transactions {
+                            @for transaction in self.transactions {
                                 tr {
                                     td {
                                         (transaction.get(|a| a.get_id().to_owned()))
@@ -90,12 +88,12 @@ where
                                         (transaction.get(|a| a.get_debit_credit().1))
                                     }
                                     td {(format!("HUF {}", transaction.get(|a| a.get_amount().to_formatted_string(&Locale::hu))))}
-                                    td {(format!("{}-{}-{}",    transaction.get(|a| a.get_date_settlement().year()),
-                                                                transaction.get(|a| a.get_date_settlement().month()),
-                                                                transaction.get(|a| a.get_date_settlement().day())))}
-                                    td {(format!("{}-{}-{}",    transaction.get(|a| a.get_date_created().year()),
-                                                                transaction.get(|a| a.get_date_created().month()),
-                                                                transaction.get(|a| a.get_date_created().day())))}
+                                    td {(transaction.get(|a| format!("{}-{}-{}",a.get_date_settlement().year(),
+                                                                                a.get_date_settlement().month(),
+                                                                                a.get_date_settlement().day())))}
+                                    td {(transaction.get(|a| format!("{}-{}-{}",a.get_date_created().year(),
+                                                                                a.get_date_created().month(),
+                                                                                a.get_date_created().day())))}
                                     td {(transaction.get(|a| a.get_created_by()))}
                                 }
                             }
