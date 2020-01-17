@@ -55,7 +55,6 @@ use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, NamedFile, Redirect};
 use rocket::Request;
 use rocket::State;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use storaget::*;

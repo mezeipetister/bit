@@ -68,7 +68,7 @@ where
                     }
                 }
                 .container {
-                    table.table.is-striped {
+                    table.table.is-striped."is-size-7" {
                         thead {
                             tr {
                                 th {
@@ -89,30 +89,31 @@ where
                         }
                         tbody {
                             @for account in &self.accounts {
+                                @let account = account.get_data_ref();
                                 tr {
                                     td {
-                                        @if account.get(|a| a.is_inverse()) {
+                                        @if account.is_inverse() {
                                             span.icon.is-small.has-text-grey {
                                                 i.fa.fa-exchange-alt aria-hidden="true" title="Is inverse" {}
                                             }
                                         }
                                     }
                                     td {
-                                        @if account.get(|a| a.is_working()) {
+                                        @if account.is_working() {
                                             span.icon.is-small.has-text-success {
                                                 i.far.fa-check-circle aria-hidden="true" title="Is working" {}
                                             }
                                         }
                                     }
                                     td {
-                                        a href=(format!("/accounts/{}", account.get(|a| a.get_id().to_owned())))
-                                         {(account.get(|a| a.get_id().to_owned()))}
+                                        a href=(format!("/accounts/{}", account.get_id().to_owned()))
+                                         {(account.get_id().to_owned())}
                                     }
-                                    td {(account.get(|a| a.get_name().to_owned()))}
-                                    td {(account.get(|a| a.get_description().to_owned()))}
+                                    td {(account.get_name().to_owned())}
+                                    td {(account.get_description().to_owned())}
                                     td {(&self.transactions.into_iter().filter(|o|o.get(|a| {
-                                            a.get_credit() == account.get(|a| a.get_id().to_owned())
-                                            || a.get_debit() == account.get(|a| a.get_id().to_owned())
+                                            a.get_credit() == account.get_id().to_owned()
+                                            || a.get_debit() == account.get_id().to_owned()
                                         })).collect::<Vec<_>>().len()
                                     )}
                                 }

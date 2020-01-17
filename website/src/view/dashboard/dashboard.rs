@@ -80,7 +80,7 @@ impl View for ViewDashboard {
             section.section {
                 .container.content {
                     h2.is-spaced {"Ledger"}
-                    table.table.is-striped {
+                    table.table.is-striped."is-size-7" {
                         thead {
                             tr {
                                 th {"#"}
