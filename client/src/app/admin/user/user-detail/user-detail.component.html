@@ -1,0 +1,49 @@
+<section class="section">
+    <div class="container">
+        <h1 class="title">Felhasználó</h1>
+        <form #loginForm="ngForm">
+            <error-display [model]="user"></error-display>
+            <div class="field">
+                <label class="label">Felhasználó azonosítója</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Példa User" name="username"
+                        [(ngModel)]="user.data.username" required readonly disabled>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Felhasználó neve</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Példa Vásárló" name="name"
+                        [(ngModel)]="user.data.name" required readonly disabled>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Telefonszám</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Telefonszám" name="phone"
+                        [(ngModel)]="user.data.phone" required readonly disabled>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Email" name="email" [(ngModel)]="user.data.email"
+                        required readonly disabled>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Létrehozta</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Demo Elek" name="createdBy"
+                        [(ngModel)]="user.data.created_by" required readonly disabled>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Létrehozva: {{user.data.date_created | date}}</label>
+            </div>
+            <!-- <div class="field">
+                <label class="label">Hozzárendelt vásárlók: {{user.data.customers}}</label>
+            </div> -->
+        </form>
+    </div>
+</section>

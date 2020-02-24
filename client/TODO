@@ -1,0 +1,41 @@
+( ) # username store in client side
+    for client filter processes e.g.: issue/ display follow status.
+    As we see a follows list, we need to know our username to detect we are
+    in the list or not.
+
+    ! New API response refact at login process
+    -> store userid at client side
+    -> somehow easily get access to client side userid
+
+( ) # Issue follow / unfollow
+
+( ) # Issue comment like / dislike
+
+( ) # Notification refact, using Event / EventKind model
+
+    struct Event {
+        id: usize,
+        created_by: String,         <--- ? ez kell?
+        date_created: DateTime<Utc>,
+        event_kind: EventKind,
+    }
+
+    enum EventKind {
+        IssueMention {
+            who: String,
+            issue_title: String,
+            issue_id: String,
+            comment_id: Usize,
+        }
+        IssueAssigned {
+            who: String,
+            issue_title: String,
+            issue_id: String,
+        }
+    }
+
+Product
+Stock
+Cart
+CashRegister
+Analytics

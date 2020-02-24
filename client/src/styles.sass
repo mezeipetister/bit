@@ -1,0 +1,63 @@
+@charset "utf-8"
+
+// Customization
+
+// You can easily customize Bulma with your own variables.
+// Just uncomment the following block to see the result.
+
+$widescreen-enabled: false
+$fullhd-enabled: false
+
+@import "../node_modules/bulma/bulma.sass"
+
+// // 1. Import the initial variables
+// @import "../node_modules/bulma/sass/utilities/initial-variables"
+// // @import "../node_modules/bulma/sass/utilities/functions"
+// // @import "../node_modules/bulma/sass/utilities/_all.sass"
+// // @import "../node_modules/bulma/sass/elements/_all.sass"
+// @import "../node_modules/bulma/bulma.sass"
+// // @import "../node_modules/bulma/bulma"
+
+.container.is-narrow
+    width: $desktop !important
+
+.is-ok
+    color: transparent !important
+    animation-name: save-background
+    animation-duration: 1.5s
+
+.is-ok:after
+    color: $info
+    font-family: "Font Awesome 5 Free"
+    content: ""
+    // content: "\f058"
+    // content: "\f00"
+    position: absolute
+    // vertical-align: middle
+    font-weight: 100
+    animation-name: save-text
+    animation-duration: 1.5s
+
+.is-ok:hover:after
+    color: $button-text-hover-color
+
+.is-ok.is-outlined:after
+    color: $info
+
+.is-ok.is-outlined:hover:after
+    color: white
+
+@keyframes save-background
+    5%
+        bacgkround-color: green
+    90%
+        background-color: $success
+
+@keyframes save-text
+    10%
+        color: findColorInvert($info)
+    30%
+        content: "\f164"
+    100%
+        color: findColorInvert($info)
+        content: "\f164"

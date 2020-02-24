@@ -1,0 +1,83 @@
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-6">
+                <h1 class="title">Felhasználói profil</h1>
+                <p class="subtitle is-4">Itt szerkesztheted a felhasználói adataidat
+                </p>
+                <form (ngSubmit)="profile.submit()" #loginForm="ngForm">
+                    <error-display [model]="profile"></error-display>
+                    <div class="field">
+                        <label class="label">Felhasználói név</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Demo felhasználói név" name="username"
+                                [(ngModel)]="profile.data.username" readonly disabled>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Email</label>
+                        <div class="control">
+                            <input class="input" type="email" placeholder="demo.elek@email.com"
+                                [(ngModel)]="profile.data.email" name="email">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Telefonszám</label>
+                        <div class="control">
+                            <input class="input" type="phone" placeholder="+36 _ ____ ____"
+                                [(ngModel)]="profile.data.phone" name="phone">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Név</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Példa név" [(ngModel)]="profile.data.name"
+                                name="name">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="buttons">
+                                <!-- <button class="button is-info is-outlined" type="submit"
+                                    [class.is-ok]="profile.isOk">Mentés</button> -->
+                                <button-submit [model]="profile">
+                                </button-submit>
+                                <!-- <button class="button" type="button">Jelszó módosítása</button> -->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <h1 class="title">Jelszó módosítása</h1>
+                <p class="subtitle is-6">Kérünk add meg az új jelszavadat
+                </p>
+                <form (ngSubmit)="password.submit()" #passwordForm="ngForm">
+                    <error-display [model]="password"></error-display>
+                    <div class="field">
+                        <label class="label">Új jelszó</label>
+                        <div class="control">
+                            <input class="input" type="password" placeholder="erősjelszó"
+                                [(ngModel)]="password.data.password1" name="password1">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Új jelszó ismét</label>
+                        <div class="control">
+                            <input class="input" type="password" placeholder="erősjelszó"
+                                [(ngModel)]="password.data.password2" name="password2">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="buttons">
+                                <!-- <button class="button is-info is-outlined" type="submit"
+                                    [class.is-ok]="password.isOk">Módosítás</button> -->
+                                <button-submit [model]="password" name="Jelszó módosítása"></button-submit>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
