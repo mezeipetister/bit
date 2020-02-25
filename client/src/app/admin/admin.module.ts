@@ -25,6 +25,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { AccountDetailComponent } from './account/account-detail/account-detail.component';
 import { AccountNewComponent } from './account/account-new/account-new.component';
 import { RepositoryNewComponent } from './repository/repository-new/repository-new.component';
+import { AssetDetailComponent } from './asset/asset-detail/asset-detail.component';
+import { AssetNewComponent } from './asset/asset-new/asset-new.component';
 
 @NgModule({
   declarations: [
@@ -50,6 +52,8 @@ import { RepositoryNewComponent } from './repository/repository-new/repository-n
     AccountDetailComponent,
     AccountNewComponent,
     RepositoryNewComponent,
+    AssetDetailComponent,
+    AssetNewComponent,
   ],
   imports: [
     CommonModule,

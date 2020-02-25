@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-ledger',
   templateUrl: './ledger.component.html',
-  styleUrls: ['./ledger.component.css']
+  styleUrls: ['./ledger.component.sass']
 })
 export class LedgerComponent implements OnInit {
 

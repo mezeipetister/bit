@@ -5,6 +5,11 @@
                 <strong>BIT</strong>
                 <!-- <strong>Gardenzilla</strong> -->
             </a>
+            <a class="navbar-item is-hidden-desktop is-pulled-right">
+                <span class="icon">
+                    <i class="fas fa-plus"></i>
+                </span>
+            </a>
             <a role="button" class="navbar-burger burger" [ngClass]="{'is-active': isActive}" aria-label="menu"
                 aria-expanded="false" data-target="navbarBasicExample" (click)="isActive = isActive ? false : true">
                 <span aria-hidden="true"></span>
@@ -24,6 +29,11 @@
             </div>
 
             <div class="navbar-end">
+                <a class="navbar-item">
+                    <span class="icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                </a>
                 <a class="navbar-item" routerLink='/profile'>{{username}}</a>
                 <div class="navbar-item">
                     <a (click)="logout()" class="has-text-white">
