@@ -22,6 +22,8 @@ import { AccountNewComponent } from './account/account-new/account-new.component
 import { RepositoryNewComponent } from './repository/repository-new/repository-new.component';
 import { AssetNewComponent } from './asset/asset-new/asset-new.component';
 import { AssetDetailComponent } from './asset/asset-detail/asset-detail.component';
+import { TransactionNewComponent } from './transaction/transaction-new/transaction-new.component';
+import { TransactionDetailComponent } from './transaction/transaction-detail/transaction-detail.component';
 
 const routes: Routes = [
   {
@@ -39,7 +41,13 @@ const routes: Routes = [
               { path: '', component: RepositoryDetailComponent },
               { path: 'dashboard', component: DashboardComponent },
               { path: 'ledger', component: LedgerComponent },
-              { path: 'transaction', component: TransactionComponent },
+              {
+                path: 'transaction', component: EmptyComponent, children: [
+                  { path: '', component: TransactionComponent },
+                  { path: 'new', component: TransactionNewComponent },
+                  { path: ':id', component: TransactionDetailComponent }
+                ]
+              },
               {
                 path: 'asset', component: EmptyComponent, children: [
                   { path: '', component: AssetComponent },

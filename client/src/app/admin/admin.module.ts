@@ -27,6 +27,8 @@ import { AccountNewComponent } from './account/account-new/account-new.component
 import { RepositoryNewComponent } from './repository/repository-new/repository-new.component';
 import { AssetDetailComponent } from './asset/asset-detail/asset-detail.component';
 import { AssetNewComponent } from './asset/asset-new/asset-new.component';
+import { TransactionNewComponent } from './transaction/transaction-new/transaction-new.component';
+import { TransactionDetailComponent } from './transaction/transaction-detail/transaction-detail.component';
 
 @NgModule({
   declarations: [
@@ -54,6 +56,8 @@ import { AssetNewComponent } from './asset/asset-new/asset-new.component';
     RepositoryNewComponent,
     AssetDetailComponent,
     AssetNewComponent,
+    TransactionNewComponent,
+    TransactionDetailComponent,
   ],
   imports: [
     CommonModule,

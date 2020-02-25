@@ -4,87 +4,51 @@
         Search field mobile view -->
         <div class="columns is-hidden-desktop">
             <div class="column has-text-centered">
-                <div class="control has-icons-left">
-                    <input class="input" type="text" placeholder="Keresés">
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-search"></i>
-                    </span>
+                <div class="field is-grouped">
+                    <div class="control has-icons-left is-expanded">
+                        <input class="input" type="text" placeholder="Szűrés">
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-search"></i>
+                        </span>
+                    </div>
+                    <div class="control">
+                        <input type="date" class="input">
+                    </div>
                 </div>
             </div>
         </div>
         <!-- 
         Search field desktop view -->
-        <nav class="level is-hidden-mobile">
+        <nav class="level is-hidden-touch">
             <div class="level-left">
                 <div class="level-item">
-                    <div class="control has-icons-left">
-                        <input class="input" type="text" placeholder="Keresés">
-                        <span class="icon is-small is-left">
-                            <i class="fas fa-search"></i>
-                        </span>
+                    <div class="field is-grouped">
+                        <div class="control has-icons-left">
+                            <input class="input" type="text" placeholder="Szűrés">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                        <div class="control">
+                            <input type="date" class="input">
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="level-right is-hidden-mobile">
                 <div class="level-item">
-                    <button class="button is-outlined is-success is-normal">Új tétel</button>
+                    <!-- <button class="button is-outlined is-success is-normal" routerLink="./new">Új tétel</button> -->
                 </div>
             </div>
         </nav>
-        <!-- 
-        Sort field mobile view -->
-        <div class="columns is-hidden-desktop">
-            <div class="column has-text-centered">
-                <a>
-                    Rendezés dátum alapján
-                    <span class="icon">
-                        <i class="fas fa-sort-up"></i>
-                    </span>
-                </a>
-                <a>
-                    Rendezés összeg alapján
-                    <span class="icon">
-                        <i class="fas fa-sort-up"></i>
-                    </span>
-                </a>
-            </div>
-        </div>
-        <!-- 
-        Sort field desktop view -->
-        <nav class="level is-hidden-mobile">
-            <div class="level-left"></div>
-            <div class="level-right">
-                <div class="level-item is-size-7">
-                    <a>
-                        Rendezés dátum alapján
-                        <span class="icon">
-                            <i class="fas fa-sort-up"></i>
-                        </span>
-                    </a>
-                </div>
-                <div class="level-item is-size-7">
-                    <a>
-                        Rendezés összeg alapján
-                        <span class="icon">
-                            <i class="fas fa-sort-up"></i>
-                        </span>
-                    </a>
-                </div>
-            </div>
-        </nav>
-        <div class="box has-background-lighter">
-            <p class="is-size-7 header">
-                <a>2019-03-02</a>
-                <a>@mezeipetister</a>
-                <a>#324234234</a>
-            </p>
-            <p class="is-6">Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi, quasi?
-            </p>
-            <p class="has-text-grey is-size-7 is-inline-block ft">
-                <span>Összeg: <strong>12.500 HUF</strong></span>
-                <span>Kontír tételek: 161 / 3841</span>
-                <span>Könyvelés dátuma: 2019-01-01</span>
-            </p>
-        </div>
+        <table class="table is-fullwidth">
+            <thead>
+                <tr>
+                    <th class="is-narrow">#</th>
+                    <th>Megnevezés</th>
+                    <th class="is-narrow">Egyenleg</th>
+                </tr>
+            </thead>
+        </table>
     </div>
 </section>
