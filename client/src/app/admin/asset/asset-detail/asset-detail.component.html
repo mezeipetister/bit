@@ -17,6 +17,19 @@
                         </div>
                     </div>
                     <div class="field">
+                        <label class="label">Aktiválási érték</label>
+                    </div>
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input type="number" class="input" disabled>
+                        </div>
+                        <p class="control">
+                            <a class="button is-static">
+                                HUF
+                            </a>
+                        </p>
+                    </div>
+                    <div class="field">
                         <label class="label">ÉCS kulcs (%)</label>
                         <div class="control">
                             <input type="number" class="input" disabled>
@@ -24,9 +37,16 @@
                     </div>
                     <div class="field">
                         <label class="label">Maradványérték</label>
+                    </div>
+                    <div class="field has-addons">
                         <div class="control">
                             <input type="number" class="input" disabled>
                         </div>
+                        <p class="control">
+                            <a class="button is-static">
+                                HUF
+                            </a>
+                        </p>
                     </div>
                     <div class="field">
                         <label class="label">Aktiválás dátuma</label>
@@ -45,16 +65,32 @@
                 </form>
             </div>
             <div class="column">
+                <div class="tile is-ancestor">
+                    <div class="tile">
+                        <div class="tile is-parent">
+                            <div class="tile is-child notification">
+                                <p>Összes elszámolt ÉCS: 0 HUF</p>
+                            </div>
+                        </div>
+                        <div class="tile is-parent">
+                            <div class="tile is-child notification">
+                                <p>Jelenlegi nettó érték: 1.500 HUF</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Hónap</th>
                             <th>ÉCS értéke</th>
+                            <th>Halmozott ÉCS</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>2019-01</td>
+                            <td>1.700</td>
                             <td>1.700</td>
                         </tr>
                     </tbody>

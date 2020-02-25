@@ -1,11 +1,50 @@
 <section class="section">
     <div class="container">
-        Dashboard
         <div class="columns">
             <div class="column is-6">
-                <canvas baseChart [datasets]="lineChartData" [labels]="lineChartLabels" [options]="lineChartOptions"
+                Pénzeszköz alakulása
+                <canvas baseChart [datasets]="lineChartData" [labels]="lineChartLabels" [options]="ChartOptions"
                     [colors]="lineChartColors" [legend]="lineChartLegend" [chartType]="lineChartType"
                     [plugins]="lineChartPlugins">
+                </canvas>
+            </div>
+            <div class="column is-6">
+                Saját tőke változása
+                <canvas baseChart [datasets]="lineChartData" [labels]="lineChartLabels" [options]="ChartOptions"
+                    [colors]="lineChartColors" [legend]="lineChartLegend" [chartType]="lineChartType"
+                    [plugins]="lineChartPlugins">
+                </canvas>
+            </div>
+        </div>
+        <div class="columns">
+            <div class="column is-6">
+                Beruházások
+                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
+                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
+                    [colors]="lineChartColors">
+                </canvas>
+            </div>
+            <div class="column is-6">
+                ÉCS
+                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
+                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
+                    [colors]="lineChartColors">
+                </canvas>
+            </div>
+        </div>
+        <div class="columns">
+            <div class="column is-6">
+                Költségek alakulása
+                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
+                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
+                    [colors]="lineChartColors">
+                </canvas>
+            </div>
+            <div class="column is-6">
+                Eredmény
+                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
+                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
+                    [colors]="lineChartColors">
                 </canvas>
             </div>
         </div>
