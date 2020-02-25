@@ -18,6 +18,8 @@ import { AssetComponent } from './asset/asset.component';
 import { TransactionComponent } from './transaction/transaction.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AccountDetailComponent } from './account/account-detail/account-detail.component';
+import { AccountNewComponent } from './account/account-new/account-new.component';
+import { RepositoryNewComponent } from './repository/repository-new/repository-new.component';
 
 const routes: Routes = [
   {
@@ -29,7 +31,7 @@ const routes: Routes = [
       {
         path: 'repository', component: EmptyComponent, children: [
           { path: '', component: RepositoryComponent },
-          // { path: 'new', component: UserNewComponent },
+          { path: 'new', component: RepositoryNewComponent },
           {
             path: ':id', component: RepositoryLayoutComponent, children: [
               { path: '', component: RepositoryDetailComponent },
@@ -41,7 +43,8 @@ const routes: Routes = [
               {
                 path: 'account', component: EmptyComponent, children: [
                   { path: '', component: AccountComponent },
-                  { path: ':id', component: AccountDetailComponent }
+                  { path: 'new', component: AccountNewComponent },
+                  { path: ':id', component: AccountDetailComponent },
                 ]
               },
               { path: 'setting', component: SettingComponent },

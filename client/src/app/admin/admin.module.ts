@@ -23,6 +23,8 @@ import { AccountComponent } from './account/account.component';
 import { SettingComponent } from './setting/setting.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AccountDetailComponent } from './account/account-detail/account-detail.component';
+import { AccountNewComponent } from './account/account-new/account-new.component';
+import { RepositoryNewComponent } from './repository/repository-new/repository-new.component';
 
 @NgModule({
   declarations: [
@@ -46,6 +48,8 @@ import { AccountDetailComponent } from './account/account-detail/account-detail.
     SettingComponent,
     DashboardComponent,
     AccountDetailComponent,
+    AccountNewComponent,
+    RepositoryNewComponent,
   ],
   imports: [
     CommonModule,
