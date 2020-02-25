@@ -14,6 +14,14 @@ import { UserDetailComponent } from './user/user-detail/user-detail.component';
 import { RepositoryComponent } from './repository/repository.component';
 import { RepositoryDetailComponent } from './repository/repository-detail/repository-detail.component';
 import { RepositoryLayoutComponent } from './layout/repository-layout/repository-layout.component';
+import { LedgerComponent } from './ledger/ledger.component';
+import { SummaryComponent } from './summary/summary.component';
+import { TransactionComponent } from './transaction/transaction.component';
+import { AssetComponent } from './asset/asset.component';
+import { ProjectComponent } from './project/project.component';
+import { AccountComponent } from './account/account.component';
+import { SettingComponent } from './setting/setting.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +36,14 @@ import { RepositoryLayoutComponent } from './layout/repository-layout/repository
     RepositoryComponent,
     RepositoryDetailComponent,
     RepositoryLayoutComponent,
+    LedgerComponent,
+    SummaryComponent,
+    TransactionComponent,
+    AssetComponent,
+    ProjectComponent,
+    AccountComponent,
+    SettingComponent,
+    DashboardComponent,
   ],
   imports: [
     CommonModule,

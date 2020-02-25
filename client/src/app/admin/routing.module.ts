@@ -10,6 +10,13 @@ import { UserDetailComponent } from './user/user-detail/user-detail.component';
 import { RepositoryComponent } from './repository/repository.component';
 import { RepositoryDetailComponent } from './repository/repository-detail/repository-detail.component';
 import { RepositoryLayoutComponent } from './layout/repository-layout/repository-layout.component';
+import { LedgerComponent } from './ledger/ledger.component';
+import { SettingComponent } from './setting/setting.component';
+import { AccountComponent } from './account/account.component';
+import { ProjectComponent } from './project/project.component';
+import { AssetComponent } from './asset/asset.component';
+import { TransactionComponent } from './transaction/transaction.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 const routes: Routes = [
   {
@@ -24,9 +31,14 @@ const routes: Routes = [
           // { path: 'new', component: UserNewComponent },
           {
             path: ':id', component: RepositoryLayoutComponent, children: [
-              {
-                path: '', component: RepositoryDetailComponent
-              }
+              { path: '', component: RepositoryDetailComponent },
+              { path: 'dashboard', component: DashboardComponent },
+              { path: 'ledger', component: LedgerComponent },
+              { path: 'transaction', component: TransactionComponent },
+              { path: 'asset', component: AssetComponent },
+              { path: 'project', component: ProjectComponent },
+              { path: 'account', component: AccountComponent },
+              { path: 'setting', component: SettingComponent },
             ]
           }
         ]
@@ -38,15 +50,6 @@ const routes: Routes = [
           { path: ':id', component: UserDetailComponent }
         ]
       },
-      // {
-      //   path: 'folder', component: EmptyComponent, children: [
-      //     { path: '', component: FolderComponent },
-      //     { path: 'new', component: FolderNewComponent },
-      //     { path: ':id', component: FolderDetailComponent },
-      //     { path: ':id/edit', component: FolderEditComponent },
-      //     { path: ':id/new', component: DocumentNewComponent }
-      //   ]
-      // },
     ]
   },
 
