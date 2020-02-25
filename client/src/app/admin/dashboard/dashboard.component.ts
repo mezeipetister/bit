@@ -12,10 +12,10 @@ export class DashboardComponent implements OnInit {
   constructor() { }
 
   lineChartData: ChartDataSets[] = [
-    { data: [85, 72, 78, 75, 77, 75], label: 'Crude oil prices' },
+    { data: [100, 110, 90, 120, 121, 122, 140, 150, 157], label: 'Pénzeszköz alakulása' },
   ];
 
-  lineChartLabels: Label[] = ['January', 'February', 'March', 'April', 'May', 'June'];
+  lineChartLabels: Label[] = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
 
   lineChartOptions = {
     responsive: true,
@@ -23,8 +23,8 @@ export class DashboardComponent implements OnInit {
 
   lineChartColors: Color[] = [
     {
-      borderColor: 'black',
-      backgroundColor: 'rgba(255,255,0,0.28)',
+      // borderColor: 'black',
+      // backgroundColor: 'rgba(255,255,0,0.28)',
     },
   ];
 
