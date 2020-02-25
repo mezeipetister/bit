@@ -22,6 +22,7 @@ import { ProjectComponent } from './project/project.component';
 import { AccountComponent } from './account/account.component';
 import { SettingComponent } from './setting/setting.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { AccountDetailComponent } from './account/account-detail/account-detail.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
     AccountComponent,
     SettingComponent,
     DashboardComponent,
+    AccountDetailComponent,
   ],
   imports: [
     CommonModule,

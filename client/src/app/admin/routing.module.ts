@@ -17,6 +17,7 @@ import { ProjectComponent } from './project/project.component';
 import { AssetComponent } from './asset/asset.component';
 import { TransactionComponent } from './transaction/transaction.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { AccountDetailComponent } from './account/account-detail/account-detail.component';
 
 const routes: Routes = [
   {
@@ -37,7 +38,12 @@ const routes: Routes = [
               { path: 'transaction', component: TransactionComponent },
               { path: 'asset', component: AssetComponent },
               { path: 'project', component: ProjectComponent },
-              { path: 'account', component: AccountComponent },
+              {
+                path: 'account', component: EmptyComponent, children: [
+                  { path: '', component: AccountComponent },
+                  { path: ':id', component: AccountDetailComponent }
+                ]
+              },
               { path: 'setting', component: SettingComponent },
             ]
           }
