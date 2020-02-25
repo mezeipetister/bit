@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { ChartsModule } from 'ng2-charts';
+
 import { RoutingModule as AdminRouter } from './routing.module';
 import { LayoutComponent } from './layout/layout.component';
 import { NavbarComponent } from './partial/navbar/navbar.component';
@@ -60,6 +62,7 @@ import { TransactionDetailComponent } from './transaction/transaction-detail/tra
     TransactionDetailComponent,
   ],
   imports: [
+    ChartsModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

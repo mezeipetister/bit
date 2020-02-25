@@ -1,1 +1,13 @@
-<p>dashboard works!</p>
+<section class="section">
+    <div class="container">
+        Dashboard
+        <div class="columns">
+            <div class="column is-6">
+                <canvas baseChart [datasets]="lineChartData" [labels]="lineChartLabels" [options]="lineChartOptions"
+                    [colors]="lineChartColors" [legend]="lineChartLegend" [chartType]="lineChartType"
+                    [plugins]="lineChartPlugins">
+                </canvas>
+            </div>
+        </div>
+    </div>
+</section>
