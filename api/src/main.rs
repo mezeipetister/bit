@@ -36,6 +36,7 @@ pub mod controller;
 pub mod cors;
 pub mod guard;
 pub mod login;
+pub mod model;
 pub mod prelude;
 
 use crate::prelude::*;
@@ -120,21 +121,11 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::user::user_all_get,
                 controller::user::user_id_get,
                 controller::user::user_new_post,
-                controller::folder::folder_all_get,
-                controller::folder::folder_new_put,
-                controller::folder::folder_id_get,
-                controller::folder::folder_rename_post,
-                controller::folder::folder_redescription_post,
-                controller::folder::folder_remove_post,
-                controller::folder::folder_restore_post,
-                controller::document::document_all_get,
-                controller::document::document_new_put,
-                controller::document::document_id_get,
-                controller::document::document_remove_post,
-                controller::document::document_restore_post,
-                controller::document::document_update_post,
-                controller::document::document_upload_file_post,
-                controller::document::document_file_get
+                controller::repository::repository_all_get,
+                controller::repository::repository_new_put,
+                controller::repository::repository_remove_post,
+                controller::repository::repository_restore_post,
+                controller::repository::repository_update_post,
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])
@@ -142,15 +133,13 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
 
 pub struct DataLoad {
     users: Storage<User>,
-    folders: Storage<Folder>,
-    documents: Storage<Document>,
+    repositories: Storage<Repository>,
 }
 
 fn main() -> StorageResult<()> {
     let data = DataLoad {
         users: Storage::load_or_init::<User>("data/users")?,
-        folders: Storage::load_or_init::<Folder>("data/folders")?,
-        documents: Storage::load_or_init::<Document>("data/documents")?,
+        repositories: Storage::load_or_init::<Repository>("data/repositories")?,
     };
     rocket(data).launch();
     Ok(())

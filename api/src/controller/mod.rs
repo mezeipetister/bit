@@ -19,7 +19,8 @@
 // pub mod issue;
 pub mod login;
 // pub mod notification;
-pub mod document;
-pub mod folder;
+// pub mod document;
+// pub mod folder;
 pub mod profile;
+pub mod repository;
 pub mod user;

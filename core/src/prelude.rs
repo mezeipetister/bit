@@ -17,9 +17,21 @@
 
 use crate::error::*;
 use chrono::prelude::*;
+use nanoid::nanoid;
 
 pub type AppResult<T> = Result<T, Error>;
 
 pub trait DateCreated {
     fn get_date_created(&self) -> DateTime<Utc>;
+}
+
+pub fn generate_id(length: usize) -> String {
+    nanoid!(
+        length,
+        &[
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9',
+        ]
+    )
 }
