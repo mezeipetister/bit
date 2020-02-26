@@ -5,7 +5,8 @@
                 <strong>BIT</strong>
                 <!-- <strong>Gardenzilla</strong> -->
             </a>
-            <a class="navbar-item is-hidden-desktop is-pulled-right" routerLink="/transaction/new">
+            <a class="navbar-item is-hidden-desktop" [routerLink]="['/repository', repository_id, 'transaction', 'new']"
+                *ngIf="repository_id">
                 <span class="icon">
                     <i class="fas fa-plus"></i>
                 </span>
@@ -29,7 +30,8 @@
             </div>
 
             <div class="navbar-end">
-                <a class="navbar-item" routerLink="/transaction/new">
+                <a class="navbar-item" [routerLink]="['/repository', repository_id, 'transaction', 'new']"
+                    *ngIf="repository_id">
                     <span class="icon">
                         <i class="fas fa-plus"></i>
                     </span>

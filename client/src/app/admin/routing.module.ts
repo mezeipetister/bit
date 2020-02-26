@@ -31,39 +31,40 @@ const routes: Routes = [
       {
         path: '', component: RepositoryComponent,
       },
-      { path: 'profile', component: ProfileComponent },
+      { path: 'profile', component: ProfileComponent, data: { breadcrumb: 'Felhasználói profil' } },
       {
         path: 'repository', component: EmptyComponent, children: [
           { path: '', component: RepositoryComponent },
           { path: 'new', component: RepositoryNewComponent },
           {
             path: ':id', component: RepositoryLayoutComponent, children: [
-              { path: '', redirectTo: './dashboard', pathMatch: 'full' },
-              { path: 'dashboard', component: DashboardComponent },
-              { path: 'ledger', component: LedgerComponent },
+              // { path: '', component: DashboardComponent },
+              { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+              { path: 'dashboard', component: DashboardComponent, data: { breadcrumb: 'Kimutatás' } },
+              { path: 'ledger', component: LedgerComponent, data: { breadcrumb: 'Főkönyv' } },
               {
-                path: 'transaction', component: EmptyComponent, children: [
+                path: 'transaction', component: EmptyComponent, data: { breadcrumb: 'Tranzakció' }, children: [
                   { path: '', component: TransactionComponent },
                   { path: 'new', component: TransactionNewComponent },
-                  { path: ':id', component: TransactionDetailComponent }
+                  { path: ':transaction_id', component: TransactionDetailComponent, }
                 ]
               },
               {
-                path: 'asset', component: EmptyComponent, children: [
+                path: 'asset', component: EmptyComponent, data: { breadcrumb: 'Tárgyi eszközök' }, children: [
                   { path: '', component: AssetComponent },
                   { path: 'new', component: AssetNewComponent },
-                  { path: ':id', component: AssetDetailComponent }
+                  { path: ':asset_id', component: AssetDetailComponent }
                 ]
               },
-              { path: 'project', component: ProjectComponent },
+              { path: 'project', component: ProjectComponent, data: { breadcrumb: 'Projektek' } },
               {
-                path: 'account', component: EmptyComponent, children: [
+                path: 'account', component: EmptyComponent, data: { breadcrumb: 'Számlatükör' }, children: [
                   { path: '', component: AccountComponent },
                   { path: 'new', component: AccountNewComponent },
-                  { path: ':id', component: AccountDetailComponent },
+                  { path: ':account_id', component: AccountDetailComponent },
                 ]
               },
-              { path: 'setting', component: SettingComponent },
+              { path: 'setting', component: SettingComponent, data: { breadcrumb: 'Beállítások' } },
             ]
           }
         ]
@@ -72,7 +73,7 @@ const routes: Routes = [
         path: 'user', component: EmptyComponent, children: [
           { path: '', component: UserComponent },
           { path: 'new', component: UserNewComponent },
-          { path: ':id', component: UserDetailComponent }
+          { path: ':user_id', component: UserDetailComponent }
         ]
       },
     ]

@@ -1,10 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { LoginService } from 'src/app/services/login/login.service';
-import { Router, Event, NavigationEnd } from '@angular/router';
-import { DataService, Msg } from 'src/app/services/data/data.service';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of, Subscription, throwError, Subject } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Router, Event, NavigationEnd, ActivatedRoute, ParamMap } from '@angular/router';
+import { Observable, Subscription } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
 import { ErrorResponse } from 'src/app/class/error-response';
 import { Notification } from 'src/app/class/notification';
 
@@ -16,12 +14,12 @@ import { Notification } from 'src/app/class/notification';
 export class NavbarComponent implements OnInit {
 
   notifications: Notification[] = [];
+  repository_id: String = null;
 
   constructor(
     private loginService: LoginService,
     private router: Router,
-    private ds: DataService,
-    private http: HttpClient,
+    private route: ActivatedRoute
   ) {
     // Register username observer
     this.loginService.userName.subscribe((val) => this.username = val);
@@ -32,6 +30,22 @@ export class NavbarComponent implements OnInit {
        */
       if (e instanceof NavigationEnd) {
         this.isActive = false;
+
+        // TODO: REFACT PLEASE! Very ugly block
+        let pathArray = this.route.snapshot['_routerState']['url'].split('/');
+        this.repository_id = null;
+        if (pathArray.length >= 3) {
+          if (pathArray[1] == 'repository') {
+            if (pathArray[2].length > 0) {
+              this.repository_id = pathArray[2];
+            }
+          }
+        }
+        // this.route.firstChild.firstChild.paramMap.subscribe(
+        //   (params: ParamMap): void => {
+        //     this.repository_id = params.get("id");
+        //   }
+        // );
       }
     });
   }
