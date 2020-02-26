@@ -80,6 +80,18 @@ pub fn repository_remove_post(
     }
 }
 
+#[get("/repository/<id>")]
+pub fn repository_id_get(
+    _user: Login,
+    data: State<DataLoad>,
+    id: String,
+) -> Result<StatusOk<SRepositoryShort>, ApiError> {
+    match data.inner().repositories.get_by_id(&id) {
+        Ok(rep) => Ok(StatusOk(rep.clone_data().into())),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
 #[post("/repository/<id>", data = "<form>")]
 pub fn repository_update_post(
     _user: Login,

@@ -6,29 +6,12 @@
             </div>
         </div>
         <nav class="panel">
-            <a class="panel-block" [routerLink]="['/repository', 1]">
+            <a class="panel-block" [routerLink]="['/repository', repository.id]"
+                *ngFor="let repository of repositories">
                 <span class="panel-icon">
                     <i class="fas fa-code-branch" aria-hidden="true"></i>
                 </span>
-                Család
-            </a>
-            <a class="panel-block">
-                <span class="panel-icon">
-                    <i class="fas fa-code-branch" aria-hidden="true"></i>
-                </span>
-                Gardenzilla
-            </a>
-            <a class="panel-block">
-                <span class="panel-icon">
-                    <i class="fas fa-code-branch" aria-hidden="true"></i>
-                </span>
-                Gardenova Kft
-            </a>
-            <a class="panel-block">
-                <span class="panel-icon">
-                    <i class="fas fa-code-branch" aria-hidden="true"></i>
-                </span>
-                Mezei Péter EV
+                {{repository.name}}
             </a>
         </nav>
     </div>

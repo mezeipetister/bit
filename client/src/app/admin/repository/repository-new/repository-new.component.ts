@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { RepositoryNew, RepositoryShort } from 'src/app/class/repository';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-repository-new',
@@ -7,7 +10,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class RepositoryNewComponent implements OnInit {
 
-  constructor() { }
+  model: RepositoryNew = new RepositoryNew();
+
+  constructor(private http: HttpClient, private router: Router) { }
+
+  submit() {
+    this.http.put<RepositoryShort>("/repository/new", this.model)
+      .subscribe(val => this.router.navigateByUrl("/repository/" + val.id));
+  }
 
   ngOnInit() {
   }
