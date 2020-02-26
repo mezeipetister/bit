@@ -38,7 +38,7 @@ const routes: Routes = [
           { path: 'new', component: RepositoryNewComponent },
           {
             path: ':id', component: RepositoryLayoutComponent, children: [
-              { path: '', component: RepositoryDetailComponent },
+              { path: '', redirectTo: './dashboard', pathMatch: 'full' },
               { path: 'dashboard', component: DashboardComponent },
               { path: 'ledger', component: LedgerComponent },
               {
