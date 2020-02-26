@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute, NavigationEnd, Event } from '@angular/router';
 
 @Component({
   selector: 'app-repository-layout',
@@ -7,9 +8,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class RepositoryLayoutComponent implements OnInit {
 
-  constructor() { }
+  bsecond: String = null;
+  constructor(private router: Router, private route: ActivatedRoute) {
+
+  }
 
   ngOnInit() {
+
   }
 
 }
