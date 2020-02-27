@@ -5,6 +5,7 @@ import { Observable, Subscription } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { ErrorResponse } from 'src/app/class/error-response';
 import { Notification } from 'src/app/class/notification';
+import { RouterParamService } from 'src/app/services/router-param/router-param.service';
 
 @Component({
   selector: 'app-navbar',
@@ -19,7 +20,8 @@ export class NavbarComponent implements OnInit {
   constructor(
     private loginService: LoginService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private params: RouterParamService
   ) {
     // Register username observer
     this.loginService.userName.subscribe((val) => this.username = val);
@@ -30,22 +32,11 @@ export class NavbarComponent implements OnInit {
        */
       if (e instanceof NavigationEnd) {
         this.isActive = false;
-
-        // TODO: REFACT PLEASE! Very ugly block
-        let pathArray = this.route.snapshot['_routerState']['url'].split('/');
-        this.repository_id = null;
-        if (pathArray.length >= 3) {
-          if (pathArray[1] == 'repository') {
-            if (pathArray[2].length > 0) {
-              this.repository_id = pathArray[2];
-            }
-          }
-        }
-        // this.route.firstChild.firstChild.paramMap.subscribe(
-        //   (params: ParamMap): void => {
-        //     this.repository_id = params.get("id");
-        //   }
-        // );
+        /**
+         * Set repository id if exists
+         */
+        let params = this.params.routerParams();
+        this.repository_id = params["repository_id"] ? params["repository_id"] : null;
       }
     });
   }

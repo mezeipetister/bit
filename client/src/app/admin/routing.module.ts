@@ -37,7 +37,7 @@ const routes: Routes = [
           { path: '', component: RepositoryComponent },
           { path: 'new', component: RepositoryNewComponent },
           {
-            path: ':id', component: RepositoryLayoutComponent, children: [
+            path: ':repository_id', component: RepositoryLayoutComponent, children: [
               // { path: '', component: DashboardComponent },
               { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
               { path: 'dashboard', component: DashboardComponent, data: { breadcrumb: 'Kimutatás' } },

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-asset',
@@ -7,9 +9,10 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AssetComponent implements OnInit {
 
-  constructor() { }
+  constructor(private http: HttpClient, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
+
   }
 
 }

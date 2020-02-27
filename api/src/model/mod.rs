@@ -15,5 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
+pub mod account;
 pub mod repository;
+pub use account::*;
 pub use repository::*;

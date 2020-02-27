@@ -21,12 +21,12 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr *ngFor="let account of model">
                     <td class="is-narrow">
-                        <a routerLink="./1">161</a>
+                        <a [routerLink]="['./', account.id]">{{account.id}}</a>
                     </td>
-                    <td>Beruházás</td>
-                    <td class="is-hidden-mobile">Ide jön minden beruházás</td>
+                    <td>{{account.name}}</td>
+                    <td class="is-hidden-mobile">{{account.description}}</td>
                 </tr>
             </tbody>
         </table>

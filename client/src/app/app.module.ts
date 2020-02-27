@@ -13,6 +13,7 @@ import { LoginComponent } from './login/login/login.component';
 import { EmptyComponent } from './layout/empty/empty.component';
 import { PasswordresetComponent } from './login/passwordreset/passwordreset.component';
 import { httpInterceptorProviders } from './interceptors';
+import { RouterParamService } from './services/router-param/router-param.service';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,7 @@ import { httpInterceptorProviders } from './interceptors';
     AdminModule,
     AppRoutingModule,
   ],
-  providers: [DataService, LoginService, httpInterceptorProviders],
+  providers: [DataService, LoginService, RouterParamService, httpInterceptorProviders],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -21,6 +21,7 @@ pub mod login;
 // pub mod notification;
 // pub mod document;
 // pub mod folder;
+pub mod account;
 pub mod profile;
 pub mod repository;
 pub mod user;

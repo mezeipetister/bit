@@ -11,7 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class UserDetailComponent implements OnInit {
 
-  id: string = this.route.snapshot.paramMap.get("id");
+  id: string = this.route.snapshot.paramMap.get("user_id");
   user: Model<Profile> = new Model<Profile>(this.http, "/user/" + this.id, new Profile());
 
   constructor(private http: HttpClient, private route: ActivatedRoute, private router: Router) {

@@ -126,7 +126,10 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::repository::repository_remove_post,
                 controller::repository::repository_restore_post,
                 controller::repository::repository_update_post,
-                controller::repository::repository_id_get
+                controller::repository::repository_id_get,
+                controller::account::account_all_get,
+                controller::account::account_new_put,
+                controller::account::account_id_get,
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])

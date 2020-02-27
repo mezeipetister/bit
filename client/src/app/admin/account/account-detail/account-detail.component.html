@@ -2,37 +2,40 @@
     <div class="container">
         <div class="columns">
             <div class="column is-4">
-                <p class="title">Demo számla</p>
-                <form>
+                <p class="title">{{model.name}}</p>
+                <form (ngSubmit)="submit()" #loginForm="ngForm">
                     <div class="field">
                         <label class="label">Számlaszám</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa számlaszám">
+                            <input class="input" type="text" placeholder="Példa számlaszám" name="id"
+                                [(ngModel)]="model.id" disabled>
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Számla megnevezés</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa számlaszám">
+                            <input class="input" type="text" placeholder="Példa számlaszám" name="name"
+                                [(ngModel)]="model.name">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Számla rövid leírása</label>
                         <div class="control">
-                            <textarea name="description" cols="30" rows="5" class="textarea"></textarea>
+                            <textarea name="description" cols="30" rows="5" class="textarea"
+                                [(ngModel)]="model.description"></textarea>
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Beállítások</label>
                         <div class="control">
                             <label class="checkbox">
-                                <input type="checkbox">
+                                <input type="checkbox" name="is_working" [(ngModel)]="model.is_working">
                                 Lehet rá könyvelni
                             </label>
                         </div>
                         <div class="control">
                             <label class="checkbox">
-                                <input type="checkbox">
+                                <input type="checkbox" name="is_inverse" [(ngModel)]="model.is_inverse">
                                 Inverz számla
                             </label>
                         </div>
@@ -40,8 +43,8 @@
                     <div class="field">
                         <div class="control">
                             <div class="buttons">
-                                <button class="button is-success is-outlined">Mentés</button>
-                                <button class="button is-danger is-outlined">Törlés</button>
+                                <button class="button is-success is-outlined" type="submit">Mentés</button>
+                                <button class="button is-danger is-outlined" type="button">Törlés</button>
                             </div>
                         </div>
                     </div>

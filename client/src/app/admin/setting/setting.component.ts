@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RepositoryNew, RepositoryShort } from 'src/app/class/repository';
+import { RouterParamService } from 'src/app/services/router-param/router-param.service';
 
 @Component({
   selector: 'app-setting',
@@ -10,12 +11,13 @@ import { RepositoryNew, RepositoryShort } from 'src/app/class/repository';
 })
 export class SettingComponent implements OnInit {
 
-  id: string = this.route.root.firstChild.firstChild.firstChild.snapshot.paramMap.get("id");
+  id: string = this.params.hasParam("repository_id");
   model: RepositoryNew = new RepositoryNew();
 
   constructor(private http: HttpClient,
     private route: ActivatedRoute,
-    private router: Router) { }
+    private router: Router,
+    private params: RouterParamService) { }
 
   submit() {
     this.http.post<RepositoryShort>("/repository/" + this.id, this.model)
