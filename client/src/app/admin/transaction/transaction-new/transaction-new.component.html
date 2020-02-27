@@ -55,8 +55,7 @@
                     <div class="field">
                         <label class="label">Teljesítés dátuma</label>
                         <div class="control">
-                            <input type="date" class="input" name="date_settlement"
-                                [ngModel]="model.date_settlement | date: 'yyyy-MM-dd'"
+                            <input type="date" class="input" name="date_settlement" [ngModel]="model.date_settlement"
                                 (ngModelChange)="model.date_settlement = $event">
                         </div>
                     </div>

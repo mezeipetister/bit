@@ -13,7 +13,7 @@ export class TransactionComponent implements OnInit {
 
   repository_id: string = this.params.hasParam("repository_id");
   model: Transaction[] = [];
-  account: string = null;
+  account: string = "";
   from: string = this.getTodayWindow(-30);
   till: string = this.getTodayWindow();
 
@@ -22,18 +22,18 @@ export class TransactionComponent implements OnInit {
   getTodayWindow(window: number = 0): string {
     let dt: Date = new Date();
     dt.setDate(dt.getDate() + window);
-    return dt.toLocaleDateString();
+    return dt.toISOString().split('T')[0];
   }
 
   loadData() {
     if (!this.from) {
-      this.from = new Date().toLocaleDateString();
+      this.from = new Date().toISOString().split('T')[0];
     }
     if (!this.till) {
-      this.till = new Date().toLocaleDateString();
+      this.till = new Date().toISOString().split('T')[0];
     }
-    this.from = new Date(this.from).toLocaleDateString();
-    this.till = new Date(this.till).toLocaleDateString();
+    this.from = new Date(this.from).toISOString().split('T')[0];
+    this.till = new Date(this.till).toISOString().split('T')[0];
     this.http.get<Transaction[]>("/repository/"
       + this.repository_id
       + "/transaction/all?from="

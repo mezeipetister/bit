@@ -35,11 +35,11 @@ use std::path::Path;
 pub struct Filter {
     from: String,
     till: String,
-    account: Option<String>,
+    account: String,
 }
 
 fn parse_date(dt: &str) -> AppResult<NaiveDate> {
-    match NaiveDate::parse_from_str(dt, "%m/%d/%Y") {
+    match NaiveDate::parse_from_str(dt, "%Y-%m-%d") {
         Ok(dt) => Ok(dt),
         Err(_) => Err(core_lib::Error::BadRequest(
             "Rossz dátum formátum!".to_string(),
@@ -63,8 +63,8 @@ pub fn transaction_all_get(
                 .into_iter()
                 .filter(|t| t.date_settlement >= from && t.date_settlement <= till)
                 .filter(|t| {
-                    if let Some(account_id) = &filter.account {
-                        return &t.debit == account_id || &t.credit == account_id;
+                    if filter.account.len() > 0 {
+                        return t.debit == filter.account || t.credit == filter.account;
                     }
                     true
                 })

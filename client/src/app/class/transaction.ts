@@ -17,6 +17,6 @@ export class TransactionNew {
         public debit: string = "",
         public credit: string = "",
         public amount: number = 0,
-        public date_settlement: string = new Date().toLocaleDateString(),
+        public date_settlement: string = new Date().toISOString().split('T')[0],
     ) { }
 }

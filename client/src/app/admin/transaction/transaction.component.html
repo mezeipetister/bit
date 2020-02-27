@@ -14,8 +14,8 @@
                 </div>
                 <div class="field">
                     <p class="control has-icons-left">
-                        <input class="input" type="date" placeholder="Ettől" name="from"
-                            [ngModel]="from | date: 'yyyy-MM-dd'" (ngModelChange)="from = $event">
+                        <input class="input" type="date" placeholder="Ettől" name="from" [ngModel]="from"
+                            (ngModelChange)="from = $event">
                         <span class="icon is-small is-left">
                             <i class="fas fa-calendar-alt"></i>
                         </span>
@@ -23,8 +23,8 @@
                 </div>
                 <div class="field">
                     <p class="control has-icons-left">
-                        <input class="input" type="date" placeholder="Eddig" name="till"
-                            [ngModel]="till | date: 'yyyy-MM-dd'" (ngModelChange)="till = $event">
+                        <input class="input" type="date" placeholder="Eddig" name="till" [ngModel]="till"
+                            (ngModelChange)="till = $event">
                         <span class="icon is-small is-left">
                             <i class="fas fa-calendar-alt"></i>
                         </span>
@@ -48,32 +48,34 @@
                             <i class="fas fa-search"></i>
                         </span>
                     </div> -->
-                    <div class="field is-grouped">
-                        <p class="control has-icons-left">
-                            <input class="input" type="text" placeholder="Számlaszám" name="account"
-                                [(ngModel)]="account">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-list-alt"></i>
-                            </span>
-                        </p>
-                        <p class="control has-icons-left">
-                            <input class="input" type="date" placeholder="Ettől" name="from"
-                                [ngModel]="from | date: 'yyyy-MM-dd'" (ngModelChange)="from = $event">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                        </p>
-                        <p class="control has-icons-left">
-                            <input class="input" type="date" placeholder="Eddig" name="till"
-                                [ngModel]="till | date: 'yyyy-MM-dd'" (ngModelChange)="till = $event">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                        </p>
-                        <div class="control">
-                            <button class="button" (click)="loadData()">Szűrés</button>
+                    <form (submit)="loadData()">
+                        <div class="field is-grouped">
+                            <p class="control has-icons-left">
+                                <input class="input" type="text" placeholder="Számlaszám" name="account"
+                                    [(ngModel)]="account">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-list-alt"></i>
+                                </span>
+                            </p>
+                            <p class="control has-icons-left">
+                                <input class="input" type="date" placeholder="Ettől" name="from" [ngModel]="from"
+                                    (ngModelChange)="from = $event">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                            </p>
+                            <p class="control has-icons-left">
+                                <input class="input" type="date" placeholder="Eddig" name="till" [ngModel]="till"
+                                    (ngModelChange)="till = $event">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                            </p>
+                            <div class="control">
+                                <button class="button" (click)="loadData()">Szűrés</button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
             <div class="level-right is-hidden-mobile">
