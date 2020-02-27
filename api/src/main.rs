@@ -133,6 +133,7 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::account::account_update_post,
                 controller::transaction::transaction_all_get,
                 controller::transaction::transaction_new_put,
+                controller::transaction::transaction_id_get,
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])

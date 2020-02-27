@@ -155,6 +155,16 @@ impl Repository {
     pub fn get_transactions(&self) -> &Vec<Transaction> {
         &self.transactions
     }
+    pub fn get_transaction_by_id(&self, id: usize) -> AppResult<Transaction> {
+        for item in &self.transactions {
+            if item.id == id {
+                return Ok(item.clone());
+            }
+        }
+        Err(Error::BadRequest(
+            "A megadott tranzakció nem található".to_string(),
+        ))
+    }
     pub fn add_transaction(
         &mut self,
         subject: String,

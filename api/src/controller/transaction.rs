@@ -47,6 +47,22 @@ pub fn transaction_all_get(
     }
 }
 
+#[get("/repository/<repository_id>/transaction/<transaction_id>", rank = 2)]
+pub fn transaction_id_get(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    transaction_id: usize,
+) -> Result<StatusOk<apiSchema::Transaction>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(rep) => Ok(StatusOk(
+            rep.get(|r: &Repository| r.get_transaction_by_id(transaction_id))?
+                .into(),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
 #[put("/repository/<repository_id>/transaction/new", data = "<form>")]
 pub fn transaction_new_put(
     user: Login,
