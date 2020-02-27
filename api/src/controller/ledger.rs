@@ -67,6 +67,9 @@ pub fn ledger_get(
                         apiSchema::Ledger::new(
                             a.get_id().to_string(),
                             a.get_name().to_string(),
+                            a.get_is_working(),
+                            a.get_is_inverse(),
+                            a.get_is_active(),
                             0,
                             0,
                             0,

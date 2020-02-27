@@ -24,13 +24,16 @@
                 <div class="level-item">
                     <div class="field is-grouped">
                         <div class="control has-icons-left">
-                            <input class="input" type="text" placeholder="Szűrés">
+                            <input class="input" type="text" placeholder="Szűrés" name="filter" [(ngModel)]="filter">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-search"></i>
                             </span>
                         </div>
                         <div class="control">
-                            <input type="date" class="input">
+                            <input type="date" class="input" name="till" [(ngModel)]="till">
+                        </div>
+                        <div class="control">
+                            <button class="button" type="button" (click)="load()">Szűrés</button>
                         </div>
                     </div>
                 </div>
@@ -44,11 +47,32 @@
         <table class="table is-fullwidth">
             <thead>
                 <tr>
-                    <th class="is-narrow">#</th>
+                    <th></th>
+                    <th>#</th>
                     <th>Megnevezés</th>
-                    <th class="is-narrow">Egyenleg</th>
+                    <th>Tartozik összes</th>
+                    <th>Követel összes</th>
+                    <th>Egyenleg</th>
                 </tr>
             </thead>
+            <tbody>
+                <ng-container *ngFor="let item of model">
+                    <tr class="is-size-6" [class.is-working]="item.is_working"
+                        *ngIf="filter.length > 0 ? item.account_id.includes(filter) : true">
+                        <td class="is-narrow">
+                            <span class="icon">
+                                <i class="far fa-check-circle" [class.has-text-success]="item.is_working"></i>
+                            </span>
+                        </td>
+                        <td class="is-narrow">{{item.account_id}}</td>
+                        <td>{{item.account_name}}</td>
+                        <td class="is-narrow">{{item.debit_total.toLocaleString()}} HUF</td>
+                        <td class="is-narrow">{{item.credit_total.toLocaleString()}} HUF</td>
+                        <td class="is-narrow">
+                            <strong>{{item.total.toLocaleString()}} HUF</strong></td>
+                    </tr>
+                </ng-container>
+            </tbody>
         </table>
     </div>
 </section>

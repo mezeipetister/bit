@@ -15,6 +15,7 @@
         <table class="table is-fullwidth">
             <thead>
                 <tr>
+                    <th></th>
                     <th class="is-narrow">#</th>
                     <th>Név</th>
                     <th class="is-hidden-mobile">Leírás</th>
@@ -22,6 +23,11 @@
             </thead>
             <tbody>
                 <tr *ngFor="let account of model">
+                    <td class="is-narrow">
+                        <span class="icon" alt="Könyvelhető">
+                            <i class="far fa-check-circle" [class.has-text-success]="account.is_working"></i>
+                        </span>
+                    </td>
                     <td class="is-narrow">
                         <a [routerLink]="['./', account.id]">{{account.id}}</a>
                     </td>

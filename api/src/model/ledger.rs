@@ -23,6 +23,9 @@ use serde::{Deserialize, Serialize};
 pub struct Ledger {
     pub account_id: String,
     pub account_name: String,
+    pub is_working: bool,
+    pub is_inverse: bool,
+    pub is_active: bool,
     pub debit_total: i32,
     pub credit_total: i32,
     pub total: i32,
@@ -32,6 +35,9 @@ impl Ledger {
     pub fn new(
         account_id: String,
         account_name: String,
+        is_working: bool,
+        is_inverse: bool,
+        is_active: bool,
         debit_total: i32,
         credit_total: i32,
         total: i32,
@@ -39,6 +45,9 @@ impl Ledger {
         Ledger {
             account_id,
             account_name,
+            is_working,
+            is_inverse,
+            is_active,
             debit_total,
             credit_total,
             total,
