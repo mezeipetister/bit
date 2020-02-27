@@ -3,12 +3,12 @@
         <div class="columns">
             <div class="column is-6">
                 <p class="title">Új tétel</p>
-                <form (ngSubmit)="submit()" #loginForm="ngForm">
+                <form (ngSubmit)="submit(false)" #loginForm="ngForm">
                     <div class="field">
                         <label class="label">Megnevezés</label>
                         <div class="control">
-                            <textarea class="textarea" name="event" cols="30" rows="5"
-                                [(ngModel)]="model.subject"></textarea>
+                            <textarea class="textarea" name="event" cols="30" rows="5" [(ngModel)]="model.subject"
+                                autofocus></textarea>
                         </div>
                     </div>
                     <div class="field">
@@ -32,7 +32,7 @@
                                 [(ngModel)]=model.credit>
                         </div>
                         <div class="control">
-                            <button class="button" tabindex="-1">+</button>
+                            <button class="button" tabindex="-1" (click)="helperIsActive = true">+</button>
                         </div>
                     </div>
                     <div class="field">
@@ -64,7 +64,8 @@
                         <div class="control">
                             <div class="buttons">
                                 <button class="button is-success" type="submit">Hozzáad</button>
-                                <button class="button is-success is-outlined" type="button">Hozzáad és új</button>
+                                <button class="button is-success is-outlined" type="button"
+                                    (click)="submit(true)">Hozzáad és új</button>
                             </div>
                         </div>
                     </div>
@@ -73,3 +74,16 @@
         </div>
     </div>
 </section>
+
+<div class="modal is-overlay" [class.is-active]="helperIsActive">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Számlaszámok</p>
+            <button class="delete" aria-label="close" (click)="helperIsActive = false"></button>
+        </header>
+        <section class="modal-card-body">
+            Content ...
+        </section>
+    </div>
+</div>

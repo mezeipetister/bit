@@ -14,15 +14,28 @@ export class TransactionNewComponent implements OnInit {
   repository_id: string = this.params.hasParam("repository_id");
   model: TransactionNew = new TransactionNew();
 
+  helperIsActive: boolean = false;
+
   constructor(
     private http: HttpClient,
     private router: Router,
     private params: RouterParamService
   ) { }
 
-  submit() {
+  displayHelper() {
+    this.helperIsActive = true;
+  }
+
+  submit(hasNew: boolean) {
     this.http.put<Transaction>("/repository/" + this.repository_id + "/transaction/new", this.model)
-      .subscribe(val => this.router.navigateByUrl("/repository/" + this.repository_id + "/transaction"));
+      .subscribe(val => {
+        if (hasNew) {
+          alert("Hozzáadva!");
+          this.model = new TransactionNew();
+        } else {
+          this.router.navigateByUrl("/repository/" + this.repository_id + "/transaction");
+        }
+      });
   }
   ngOnInit() {
   }
