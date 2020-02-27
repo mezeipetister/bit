@@ -104,27 +104,35 @@ pub fn account_id_get(
     }
 }
 
-// #[post(
-//     "/repository/<repository_id>/account/<account_id>",
-//     data = "<form>",
-//     rank = 3
-// )]
-// pub fn repository_update_post(
-//     _user: Login,
-//     data: State<DataLoad>,
-//     repository_id: String,
-//     account_id: String,
-//     form: Json<SAccount>,
-// ) -> Result<StatusOk<SAccount>, ApiError> {
-//     match data.inner().repositories.get_by_id(&repository_id) {
-//         Ok(repository) => Ok(StatusOk(repository.update(|f| {
-//             f.set_name(form.name.to_string());
-//             f.set_description(form.description.to_string());
-//             f.clone().into()
-//         }))),
-//         Err(_) => Err(ApiError::NotFound),
-//     }
-// }
+#[post(
+    "/repository/<repository_id>/account/<account_id>",
+    data = "<form>",
+    rank = 3
+)]
+pub fn account_update_post(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    account_id: String,
+    form: Json<SAccount>,
+) -> Result<StatusOk<SAccount>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(repository) => Ok(StatusOk(
+            repository
+                .update(|r| {
+                    r.update_account(
+                        account_id.clone(),
+                        form.name.clone(),
+                        form.description.clone(),
+                        form.is_working,
+                        form.is_inverse,
+                    )
+                })?
+                .into(),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
 
 // #[post("/repository/<id>/restore")]
 // pub fn repository_restore_post(

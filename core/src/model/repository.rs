@@ -123,6 +123,27 @@ impl Repository {
             "A megadott ID-val account nem szerepel".to_string(),
         ))
     }
+    pub fn update_account(
+        &mut self,
+        account_id: String,
+        name: String,
+        description: String,
+        is_working: bool,
+        is_inverse: bool,
+    ) -> AppResult<Account> {
+        for account in &mut self.accounts {
+            if account.id == account_id {
+                account.name = name;
+                account.description = description;
+                account.is_working = is_working;
+                account.is_inverse = is_inverse;
+                return Ok(account.clone());
+            }
+        }
+        Err(Error::BadRequest(
+            "A számla azonosító nem található".to_string(),
+        ))
+    }
 }
 
 impl StorageObject for Repository {

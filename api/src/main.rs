@@ -130,6 +130,7 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::account::account_all_get,
                 controller::account::account_new_put,
                 controller::account::account_id_get,
+                controller::account::account_update_post,
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])
