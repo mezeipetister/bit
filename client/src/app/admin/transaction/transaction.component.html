@@ -4,11 +4,28 @@
         Search field mobile view -->
         <div class="columns is-hidden-desktop">
             <div class="column has-text-centered">
-                <div class="control has-icons-left">
-                    <input class="input" type="text" placeholder="Keresés">
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-search"></i>
-                    </span>
+                <div class="field">
+                    <p class="control has-icons-left">
+                        <input class="input" type="date" placeholder="Ettől" name="from"
+                            [ngModel]="from | date: 'yyyy-MM-dd'" (ngModelChange)="from = $event">
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                    </p>
+                </div>
+                <div class="field">
+                    <p class="control has-icons-left">
+                        <input class="input" type="date" placeholder="Eddig" name="till"
+                            [ngModel]="till | date: 'yyyy-MM-dd'" (ngModelChange)="till = $event">
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                    </p>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button">Szűrés</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -17,11 +34,30 @@
         <nav class="level is-hidden-mobile">
             <div class="level-left">
                 <div class="level-item">
-                    <div class="control has-icons-left">
-                        <input class="input" type="text" placeholder="Keresés">
+                    <!-- <div class="control has-icons-left">
+                        <input class="input" type="date" placeholder="Keresés">
                         <span class="icon is-small is-left">
                             <i class="fas fa-search"></i>
                         </span>
+                    </div> -->
+                    <div class="field is-grouped">
+                        <p class="control has-icons-left">
+                            <input class="input" type="date" placeholder="Ettől" name="from"
+                                [ngModel]="from | date: 'yyyy-MM-dd'" (ngModelChange)="from = $event">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                        </p>
+                        <p class="control has-icons-left">
+                            <input class="input" type="date" placeholder="Eddig" name="till"
+                                [ngModel]="till | date: 'yyyy-MM-dd'" (ngModelChange)="till = $event">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                        </p>
+                        <div class="control">
+                            <button class="button">Szűrés</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -33,7 +69,7 @@
         </nav>
         <!-- 
         Sort field mobile view -->
-        <div class="columns is-hidden-desktop">
+        <!-- <div class="columns is-hidden-desktop">
             <div class="column has-text-centered">
                 <a>
                     Rendezés dátum alapján
@@ -48,10 +84,10 @@
                     </span>
                 </a>
             </div>
-        </div>
+        </div> -->
         <!-- 
         Sort field desktop view -->
-        <nav class="level is-hidden-mobile">
+        <!-- <nav class="level is-hidden-mobile">
             <div class="level-left"></div>
             <div class="level-right">
                 <div class="level-item is-size-7">
@@ -71,7 +107,7 @@
                     </a>
                 </div>
             </div>
-        </nav>
+        </nav> -->
         <div class="box has-background-lighter" *ngFor="let transaction of model">
             <p class="is-size-7 header">
                 <a>{{transaction.date_settlement | date}}</a>

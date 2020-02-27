@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import { TransactionNew, Transaction } from 'src/app/class/transaction';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -33,11 +33,12 @@ export class TransactionNewComponent implements OnInit {
           alert("Hozzáadva!");
           this.model = new TransactionNew();
         } else {
-          this.router.navigateByUrl("/repository/" + this.repository_id + "/transaction");
+          this.router.navigateByUrl("/repository/" + this.repository_id + "/transaction/" + val.id);
         }
       });
   }
   ngOnInit() {
+
   }
 
 }

@@ -17,6 +17,6 @@ export class TransactionNew {
         public debit: string = "",
         public credit: string = "",
         public amount: number = 0,
-        public date_settlement: string = new Date().getFullYear() + "-" + new Date().getMonth() + "-" + new Date().getDay(),
+        public date_settlement: string = new Date().toLocaleDateString(),
     ) { }
 }
