@@ -13,6 +13,7 @@ export class TransactionComponent implements OnInit {
 
   repository_id: string = this.params.hasParam("repository_id");
   model: Transaction[] = [];
+  account: string = null;
   from: string = this.getTodayWindow(-30);
   till: string = this.getTodayWindow();
 
@@ -24,9 +25,25 @@ export class TransactionComponent implements OnInit {
     return dt.toLocaleDateString();
   }
 
-  ngOnInit() {
-    this.http.get<Transaction[]>("/repository/" + this.repository_id + "/transaction/all")
+  loadData() {
+    if (!this.from) {
+      this.from = new Date().toLocaleDateString();
+    }
+    if (!this.till) {
+      this.till = new Date().toLocaleDateString();
+    }
+    this.from = new Date(this.from).toLocaleDateString();
+    this.till = new Date(this.till).toLocaleDateString();
+    this.http.get<Transaction[]>("/repository/"
+      + this.repository_id
+      + "/transaction/all?from="
+      + this.from + "&till=" + this.till
+      + "&account=" + this.account)
       .subscribe(val => this.model = val);
+  }
+
+  ngOnInit() {
+    this.loadData();
   }
 
 }

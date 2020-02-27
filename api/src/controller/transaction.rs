@@ -22,6 +22,7 @@ use crate::DataLoad;
 use chrono::prelude::*;
 use core_lib::model::*;
 use core_lib::prelude::AppResult;
+use rocket::request::Form;
 use rocket::response::NamedFile;
 use rocket::Data;
 use rocket::State;
@@ -30,16 +31,43 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use std::path::Path;
 
-#[get("/repository/<repository_id>/transaction/all")]
+#[derive(FromForm)]
+pub struct Filter {
+    from: String,
+    till: String,
+    account: Option<String>,
+}
+
+fn parse_date(dt: &str) -> AppResult<NaiveDate> {
+    match NaiveDate::parse_from_str(dt, "%m/%d/%Y") {
+        Ok(dt) => Ok(dt),
+        Err(_) => Err(core_lib::Error::BadRequest(
+            "Rossz dátum formátum!".to_string(),
+        )),
+    }
+}
+
+#[get("/repository/<repository_id>/transaction/all?<filter..>")]
 pub fn transaction_all_get(
     _user: Login,
     data: State<DataLoad>,
     repository_id: String,
+    filter: Form<Filter>,
 ) -> Result<StatusOk<Vec<apiSchema::Transaction>>, ApiError> {
+    let from = parse_date(&filter.from)?;
+    let till = parse_date(&filter.till)?;
+
     match data.inner().repositories.get_by_id(&repository_id) {
         Ok(repository) => Ok(StatusOk(repository.get(|f: &Repository| {
             f.get_transactions()
-                .iter()
+                .into_iter()
+                .filter(|t| t.date_settlement >= from && t.date_settlement <= till)
+                .filter(|t| {
+                    if let Some(account_id) = &filter.account {
+                        return &t.debit == account_id || &t.credit == account_id;
+                    }
+                    true
+                })
                 .map(|a| a.clone().into())
                 .collect::<Vec<apiSchema::Transaction>>()
         }))),
@@ -47,7 +75,7 @@ pub fn transaction_all_get(
     }
 }
 
-#[get("/repository/<repository_id>/transaction/<transaction_id>", rank = 2)]
+#[get("/repository/<repository_id>/transaction/<transaction_id>")]
 pub fn transaction_id_get(
     _user: Login,
     data: State<DataLoad>,
