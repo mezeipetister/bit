@@ -15,11 +15,33 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod account;
-pub mod ledger;
-pub mod repository;
-pub mod transaction;
-pub use account::*;
-pub use ledger::*;
-pub use repository::*;
-pub use transaction::*;
+use chrono::prelude::*;
+use core_lib::model;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Ledger {
+    pub account_id: String,
+    pub account_name: String,
+    pub debit_total: i32,
+    pub credit_total: i32,
+    pub total: i32,
+}
+
+impl Ledger {
+    pub fn new(
+        account_id: String,
+        account_name: String,
+        debit_total: i32,
+        credit_total: i32,
+        total: i32,
+    ) -> Self {
+        Ledger {
+            account_id,
+            account_name,
+            debit_total,
+            credit_total,
+            total,
+        }
+    }
+}
