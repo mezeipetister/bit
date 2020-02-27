@@ -17,11 +17,14 @@
                     <div class="field is-grouped">
                         <div class="control">
                             <input type="text" class="input" placeholder="Tartozik" name="debit"
-                                [(ngModel)]="model.debit">
+                                [(ngModel)]="model.debit" #debit>
                         </div>
                         <div class="control">
-                            <button class="button" tabindex="-1">+</button>
+                            <button class="button" type="button" tabindex="-1" (click)="displayHelper(true)">+</button>
                         </div>
+                    </div>
+                    <div class="field">
+                        <p class="help">{{debit_name || '-'}}</p>
                     </div>
                     <div class="field">
                         <label class="label">Követel</label>
@@ -29,11 +32,14 @@
                     <div class="field is-grouped">
                         <div class="control">
                             <input type="text" class="input" placeholder="Követel" name="credit"
-                                [(ngModel)]=model.credit>
+                                [(ngModel)]="model.credit" #credit>
                         </div>
                         <div class="control">
-                            <button class="button" tabindex="-1" (click)="helperIsActive = true">+</button>
+                            <button class="button" type="button" tabindex="-1" (click)="displayHelper(false)">+</button>
                         </div>
+                    </div>
+                    <div class="field">
+                        <p class="help">{{credit_name || '-'}}</p>
                     </div>
                     <div class="field">
                         <label class="label">Összeg</label>
@@ -82,7 +88,21 @@
             <button class="delete" aria-label="close" (click)="helperIsActive = false"></button>
         </header>
         <section class="modal-card-body">
-            Content ...
+            <table class="table is-fullwidth is-striped">
+                <tbody>
+                    <ng-container *ngFor="let account of accounts">
+                        <tr *ngIf="account.is_working && account.is_active">
+                            <td [class.has-text-success]="account.is_working" class="is-narrow">{{account.id}}</td>
+                            <td><a (click)="target_is_debit
+                                    ? model.debit = account.id
+                                    : model.credit = account.id;
+                                    updateNames();
+                                    helperIsActive = false;">{{account.name}}</a>
+                            </td>
+                        </tr>
+                    </ng-container>
+                </tbody>
+            </table>
         </section>
     </div>
 </div>

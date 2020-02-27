@@ -3,6 +3,7 @@ import { TransactionNew, Transaction } from 'src/app/class/transaction';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { RouterParamService } from 'src/app/services/router-param/router-param.service';
+import { Account } from 'src/app/class/account';
 
 @Component({
   selector: 'app-transaction-new',
@@ -15,6 +16,7 @@ export class TransactionNewComponent implements OnInit {
   model: TransactionNew = new TransactionNew();
 
   helperIsActive: boolean = false;
+  accounts: Account[] = [];
 
   constructor(
     private http: HttpClient,
@@ -22,11 +24,44 @@ export class TransactionNewComponent implements OnInit {
     private params: RouterParamService
   ) { }
 
-  displayHelper() {
+  target_is_debit: boolean = true;
+  debit_name: string = "";
+  credit_name: string = "";
+
+  updateNames() {
+    this.debit_name = this.getAccountName(this.model.debit);
+    this.credit_name = this.getAccountName(this.model.credit);
+  }
+
+  getAccountName(id: string): string {
+    let res = null;
+    this.accounts.forEach(a => {
+      if (a.id == id) {
+        res = a.name;
+      }
+    });
+    return res;
+  }
+
+  loadAccounts() {
+    this.http.get<Account[]>("/repository/" + this.repository_id + "/account/all")
+      .subscribe(val => {
+        this.accounts = val;
+      });
+  }
+
+  displayHelper(target_is_debit: boolean = true) {
+    this.loadAccounts();
     this.helperIsActive = true;
+    this.target_is_debit = target_is_debit;
+
   }
 
   submit(hasNew: boolean) {
+    if (this.model.subject.length == 0) {
+      alert("A megnevezés mező kötelező!");
+      return;
+    }
     this.http.put<Transaction>("/repository/" + this.repository_id + "/transaction/new", this.model)
       .subscribe(val => {
         if (hasNew) {
