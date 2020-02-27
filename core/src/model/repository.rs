@@ -95,9 +95,15 @@ impl Repository {
         self.is_active = true;
     }
     pub fn add_account(&mut self, account: Account) -> AppResult<()> {
-        if let Some(p) = self.accounts.iter().position(|a| a.get_id() == account.id) {
+        if let Some(_) = self.accounts.iter().position(|a| a.get_id() == account.id) {
             return Err(Error::BadRequest(
                 "A megadott accoutn ID már létezik!".to_string(),
+            ));
+        }
+        // Check if account id contains just numbers
+        if !account.get_id().chars().all(char::is_numeric) {
+            return Err(Error::BadRequest(
+                "A számla száma csak számokat tartalmazhat!".to_string(),
             ));
         }
         self.accounts.push(account);
