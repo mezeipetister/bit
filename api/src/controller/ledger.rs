@@ -28,6 +28,7 @@ use rocket::Data;
 use rocket::State;
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::io;
 use std::path::Path;
 
@@ -105,4 +106,38 @@ pub fn ledger_get(
 
     // Return ledger vector
     Ok(StatusOk(ledger))
+}
+
+#[derive(FromForm)]
+pub struct StatFilter {
+    account: String,
+}
+
+#[get("/repository/<repository_id>/ledger/stat?<filter..>")]
+pub fn ledger_stat_get(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    filter: Form<StatFilter>,
+) -> Result<StatusOk<[i32; 12]>, ApiError> {
+    // Init result array
+    let mut result: [i32; 12] = [0; 12];
+
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(repository) => repository.update(|f: &mut Repository| {
+            for transaction in f.get_transactions() {
+                if transaction.debit.starts_with(&filter.account) {
+                    result[(transaction.date_settlement.month() - 1) as usize] +=
+                        transaction.amount;
+                }
+                if transaction.credit.starts_with(&filter.account) {
+                    result[(transaction.date_settlement.month() - 1) as usize] -=
+                        transaction.amount;
+                }
+            }
+        }),
+        Err(_) => return Err(ApiError::NotFound),
+    }
+
+    Ok(StatusOk(result))
 }
