@@ -3,9 +3,9 @@
         <div class="columns">
             <div class="column is-6">
                 Pénzeszköz alakulása
-                <canvas baseChart [datasets]="lineChartData" [labels]="lineChartLabels" [options]="ChartOptions"
-                    [colors]="lineChartColors" [legend]="lineChartLegend" [chartType]="lineChartType"
-                    [plugins]="lineChartPlugins">
+                <canvas baseChart [datasets]="stat38.data" [labels]="stat38.labels" [options]="stat38.ChartOptions"
+                    [colors]="stat38.lineChartColors" [legend]="stat38.lineChartLegend" [chartType]="stat38.chartType"
+                    [plugins]="stat38.lineChartPlugins">
                 </canvas>
             </div>
             <div class="column is-6">
@@ -19,9 +19,9 @@
         <div class="columns">
             <div class="column is-6">
                 Beruházások
-                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
-                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
-                    [colors]="lineChartColors">
+                <canvas baseChart [datasets]="stat161.data" [labels]="stat161.labels" [options]="stat161.ChartOptions"
+                    [colors]="stat161.lineChartColors" [legend]="stat161.lineChartLegend"
+                    [chartType]="stat161.chartType" [plugins]="stat161.lineChartPlugins">
                 </canvas>
             </div>
             <div class="column is-6">
@@ -35,9 +35,9 @@
         <div class="columns">
             <div class="column is-6">
                 Költségek alakulása
-                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
-                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
-                    [colors]="lineChartColors">
+                <canvas baseChart [datasets]="stat5.data" [labels]="stat5.labels" [options]="stat5.ChartOptions"
+                    [colors]="stat5.lineChartColors" [legend]="stat5.lineChartLegend" [chartType]="stat5.chartType"
+                    [plugins]="stat5.lineChartPlugins">
                 </canvas>
             </div>
             <div class="column is-6">

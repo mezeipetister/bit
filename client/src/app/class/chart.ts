@@ -5,7 +5,7 @@ export class Chart {
 
 }
 
-export class LineChar {
+export class LineChart {
     public data: ChartDataSets[] = [];
     public lineChartColors: Color[] = [];
     public ChartOptions = {

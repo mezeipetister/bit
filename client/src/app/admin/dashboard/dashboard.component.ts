@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ChartDataSets, ChartOptions, ChartType } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
+import { HttpClient } from '@angular/common/http';
+import { RouterParamService } from 'src/app/services/router-param/router-param.service';
+import { LineChart } from 'src/app/class/chart';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,7 +12,13 @@ import { Color, Label } from 'ng2-charts';
 })
 export class DashboardComponent implements OnInit {
 
-  constructor() { }
+  id: string = this.params.hasParam("repository_id");
+
+  stat38: LineChart = new LineChart();
+  stat161: LineChart = new LineChart();
+  stat5: LineChart = new LineChart();
+
+  constructor(private http: HttpClient, private params: RouterParamService) { }
 
   barChartOptions: ChartOptions = {
     responsive: true,
@@ -61,7 +70,39 @@ export class DashboardComponent implements OnInit {
   lineChartPlugins = [];
   lineChartType = 'line';
 
+  cumulateData(val: number[]): number[] {
+    val[1] = val[0] + val[1];
+    val[2] = val[1] + val[2];
+    val[3] = val[2] + val[3];
+    val[4] = val[3] + val[4];
+    val[5] = val[4] + val[5];
+    val[6] = val[5] + val[6];
+    val[7] = val[6] + val[7];
+    val[8] = val[7] + val[8];
+    val[9] = val[8] + val[9];
+    val[10] = val[9] + val[10];
+    val[11] = val[10] + val[11];
+    return val;
+  }
+
   ngOnInit() {
+    this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 38)
+      .subscribe(val => {
+        val = this.cumulateData(val);
+        this.stat38 = new LineChart('line', val, 'Pénzeszköz HUF');
+      });
+
+    this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 161)
+      .subscribe(val => {
+        val = this.cumulateData(val);
+        this.stat161 = new LineChart('line', val, 'Beruházások HUF');
+      });
+
+    this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 5)
+      .subscribe(val => {
+        val = this.cumulateData(val);
+        this.stat5 = new LineChart('line', val, 'Költségek HUF');
+      });
   }
 
 }

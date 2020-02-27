@@ -17,7 +17,7 @@
                     <div class="field is-grouped">
                         <div class="control">
                             <input type="text" class="input" placeholder="Tartozik" name="debit"
-                                [(ngModel)]="model.debit" #debit>
+                                [(ngModel)]="model.debit" #debit (ngModelChange)="updateNames()">
                         </div>
                         <div class="control">
                             <button class="button" type="button" tabindex="-1" (click)="displayHelper(true)">+</button>
@@ -32,7 +32,7 @@
                     <div class="field is-grouped">
                         <div class="control">
                             <input type="text" class="input" placeholder="Követel" name="credit"
-                                [(ngModel)]="model.credit" #credit>
+                                [(ngModel)]="model.credit" #credit (ngModelChange)="updateNames()">
                         </div>
                         <div class="control">
                             <button class="button" type="button" tabindex="-1" (click)="displayHelper(false)">+</button>
