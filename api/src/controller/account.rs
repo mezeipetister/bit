@@ -74,21 +74,6 @@ pub fn account_new_put(
     }
 }
 
-// #[post("/repository/<id>/remove")]
-// pub fn repository_remove_post(
-//     _user: Login,
-//     data: State<DataLoad>,
-//     id: String,
-// ) -> Result<StatusOk<SRepositoryShort>, ApiError> {
-//     match data.inner().repositories.get_by_id(&id) {
-//         Ok(repository) => Ok(StatusOk(repository.update(|f| {
-//             f.remove();
-//             f.clone().into()
-//         }))),
-//         Err(_) => Err(ApiError::NotFound),
-//     }
-// }
-
 #[get("/repository/<repository_id>/account/<account_id>", rank = 2)]
 pub fn account_id_get(
     _user: Login,
@@ -133,18 +118,3 @@ pub fn account_update_post(
         Err(_) => Err(ApiError::NotFound),
     }
 }
-
-// #[post("/repository/<id>/restore")]
-// pub fn repository_restore_post(
-//     _user: Login,
-//     data: State<DataLoad>,
-//     id: String,
-// ) -> Result<StatusOk<SRepositoryShort>, ApiError> {
-//     match data.inner().repositories.get_by_id(&id) {
-//         Ok(repository) => Ok(StatusOk(repository.update(|f| {
-//             f.restore();
-//             f.clone().into()
-//         }))),
-//         Err(_) => Err(ApiError::NotFound),
-//     }
-// }

@@ -123,6 +123,14 @@ impl Repository {
             "A megadott ID-val account nem szerepel".to_string(),
         ))
     }
+    pub fn is_valid_account(&self, id: &str) -> bool {
+        for account in &self.accounts {
+            if account.get_id() == id && account.get_is_working() && account.get_is_active() {
+                return true;
+            }
+        }
+        false
+    }
     pub fn update_account(
         &mut self,
         account_id: String,
@@ -143,6 +151,42 @@ impl Repository {
         Err(Error::BadRequest(
             "A számla azonosító nem található".to_string(),
         ))
+    }
+    pub fn get_transactions(&self) -> &Vec<Transaction> {
+        &self.transactions
+    }
+    pub fn add_transaction(
+        &mut self,
+        subject: String,
+        debit: String,
+        credit: String,
+        amount: i32,
+        date_settlement: NaiveDate,
+        created_by: String,
+    ) -> AppResult<Transaction> {
+        if !self.is_valid_account(&debit) {
+            return Err(Error::BadRequest(
+                "A megadott debit ID nem könyvelhető".to_string(),
+            ));
+        }
+        if !self.is_valid_account(&credit) {
+            return Err(Error::BadRequest(
+                "A megadott credit ID nem könyvelhető".to_string(),
+            ));
+        }
+        let transaction = Transaction::new(
+            self.transactions.len(),
+            subject,
+            debit,
+            credit,
+            amount,
+            date_settlement,
+            created_by,
+        );
+        self.transactions.push(transaction.clone());
+        self.transactions
+            .sort_by(|a, b| a.date_settlement.cmp(&b.date_settlement));
+        Ok(transaction)
     }
 }
 
@@ -229,7 +273,40 @@ impl Account {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Transaction {}
+pub struct Transaction {
+    pub id: usize,
+    pub subject: String,
+    pub debit: String,
+    pub credit: String,
+    pub amount: i32,
+    pub date_created: DateTime<Utc>,
+    pub date_settlement: NaiveDate,
+    pub created_by: String,
+}
+
+impl Transaction {
+    pub fn new(
+        id: usize,
+        subject: String,
+        debit: String,
+        credit: String,
+        amount: i32,
+        date_settlement: NaiveDate,
+        created_by: String,
+    ) -> Self {
+        Transaction {
+            id,
+            subject,
+            debit,
+            credit,
+            amount,
+            date_created: Utc::now(),
+            date_settlement,
+            created_by,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Asset {}
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -3,11 +3,12 @@
         <div class="columns">
             <div class="column is-6">
                 <p class="title">Új tétel</p>
-                <form>
+                <form (ngSubmit)="submit()" #loginForm="ngForm">
                     <div class="field">
                         <label class="label">Megnevezés</label>
                         <div class="control">
-                            <textarea class="textarea" name="event" cols="30" rows="5"></textarea>
+                            <textarea class="textarea" name="event" cols="30" rows="5"
+                                [(ngModel)]="model.subject"></textarea>
                         </div>
                     </div>
                     <div class="field">
@@ -15,10 +16,11 @@
                     </div>
                     <div class="field is-grouped">
                         <div class="control">
-                            <input type="text" class="input" placeholder="Tartozik">
+                            <input type="text" class="input" placeholder="Tartozik" name="debit"
+                                [(ngModel)]="model.debit">
                         </div>
                         <div class="control">
-                            <button class="button">+</button>
+                            <button class="button" tabindex="-1">+</button>
                         </div>
                     </div>
                     <div class="field">
@@ -26,10 +28,11 @@
                     </div>
                     <div class="field is-grouped">
                         <div class="control">
-                            <input type="text" class="input" placeholder="Követel">
+                            <input type="text" class="input" placeholder="Követel" name="credit"
+                                [(ngModel)]=model.credit>
                         </div>
                         <div class="control">
-                            <button class="button">+</button>
+                            <button class="button" tabindex="-1">+</button>
                         </div>
                     </div>
                     <div class="field">
@@ -37,7 +40,8 @@
                     </div>
                     <div class="field has-addons">
                         <p class="control">
-                            <input class="input" type="number" placeholder="1000">
+                            <input class="input" type="number" placeholder="1000" name="amount"
+                                [(ngModel)]="model.amount">
                         </p>
                         <p class="control">
                             <a class="button is-static">
@@ -46,19 +50,21 @@
                         </p>
                     </div>
                     <div class="field">
-                        <p class="help">1.000 HUF</p>
+                        <p class="help">{{model.amount.toLocaleString()}} HUF</p>
                     </div>
                     <div class="field">
                         <label class="label">Teljesítés dátuma</label>
                         <div class="control">
-                            <input type="date" class="input">
+                            <input type="date" class="input" name="date_settlement"
+                                [ngModel]="model.date_settlement | date: 'yyyy-MM-dd'"
+                                (ngModelChange)="model.date_settlement = $event">
                         </div>
                     </div>
                     <div class="field">
                         <div class="control">
                             <div class="buttons">
-                                <button class="button is-success">Hozzáad</button>
-                                <button class="button is-success is-outlined">Hozzáad és új</button>
+                                <button class="button is-success" type="submit">Hozzáad</button>
+                                <button class="button is-success is-outlined" type="button">Hozzáad és új</button>
                             </div>
                         </div>
                     </div>

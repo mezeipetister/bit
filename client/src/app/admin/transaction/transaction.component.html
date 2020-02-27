@@ -72,20 +72,19 @@
                 </div>
             </div>
         </nav>
-        <div class="box has-background-lighter">
+        <div class="box has-background-lighter" *ngFor="let transaction of model">
             <p class="is-size-7 header">
-                <a>2019-03-02</a>
-                <a>@mezeipetister</a>
-                <a>#324234234</a>
+                <a>{{transaction.date_settlement | date}}</a>
+                <a>@{{transaction.created_by}}</a>
+                <a>#{{transaction.id}}</a>
             </p>
             <p class="is-6">
-                <a class="has-text-dark" routerLink="./1">Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    Excepturi, quasi?</a>
+                <a class="has-text-dark" [routerLink]="['./', transaction.id]">{{transaction.subject}}</a>
             </p>
             <p class="has-text-grey is-size-7 is-inline-block ft">
-                <span>Összeg: <strong>12.500 HUF</strong></span>
-                <span>Kontír tételek: 161 / 3841</span>
-                <span>Könyvelés dátuma: 2019-01-01</span>
+                <span>Összeg: <strong>{{transaction.amount}} HUF</strong></span>
+                <span>Kontír tételek: {{transaction.debit}} / {{transaction.credit}}</span>
+                <span>Könyvelés dátuma: {{transaction.date_created | date}}</span>
             </p>
         </div>
     </div>
