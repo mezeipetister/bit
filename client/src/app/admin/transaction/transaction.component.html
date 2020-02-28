@@ -135,7 +135,7 @@
                 <a class="has-text-dark" [routerLink]="['./', transaction.id]">{{transaction.subject}}</a>
             </p>
             <p class="has-text-grey is-size-7 is-inline-block ft">
-                <span>Összeg: <strong>{{transaction.amount}} HUF</strong></span>
+                <span>Összeg: <strong>{{transaction.amount.toLocaleString()}} HUF</strong></span>
                 <span>Kontír tételek: {{transaction.debit}} / {{transaction.credit}}</span>
                 <span>Könyvelés dátuma: {{transaction.date_created | date}}</span>
             </p>

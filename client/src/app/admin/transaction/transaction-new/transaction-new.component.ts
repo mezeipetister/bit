@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Input } from '@angular/core';
+import { Component, OnInit, ViewChild, Input, ViewChildren } from '@angular/core';
 import { TransactionNew, Transaction } from 'src/app/class/transaction';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -17,6 +17,12 @@ export class TransactionNewComponent implements OnInit {
 
   helperIsActive: boolean = false;
   accounts: Account[] = [];
+
+  @ViewChildren('subject') subject;
+
+  ngAfterViewInit() {
+    this.subject.first.nativeElement.focus();
+  }
 
   constructor(
     private http: HttpClient,
@@ -58,6 +64,9 @@ export class TransactionNewComponent implements OnInit {
   }
 
   submit(hasNew: boolean) {
+    if (!confirm('Biztosan hozzáadod?')) {
+      return;
+    }
     if (this.model.subject.length == 0) {
       alert("A megnevezés mező kötelező!");
       return;
@@ -73,7 +82,7 @@ export class TransactionNewComponent implements OnInit {
       });
   }
   ngOnInit() {
-
+    this.loadAccounts();
   }
 
 }

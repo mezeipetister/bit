@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { LoginService } from 'src/app/services/login/login.service';
 import { Router, Event, NavigationEnd, ActivatedRoute, ParamMap } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
@@ -16,6 +16,13 @@ export class NavbarComponent implements OnInit {
 
   notifications: Notification[] = [];
   repository_id: String = null;
+
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(event: KeyboardEvent) {
+    if (event.key === 'F1' && this.repository_id) {
+      this.router.navigateByUrl("/repository/" + this.repository_id + "/transaction/new");
+    }
+  }
 
   constructor(
     private loginService: LoginService,

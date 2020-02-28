@@ -59,7 +59,8 @@ pub fn transaction_all_get(
 
     match data.inner().repositories.get_by_id(&repository_id) {
         Ok(repository) => Ok(StatusOk(repository.get(|f: &Repository| {
-            f.get_transactions()
+            let mut result: Vec<apiSchema::Transaction> = f
+                .get_transactions()
                 .into_iter()
                 .filter(|t| t.date_settlement >= from && t.date_settlement <= till)
                 .filter(|t| {
@@ -69,7 +70,18 @@ pub fn transaction_all_get(
                     true
                 })
                 .map(|a| a.clone().into())
-                .collect::<Vec<apiSchema::Transaction>>()
+                .collect::<Vec<apiSchema::Transaction>>();
+            // Sort by two dimension
+            // First check order by settlement date
+            // Then ser order by date_created
+            result.sort_by(|a: &apiSchema::Transaction, b: &apiSchema::Transaction| {
+                if b.date_settlement.cmp(&a.date_settlement) == std::cmp::Ordering::Equal {
+                    b.date_created.cmp(&a.date_created)
+                } else {
+                    b.date_settlement.cmp(&a.date_settlement)
+                }
+            });
+            result
         }))),
         Err(_) => Err(ApiError::NotFound),
     }

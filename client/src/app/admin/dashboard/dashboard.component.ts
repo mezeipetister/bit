@@ -4,6 +4,8 @@ import { Color, Label } from 'ng2-charts';
 import { HttpClient } from '@angular/common/http';
 import { RouterParamService } from 'src/app/services/router-param/router-param.service';
 import { LineChart } from 'src/app/class/chart';
+import { concat } from 'rxjs'
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,92 +19,77 @@ export class DashboardComponent implements OnInit {
   stat38: LineChart = new LineChart();
   stat161: LineChart = new LineChart();
   stat5: LineChart = new LineChart();
+  stat985: LineChart = new LineChart();
+  stat4: LineChart = new LineChart();
+  stat468: LineChart = new LineChart();
 
   constructor(private http: HttpClient, private params: RouterParamService) { }
 
-  barChartOptions: ChartOptions = {
-    responsive: true,
-  };
-  barChartLabels: Label[] = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
-  barChartType: ChartType = 'bar';
-  barChartLegend = true;
-  barChartPlugins = [];
-
-  barChartData: ChartDataSets[] = [
-    { data: [15132000, 16000000, 16500000, 5000000], label: 'Beruházások' }
-  ];
-
-  lineChartData: ChartDataSets[] = [
-    { data: [100, 110, 90, 120, 121, 122, 140, 150, 157], label: 'Pénzeszköz HUF' },
-  ];
-
-  lineChartLabels: Label[] = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
-
-  ChartOptions = {
-    responsive: true,
-    tooltips: {
-      callbacks: {
-        label: function (tooltipItems, data) {
-          return data.labels[tooltipItems.index] + '' + data.datasets[0].data[tooltipItems.index].toLocaleString();
-        }
-      }
-    },
-    scales: {
-      yAxes: [{
-        ticks: {
-          beginAtZero: false,
-          callback: function (value, index, values) {
-            return value.toLocaleString();
-          }
-        }
-      }]
-    }
-  };
-
-  lineChartColors: Color[] = [
-    {
-      // borderColor: 'black',
-      // backgroundColor: 'rgba(255,255,0,0.28)',
-    },
-  ];
-
-  lineChartLegend = true;
-  lineChartPlugins = [];
-  lineChartType = 'line';
-
   cumulateData(val: number[]): number[] {
-    val[1] = val[0] + val[1];
-    val[2] = val[1] + val[2];
-    val[3] = val[2] + val[3];
-    val[4] = val[3] + val[4];
-    val[5] = val[4] + val[5];
-    val[6] = val[5] + val[6];
-    val[7] = val[6] + val[7];
-    val[8] = val[7] + val[8];
-    val[9] = val[8] + val[9];
-    val[10] = val[9] + val[10];
-    val[11] = val[10] + val[11];
+    val.forEach((value, index) => {
+      if (index > 0) {
+        value += val[index - 1];
+      }
+    });
     return val;
+  }
+
+  sumArrays(...arrays): number[] {
+    const n = arrays.reduce((max, xs) => Math.max(max, xs.length), 0);
+    const result = Array.from({ length: n });
+    return result.map((_, i) => arrays.map(xs => xs[i] || 0).reduce((sum, x) => sum + x, 0));
   }
 
   ngOnInit() {
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 38)
       .subscribe(val => {
         val = this.cumulateData(val);
-        this.stat38 = new LineChart('line', val, 'Pénzeszköz HUF');
+        this.stat38 = new LineChart('line', val, 'Minden 38-as HUF');
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 161)
       .subscribe(val => {
         val = this.cumulateData(val);
-        this.stat161 = new LineChart('line', val, 'Beruházások HUF');
+        this.stat161 = new LineChart('line', val, '161-es HUF');
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 5)
       .subscribe(val => {
         val = this.cumulateData(val);
-        this.stat5 = new LineChart('line', val, 'Költségek HUF');
+        this.stat5 = new LineChart('line', val, 'Minden 5-ös HUF');
       });
+
+    this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 4)
+      .subscribe(val => {
+        // val = this.cumulateData(val);
+        this.stat4 = new LineChart('bar', val, '4-esek összegezve HUF');
+      });
+
+    this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 468)
+      .subscribe(val => {
+        // val = this.cumulateData(val);
+        this.stat468 = new LineChart('bar', val, '468 HUF');
+      });
+
+    let d9: number[] = [];
+    let d8: number[] = [];
+    let d5: number[] = [];
+    let c9 = this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 9)
+      .pipe(map(v => {
+        d9 = v.map(x => x * -1);
+      }));
+    let c8 = this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 8)
+      .pipe(map(v => {
+        d8 = v;
+      }));
+    let c5 = this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 5)
+      .pipe(map(v => {
+        d5 = v;
+      }));
+    concat(c9, c8, c5).subscribe(v => {
+      let data = d9.map((x, index) => x - d8[index] - d5[index]);
+      this.stat985 = new LineChart('bar', data, '(9*-1)-8-5 HUF');
+    });
   }
 
 }

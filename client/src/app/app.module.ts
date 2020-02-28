@@ -14,6 +14,7 @@ import { EmptyComponent } from './layout/empty/empty.component';
 import { PasswordresetComponent } from './login/passwordreset/passwordreset.component';
 import { httpInterceptorProviders } from './interceptors';
 import { RouterParamService } from './services/router-param/router-param.service';
+import { ModalService } from './services/modal/modal.service';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,7 @@ import { RouterParamService } from './services/router-param/router-param.service
     AdminModule,
     AppRoutingModule,
   ],
-  providers: [DataService, LoginService, RouterParamService, httpInterceptorProviders],
+  providers: [DataService, LoginService, RouterParamService, httpInterceptorProviders, ModalService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

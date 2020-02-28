@@ -10,10 +10,9 @@
             </div>
             <div class="column is-6">
                 Saját tőke változása
-                <canvas baseChart [datasets]="lineChartData" [labels]="lineChartLabels" [options]="ChartOptions"
-                    [colors]="lineChartColors" [legend]="lineChartLegend" [chartType]="lineChartType"
-                    [plugins]="lineChartPlugins">
-                </canvas>
+                <canvas baseChart [datasets]="stat4.data" [labels]="stat4.labels" [options]="stat4.ChartOptions"
+                    [colors]="stat4.lineChartColors" [legend]="stat4.lineChartLegend" [chartType]="stat4.chartType"
+                    [plugins]="stat4.lineChartPlugins"></canvas>
             </div>
         </div>
         <div class="columns">
@@ -26,9 +25,9 @@
             </div>
             <div class="column is-6">
                 ÉCS
-                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
-                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
-                    [colors]="lineChartColors">
+                <canvas baseChart [datasets]="stat468.data" [labels]="stat468.labels" [options]="stat468.ChartOptions"
+                    [colors]="stat468.lineChartColors" [legend]="stat468.lineChartLegend"
+                    [chartType]="stat468.chartType" [plugins]="stat468.lineChartPlugins">
                 </canvas>
             </div>
         </div>
@@ -42,9 +41,9 @@
             </div>
             <div class="column is-6">
                 Eredménykimutatás
-                <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="ChartOptions"
-                    [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType"
-                    [colors]="lineChartColors">
+                <canvas baseChart [datasets]="stat985.data" [labels]="stat985.labels" [options]="stat985.ChartOptions"
+                    [colors]="stat985.lineChartColors" [legend]="stat985.lineChartLegend"
+                    [chartType]="stat985.chartType" [plugins]="stat985.lineChartPlugins">
                 </canvas>
             </div>
         </div>

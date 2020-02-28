@@ -3,7 +3,7 @@
         <div class="columns">
             <div class="column is-6">
                 <p class="title">Új tétel</p>
-                <form (ngSubmit)="submit(false)" #loginForm="ngForm">
+                <form #loginForm="ngForm" (submit)="submit(false)">
                     <div class="field">
                         <label class="label">Megnevezés</label>
                         <div class="control">
