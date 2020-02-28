@@ -55,14 +55,14 @@ export class DashboardComponent implements OnInit {
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 5)
       .subscribe(val => {
-        val = this.cumulateData(val);
-        this.stat5 = new LineChart('line', val, 'Minden 5-ös HUF');
+        // val = this.cumulateData(val);
+        this.stat5 = new LineChart('bar', val, 'Minden 5-ös HUF');
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 4)
       .subscribe(val => {
-        // val = this.cumulateData(val);
-        this.stat4 = new LineChart('bar', val, '4-esek összegezve HUF');
+        val = this.cumulateData(val);
+        this.stat4 = new LineChart('line', val, '4-esek összegezve HUF');
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 468)
