@@ -10,6 +10,9 @@ import { HttpError } from '../class/http-error';
 export class ErrorHandlerInterceptor implements HttpInterceptor {
     constructor() { }
 
+    /**
+     * TODO: Refact this whole error part
+     */
     private handleError(error: HttpErrorResponse) {
         if (error.error instanceof ErrorEvent) {
             // A client-side or network error occurred. Handle it accordingly.
