@@ -4,15 +4,20 @@
         Search field mobile view -->
         <div class="columns is-hidden-desktop">
             <div class="column has-text-centered">
-                <div class="field is-grouped">
-                    <div class="control has-icons-left is-expanded">
-                        <input class="input" type="text" placeholder="Szűrés">
+                <div class="field">
+                    <div class="control has-icons-left">
+                        <input class="input" type="text" placeholder="Szűrés" name="filter" [(ngModel)]="filter">
                         <span class="icon is-small is-left">
                             <i class="fas fa-search"></i>
                         </span>
                     </div>
+                </div>
+                <div class="field is-grouped is-grouped-centered">
                     <div class="control">
-                        <input type="date" class="input">
+                        <input type="date" class="input" name="till" [(ngModel)]="till" (ngModelChange)="load()">
+                    </div>
+                    <div class="control">
+                        <button class="button" type="button" (click)="load()">Szűrés</button>
                     </div>
                 </div>
             </div>
@@ -30,7 +35,7 @@
                             </span>
                         </div>
                         <div class="control">
-                            <input type="date" class="input" name="till" [(ngModel)]="till">
+                            <input type="date" class="input" name="till" [(ngModel)]="till" (ngModelChange)="load()">
                         </div>
                         <div class="control">
                             <button class="button" type="button" (click)="load()">Szűrés</button>
