@@ -5,6 +5,7 @@
 FROM rustlang/rust:nightly AS api_builder
 WORKDIR /app
 COPY . /app/
+COPY ./Rocket.toml /app/
 RUN cargo build --bin api --release
 
 # ====================
@@ -18,5 +19,6 @@ COPY --from=api_builder /app/target/release/api .
 RUN apt update
 # Install libssl as dependency
 RUN apt install libssl-dev -y
+ENV ROCKET_PORT=8002
 ENTRYPOINT ["./api"]
-EXPOSE 8000/tcp
+EXPOSE 8002/tcp
