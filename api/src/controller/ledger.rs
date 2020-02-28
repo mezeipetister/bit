@@ -126,6 +126,10 @@ pub fn ledger_stat_get(
     match data.inner().repositories.get_by_id(&repository_id) {
         Ok(repository) => repository.update(|f: &mut Repository| {
             for transaction in f.get_transactions() {
+                // Filter just the current year events
+                if transaction.date_settlement.year() != Utc::now().naive_utc().year() {
+                    continue;
+                }
                 let month = (transaction.date_settlement.month() - 1) as usize;
                 if transaction.debit.starts_with(&filter.account) {
                     match result[month] {
