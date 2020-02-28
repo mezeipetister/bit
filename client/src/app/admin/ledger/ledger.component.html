@@ -51,18 +51,18 @@
         </nav>
         <table class="table is-fullwidth">
             <thead>
-                <tr>
+                <tr class="is-size-7-touch">
                     <th></th>
                     <th>#</th>
                     <th>Megnevezés</th>
                     <th>Tartozik összes</th>
-                    <th>Követel összes</th>
-                    <th>Egyenleg</th>
+                    <th class="is-hidden-touch">Követel összes</th>
+                    <th class="is-hidden-touch">Egyenleg</th>
                 </tr>
             </thead>
             <tbody>
                 <ng-container *ngFor="let item of model">
-                    <tr class="is-size-6" [class.is-working]="item.is_working"
+                    <tr class="is-size-7-touch" [class.is-working]="item.is_working"
                         *ngIf="filter.length > 0 ? item.account_id.includes(filter) : true">
                         <td class="is-narrow">
                             <span class="icon">
@@ -71,8 +71,8 @@
                         </td>
                         <td class="is-narrow">{{item.account_id}}</td>
                         <td>{{item.account_name}}</td>
-                        <td class="is-narrow">{{item.debit_total.toLocaleString()}} HUF</td>
-                        <td class="is-narrow">{{item.credit_total.toLocaleString()}} HUF</td>
+                        <td class="is-narrow is-hidden-touch">{{item.debit_total.toLocaleString()}} HUF</td>
+                        <td class="is-narrow is-hidden-touch">{{item.credit_total.toLocaleString()}} HUF</td>
                         <td class="is-narrow">
                             <strong>{{item.total.toLocaleString()}} HUF</strong></td>
                     </tr>

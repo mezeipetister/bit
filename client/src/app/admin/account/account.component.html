@@ -12,13 +12,13 @@
                 </div>
             </div>
         </nav>
-        <table class="table is-fullwidth">
+        <table class="table is-fullwidth is-size-7-touch">
             <thead>
                 <tr>
                     <th></th>
                     <th class="is-narrow">#</th>
                     <th>Név</th>
-                    <th class="is-hidden-mobile">Leírás</th>
+                    <th class="is-hidden-touch">Leírás</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,7 +32,7 @@
                         <a [routerLink]="['./', account.id]">{{account.id}}</a>
                     </td>
                     <td>{{account.name}}</td>
-                    <td class="is-hidden-mobile">{{account.description}}</td>
+                    <td class="is-hidden-touch">{{account.description}}</td>
                 </tr>
             </tbody>
         </table>
