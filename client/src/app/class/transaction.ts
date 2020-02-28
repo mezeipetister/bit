@@ -16,7 +16,7 @@ export class TransactionNew {
         public subject: string = "",
         public debit: string = "",
         public credit: string = "",
-        public amount: number = null,
+        public amount: number = 0,
         public date_settlement: string = new Date().toISOString().split('T')[0],
     ) { }
 }
