@@ -1,0 +1,45 @@
+<section class="section">
+    <div class="container">
+        <div class="column is-6">
+            <h1 class="title">Új felhasználó</h1>
+            <p class="subtitle is-4">Az adatokat később csak a felhasználó szerkesztheti
+            </p>
+            <form (ngSubmit)="user.submit()" #newCustomerForm="ngForm">
+                <error-display [model]="user"></error-display>
+                <div class="field">
+                    <label class="label">Felhasználói név</label>
+                    <div class="control">
+                        <input class="input" type="text" placeholder="demo_elek" name="username"
+                            [(ngModel)]="user.data.username" required autofocus>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Név</label>
+                    <div class="control">
+                        <input class="input" type="text" placeholder="Példa Vásárló" name="name"
+                            [(ngModel)]="user.data.name" required autofocus>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Email</label>
+                    <div class="control">
+                        <input class="input" type="email" placeholder="pelda@pleda.com" name="email"
+                            [(ngModel)]="user.data.email" required autofocus>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Telefonszám</label>
+                    <div class="control">
+                        <input class="input" type="text" placeholder="+36 __ ___ ____" name="phone"
+                            [(ngModel)]="user.data.phone" required autofocus>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button" type="submit">Létrehozás</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>

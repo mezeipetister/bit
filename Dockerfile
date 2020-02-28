@@ -1,24 +1,22 @@
-# Base file
-FROM rustlang/rust:nightly
-
+# ====================
+# Stage 1
+# Build the API
+# ====================
+FROM rustlang/rust:nightly AS api_builder
 WORKDIR /app
 COPY . /app/
+RUN cargo build --bin api --release
 
-# Common tasks
-#RUN apt-get update
-#RUN apt-get upgrade -y
-
-# Before build
-#RUN dpkg --configure -a
-#RUN apt install build-essential -y
-#RUN apt install libssl-dev -y
-#RUN apt install curl -y
-#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -y | sh
-#RUN source $HOME/.cargo/env
-#RUN rustup override set nightly
-RUN cargo build --bin website --release
-
-#CMD ./target/release/website
-
-ENTRYPOINT ["./target/release/website"]
+# ====================
+# Stage Final
+# Bundle API and Client into a single container
+# ====================
+FROM ubuntu:latest AS api_server
+WORKDIR /app
+COPY --from=api_builder /app/target/release/api .
+# update for future dep install
+RUN apt update
+# Install libssl as dependency
+RUN apt install libssl-dev -y
+ENTRYPOINT ["./api"]
 EXPOSE 8000/tcp

@@ -1,0 +1,50 @@
+<nav class="navbar is-light is-success" role="navigation" aria-label="main navigation">
+    <div class="container is-fullhd">
+        <div class="navbar-brand">
+            <a class="navbar-item" routerLink='/'>
+                <strong>BIT</strong>
+                <!-- <strong>Gardenzilla</strong> -->
+            </a>
+            <a class="navbar-item is-hidden-desktop" [routerLink]="['/repository', repository_id, 'transaction', 'new']"
+                *ngIf="repository_id">
+                <span class="icon">
+                    <i class="fas fa-plus"></i>
+                </span>
+            </a>
+            <a role="button" class="navbar-burger burger" [ngClass]="{'is-active': isActive}" aria-label="menu"
+                aria-expanded="false" data-target="navbarBasicExample" (click)="isActive = isActive ? false : true">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu" [ngClass]="{'is-active': isActive}">
+            <div class="navbar-start">
+                <a class="navbar-item" routerLink='/repository'>
+                    Repository
+                </a>
+                <a class="navbar-item" routerLink="/user">
+                    Felhasználók
+                </a>
+            </div>
+
+            <div class="navbar-end">
+                <a class="navbar-item" [routerLink]="['/repository', repository_id, 'transaction', 'new']"
+                    *ngIf="repository_id">
+                    <span class="icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                </a>
+                <a class="navbar-item" routerLink='/profile'>{{username}}</a>
+                <div class="navbar-item">
+                    <a (click)="logout()" class="has-text-white">
+                        <span class="icon">
+                            <i class="fas fa-power-off"></i>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

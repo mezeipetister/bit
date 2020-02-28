@@ -1,0 +1,52 @@
+<section class="section">
+    <div class="container">
+        <!-- <p class="subtitle has-text-centered is-size-5">Bejelentkezés a Bermuda dokumentum <br> és iratkezelő
+            rendszerbe</p> -->
+        <div class="columns is-mobile">
+            <div class="column is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+                <p class="has-text-centered title is-spaced has-background-success has-text-white title">BIT</p>
+                <form (ngSubmit)="login()" #loginForm="ngForm" autocomplete="off">
+                    <!-- 
+                        Notification box
+                     -->
+                    <div class="notification is-light" [ngClass]="'is-' + error.kind" *ngIf='error'>
+                        <button class="delete" (click)='error = null'></button>
+                        {{error.message}}
+                    </div>
+                    <div class="field">
+                        <label class="label">Felhasználói név</label>
+                        <div class="control has-icons-right">
+                            <input class="input" type="text" placeholder="e.g John Smith" [(ngModel)]="username"
+                                name="username" #uname="ngModel" required readonly
+                                onfocus="this.removeAttribute('readonly');" autocomplete="off">
+                            <span class="icon is-small is-right" *ngIf='uname.invalid && (uname.dirty || pwd.touched)'>
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Jelszó</label>
+                        <div class="control has-icons-right">
+                            <input class="input" type="password" placeholder="erős jelszó" [(ngModel)]="password"
+                                name="password" #pwd="ngModel" required readonly
+                                onfocus="this.removeAttribute('readonly');" autocomplete="off">
+                            <span class="icon is-small is-right" *ngIf='pwd.invalid && (pwd.dirty || pwd.touched)'>
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="buttons">
+                                <button class="button is-info is-outlined" type="submit"
+                                    [class.is-loading]='isLoading'>Bejelentkezés</button>
+                                <button class="button" type="button" routerLink='./elfelejtett-jelszo'>Elfelejtett
+                                    jelszó</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

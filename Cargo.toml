@@ -2,7 +2,7 @@
 
 members = [
     "core",
-    "website",
+    "api",
 ]
 
 [profile.release]

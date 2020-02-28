@@ -1,0 +1,5 @@
+<!-- Error display box -->
+<div class="notification is-light" [ngClass]="'is-' + model.error.kind" *ngIf='model.error'>
+    <button class="delete" (click)='model.error = null'></button>
+    {{model.error.message}}
+</div>
