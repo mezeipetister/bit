@@ -14,7 +14,11 @@ export class RepositoryComponent implements OnInit {
   repositories: RepositoryShort[] = null;
 
   ngOnInit() {
-    this.http.get<RepositoryShort[]>("/repository/all").subscribe(val => this.repositories = val);
+    this.http.get<RepositoryShort[]>("/repository/all").subscribe(val => {
+      this.repositories = val;
+      // Set order by date_created asc
+      this.repositories.sort((a, b) => a.date_created > b.date_created ? 1 : -1);
+    });
   }
 
 }
