@@ -329,6 +329,7 @@ pub struct Asset {
     residual_value: u32,
     date_created: DateTime<Utc>,
     created_by: String,
+    is_active: bool,
 }
 
 impl Asset {
@@ -354,6 +355,7 @@ impl Asset {
             residual_value,
             date_created: Utc::now(),
             created_by,
+            is_active: true,
         }
     }
     pub fn get_id(&self) -> usize {
@@ -361,6 +363,45 @@ impl Asset {
     }
     pub fn get_name(&self) -> &str {
         &self.name
+    }
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+    pub fn get_description(&self) -> &str {
+        &self.description
+    }
+    pub fn set_description(&mut self, description: String) {
+        self.description = description;
+    }
+    pub fn get_tag(&self) -> &str {
+        &self.tag
+    }
+    pub fn set_tag(&mut self, tag: String) {
+        self.tag = tag;
+    }
+    pub fn remove(&mut self) {
+        self.is_active = false;
+    }
+    pub fn restore(&mut self) {
+        self.is_active = true;
+    }
+    pub fn get_is_active(&self) -> bool {
+        self.is_active
+    }
+    pub fn get_value(&self) -> u32 {
+        self.value
+    }
+    pub fn get_depreciation_key(&self) -> f32 {
+        self.depreciation_key
+    }
+    pub fn get_date_created(&self) -> DateTime<Utc> {
+        self.date_created
+    }
+    pub fn get_created_by(&self) -> &str {
+        &self.created_by
+    }
+    pub fn get_residual_value(&self) -> u32 {
+        self.residual_value
     }
     pub fn get_date_activated(&self) -> NaiveDate {
         self.date_activated
@@ -410,6 +451,7 @@ impl Asset {
         }
         0
     }
+    /// return Vec<Date, Depreciation value, Cumulated depreciation>
     pub fn depreciation_monthly_vector(&self) -> Vec<(NaiveDate, u32, u32)> {
         let mut res: Vec<(NaiveDate, u32, u32)> = Vec::new();
         let mut date_next: NaiveDate = month_last_day(self.date_activated);
@@ -448,5 +490,76 @@ fn month_last_day(date: NaiveDate) -> NaiveDate {
 fn next_month_last_day(date: NaiveDate) -> NaiveDate {
     month_last_day(month_last_day(date) + chrono::Duration::days(1))
 }
+
+impl Repository {
+    pub fn add_asset(
+        &mut self,
+        name: String,
+        description: String,
+        tag: String,
+        value: u32,
+        date_activated: NaiveDate,
+        deprecation_key: f32,
+        residual_value: u32,
+        created_by: String,
+    ) {
+        let new_asset = Asset::new(
+            id: self.assets.len(),
+            name,
+            description,
+            tag,
+            value,
+            date_activated,
+            depreciation_key,
+            residual_value,
+            created_by,
+        );
+        self.assets.push(new_asset);
+    }
+    pub fn remove_asset_by_id(&mut self, id: usize) -> AppResult<()> {
+        for asset in &mut self.assets {
+            if asset.get_id() == id {
+                asset.remove();
+                return Ok(());
+            }
+        }
+        Err(Error::BadRequest("Asset id not found".to_string()))
+    }
+    pub fn restore_asset_by_id(&mut self, id: usize) -> AppResult<()> {
+        for asset in &mut self.assets {
+            if asset.get_id() == id {
+                asset.restore();
+                return Ok(());
+            }
+        }
+        Err(Error::BadRequest("Asset id not found".to_string()))
+    }
+    pub fn asset_get_by_id(&mut self, id: usize) -> AppResult<Asset> {
+        for asset in &self.assets {
+            if asset.get_id() == id {
+                return Ok(asset.clone());
+            }
+        }
+        Err(Error::BadRequest("Asset id not found".to_string()))
+    }
+    pub fn asset_update_by_id(&mut self, id: usize, name: String, description: String, tag: String) -> AppResult<()> {
+        for asset in &self.assets {
+            if asset.get_id() == id {
+                asset.set_name(name);
+                asset.set_description(description);
+                asset.set_tag(tag);
+                return Ok(());
+            }
+        }
+        Err(Error::BadRequest("Asset id not found".to_string()))
+    }
+    pub fn asset_get_tags(&self) -> Vec<String> {
+        let mut res = self.assets.iter().map(|i: &Asset|i.get_tag().to_string()).collect::<Vec<String>>();
+        res.sort();
+        res.dedup();
+        res
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Project {}
