@@ -318,6 +318,135 @@ impl Transaction {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Asset {}
+pub struct Asset {
+    id: usize,
+    name: String,
+    description: String,
+    tag: String,
+    value: u32,
+    date_activated: NaiveDate,
+    depreciation_key: f32,
+    residual_value: u32,
+    date_created: DateTime<Utc>,
+    created_by: String,
+}
+
+impl Asset {
+    pub fn new(
+        id: usize,
+        name: String,
+        description: String,
+        tag: String,
+        value: u32,
+        date_activated: NaiveDate,
+        depreciation_key: f32,
+        residual_value: u32,
+        created_by: String,
+    ) -> Self {
+        Asset {
+            id,
+            name,
+            description,
+            tag,
+            value,
+            date_activated,
+            depreciation_key,
+            residual_value,
+            date_created: Utc::now(),
+            created_by,
+        }
+    }
+    pub fn get_id(&self) -> usize {
+        self.id
+    }
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+    pub fn get_date_activated(&self) -> NaiveDate {
+        self.date_activated
+    }
+    pub fn depreciation_value(&self) -> u32 {
+        self.value - self.residual_value
+    }
+    pub fn depreciation_daily_value(&self) -> u32 {
+        (((self.value - self.residual_value) as f32 * self.depreciation_key) / 100.0 / 365.0)
+            .round() as u32
+    }
+    pub fn depreciation_days(&self) -> u32 {
+        ((self.value - self.residual_value) as f32 / self.depreciation_daily_value() as f32).ceil()
+            as u32
+    }
+    pub fn depreciation_last_day(&self) -> NaiveDate {
+        // Minus 1 as we count depreciation for the first day as well
+        self.date_activated + chrono::Duration::days(self.depreciation_days() as i64 - 1)
+    }
+    pub fn depreciation_last_day_value(&self) -> u32 {
+        self.depreciation_value() - (self.depreciation_days() - 1) * self.depreciation_daily_value()
+    }
+    pub fn depreciation_by_month(&self, year: i32, month: i32) -> u32 {
+        let last_day = self.depreciation_last_day();
+        let date = NaiveDate::from_ymd(year, month as u32, 1);
+        let date_month_day_number = month_last_day(date).day();
+        // If month is withing the current item depreciation interval
+        if date >= (self.date_activated - chrono::Duration::days(self.date_activated.day() as i64))
+            && date <= last_day
+        {
+            // if the month is the last month
+            // and it might be not a full one
+            if date.month() == last_day.month() && date.year() == last_day.year() {
+                return (last_day.day() - 1) * self.depreciation_daily_value()
+                    + self.depreciation_last_day_value();
+            }
+            // if the month if the first month
+            // and it might be not a full one
+            else if date.month() == self.date_activated.month()
+                && date.year() == self.date_activated.year()
+            {
+                return (date_month_day_number - self.date_activated.day() + 1)
+                    * self.depreciation_daily_value();
+            } else {
+                return date_month_day_number * self.depreciation_daily_value();
+            }
+        }
+        0
+    }
+    pub fn depreciation_monthly_vector(&self) -> Vec<(NaiveDate, u32, u32)> {
+        let mut res: Vec<(NaiveDate, u32, u32)> = Vec::new();
+        let mut date_next: NaiveDate = month_last_day(self.date_activated);
+        for _ in 0.. {
+            match self.depreciation_by_month(date_next.year(), date_next.month() as i32) {
+                x if x != 0 => res.push((
+                    date_next,
+                    x,
+                    match res.last() {
+                        Some(t) => t.2 + x,
+                        None => x,
+                    },
+                )),
+                _ => break,
+            }
+            date_next = next_month_last_day(date_next);
+        }
+        res
+    }
+    pub fn depreciation_total_till_date(&self, date: NaiveDate) -> u32 {
+        self.depreciation_monthly_vector()
+            .into_iter()
+            .filter(|i| i.0 <= date)
+            .map(|i| i.1)
+            .sum()
+    }
+}
+
+fn month_last_day(date: NaiveDate) -> NaiveDate {
+    let given_first_day = NaiveDate::from_ymd(date.year(), date.month(), 1);
+    let next_month_some = given_first_day + chrono::Duration::days(32);
+    NaiveDate::from_ymd(next_month_some.year(), next_month_some.month(), 1)
+        - chrono::Duration::days(1)
+}
+
+fn next_month_last_day(date: NaiveDate) -> NaiveDate {
+    month_last_day(month_last_day(date) + chrono::Duration::days(1))
+}
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Project {}
