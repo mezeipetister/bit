@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::model::version::transaction::v1;
 use chrono::prelude::*;
-use core_lib::model;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Transaction {
     pub id: usize,
     pub subject: String,
@@ -31,26 +31,27 @@ pub struct Transaction {
     pub created_by: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TransactionNew {
-    pub subject: String,
-    pub debit: String,
-    pub credit: String,
-    pub amount: i32,
-    pub date_settlement: DateTime<Utc>,
-}
-
-impl From<model::Transaction> for Transaction {
-    fn from(from: model::Transaction) -> Self {
+impl From<&v1::Transaction> for Transaction {
+    fn from(from: &v1::Transaction) -> Self {
         Transaction {
             id: from.id,
-            subject: from.subject,
-            debit: from.debit,
-            credit: from.credit,
+            subject: from.subject.clone(),
+            debit: from.debit.clone(),
+            credit: from.credit.clone(),
             amount: from.amount,
             date_created: from.date_created,
-            date_settlement: from.date_settlement,
-            created_by: from.created_by,
+            date_settlement: DateTime::<Utc>::from_utc(
+                DateTime::parse_from_rfc3339(&format!(
+                    "{}-{}-{}T00:00:00-00:00",
+                    from.date_settlement.year(),
+                    from.date_settlement.month(),
+                    from.date_settlement.day()
+                ))
+                .expect("Error while date_settlement convert")
+                .naive_utc(),
+                Utc,
+            ),
+            created_by: from.created_by.clone(),
         }
     }
 }

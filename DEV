@@ -1,0 +1,126 @@
+// Copyright (C) 2020 Peter Mezei
+// 
+// This file is part of BIT.
+// 
+// BIT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+// 
+// BIT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with BIT.  If not, see <http://www.gnu.org/licenses/>.
+
+Using Date(s)
+
+    Problem (A)
+
+        When using date we have many options based on Date, Date + Time and
+        Timezone. We need to decide whether use Date or Date + Time, and a
+        Timezone is a core question indeed. Found problems:
+
+        • As we do not know the client side local settings, as we do not know
+        the client side timezone, it's better to use timezone aware date format
+        at server side. But using dates its hard to tell the timezone.
+
+        In Rust using Chrono.rs we have the following date types:
+
+            - Date<Offset>
+            - DateTime<Offset>
+            - NaiveDate
+            - NaiveDateTime
+
+        As for the Offset we can use Local or Fixed offset, or Utc.
+
+        Using UTC seems to be a good choice as in this case we can properly
+        handle time zones.
+
+    Problem (B)
+
+        Using Utc for DateTime sounds good. But what can we do with single dates
+        without time information? There can be situation where there are no time
+        information. Can we use or should we use timezone in this case?
+
+        E.g. at BIT we have date_settlement field at each transaction. In
+        bookkeeping for the date_settlement we generally do not use time zones
+        as each bill/invoice has its own date in its own locale. But managing it
+        without timezone can also be confusing. What if a team member register a
+        transaction from Japan to our Hungarian books? And what if that person
+        register a Hungarian bill from Japan?
+        
+    Solution (A)
+
+        RFC3339
+
+        This ISO standard can be used as as common Date format. It contains a
+        Naive DateTime plus an offset, or a Z sign to display it's in UTC. The
+        offset is the offset from UTC.
+
+        Example RFC3339
+
+            2020-03-05T13:07:56+00:00
+            2020-03-05T13:07:56Z
+
+        Using JavaScript Date() has a built in method to generate RFC3339
+        format.  It's called toISOString() and it produces the date format as
+        UTC based
+        on the locale settings.
+
+        Example:
+
+            new Date().toISOString()
+
+        Suggested solution workflow:
+
+            1. We store date as DateTime<Utc> at server side
+            2. At client side we use Date as date type, and working with dates
+            as local dates
+            3. We transform client JS side Date to ISOString() and send the data
+            model to the server 4. At server side we accept date as String and
+            convert them to
+            RFC3339 format at the beginning. + validation!
+            5. Store date in UTC, automatically converted from client side
+            locale date
+
+        Workflow diagram
+
+        [CLIENT]                             [Server]
+          |                                     |
+          |---- Request: Date (RFC3339) ---->  API --> Store in DateTime<Utc>
+
+
+    Solution (B)
+
+        For now we avoid using time zones for this particular field
+        (date_settlement) and just use NaiveDate and locale Date string from
+        client side.
+
+        For a more sophisticated solution we should somehow use TimeZone aware
+        date type, but we also should manage the business logic to handle
+        time zones. As in the Problem (B) part we somehow should be able to set
+        the timezone to each date: locale time zone to the Japanese bill
+        accounting it from Japan, and the Hungarian time zone to the Hungarian
+        bill accounting it from Japan, but this could be confusing.
+
+        At this point - in the project - we do not have the required knowledge
+        and market need for this solution.
+
+
+________________________
+
+Appendix
+
+    Unicode's
+    
+        In this project I use sometimes Unicode characters. Here you can find
+        the used
+        
+        characters and their codes:
+    
+        •   => 2022
+        ⭐  => eb50
+        😍  => 1f60d

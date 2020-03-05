@@ -53,8 +53,7 @@ pub fn ledger_get(
     repository_id: String,
     filter: Form<Filter>,
 ) -> Result<StatusOk<Vec<apiSchema::Ledger>>, ApiError> {
-    let till = parse_date(&filter.till)?;
-
+    let till = DateTime::parse_from_rfc3339(&filter.till).unwrap();
     // First get ledger vector;
     // TODO: Rename ledger to something like LedgerItem
     let mut ledger: Vec<apiSchema::Ledger> =
@@ -85,7 +84,7 @@ pub fn ledger_get(
         Ok(repository) => repository.update(|f: &mut Repository| {
             for transaction in f.get_transactions().into_iter() {
                 // Apply date filter
-                if transaction.date_settlement <= till {
+                if transaction.date_settlement.naive_utc() <= till.naive_utc() {
                     for ledger_item in &mut ledger {
                         if transaction.debit == ledger_item.account_id {
                             ledger_item.debit_total += transaction.amount;

@@ -16,10 +16,9 @@
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
 use chrono::prelude::*;
-use core_lib::model;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Transaction {
     pub id: usize,
     pub subject: String,
@@ -27,30 +26,6 @@ pub struct Transaction {
     pub credit: String,
     pub amount: i32,
     pub date_created: DateTime<Utc>,
-    pub date_settlement: DateTime<Utc>,
+    pub date_settlement: NaiveDate,
     pub created_by: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TransactionNew {
-    pub subject: String,
-    pub debit: String,
-    pub credit: String,
-    pub amount: i32,
-    pub date_settlement: DateTime<Utc>,
-}
-
-impl From<model::Transaction> for Transaction {
-    fn from(from: model::Transaction) -> Self {
-        Transaction {
-            id: from.id,
-            subject: from.subject,
-            debit: from.debit,
-            credit: from.credit,
-            amount: from.amount,
-            date_created: from.date_created,
-            date_settlement: from.date_settlement,
-            created_by: from.created_by,
-        }
-    }
 }
