@@ -3,29 +3,33 @@
         <div class="columns">
             <div class="column is-4">
                 <p class="title">{{model.name}}</p>
-                <form>
+                <form #Form="ngForm" (submit)="update()">
                     <div class="field">
                         <label class="label">Eszköz neve</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa eszköz">
+                            <input class="input" type="text" placeholder="Példa eszköz" name="name"
+                                [(ngModel)]="model.name">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Eszköz rövid leírása</label>
                         <div class="control">
-                            <textarea name="description" cols="30" rows="5" class="textarea"></textarea>
+                            <textarea name="description" cols="30" rows="5" class="textarea"
+                                [(ngModel)]="model.description"></textarea>
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Főkönyvi számla</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa számla" disabled>
+                            <input class="input" type="text" placeholder="Példa számla" disabled name="account"
+                                [ngModel]="model.account">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">ÉCS elszámolási számla</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa számla" disabled>
+                            <input class="input" type="text" placeholder="Példa számla" disabled name="account_clearing"
+                                [ngModel]="model.account_clearing">
                         </div>
                     </div>
                     <div class="field">
@@ -33,7 +37,7 @@
                     </div>
                     <div class="field has-addons">
                         <div class="control">
-                            <input type="number" class="input" disabled>
+                            <input type="number" class="input" disabled name="value" [ngModel]="model.value">
                         </div>
                         <p class="control">
                             <a class="button is-static">
@@ -44,7 +48,7 @@
                     <div class="field">
                         <label class="label">ÉCS kulcs (%)</label>
                         <div class="control">
-                            <input type="number" class="input" disabled>
+                            <input type="number" class="input" disabled name="key" [ngModel]="model.depreciation_key">
                         </div>
                     </div>
                     <div class="field">
@@ -52,7 +56,8 @@
                     </div>
                     <div class="field has-addons">
                         <div class="control">
-                            <input type="number" class="input" disabled>
+                            <input type="number" class="input" disabled name="residual_value"
+                                [ngModel]="model.residual_value">
                         </div>
                         <p class="control">
                             <a class="button is-static">
@@ -63,7 +68,8 @@
                     <div class="field">
                         <label class="label">Aktiválás dátuma</label>
                         <div class="control">
-                            <input type="date" class="input" disabled>
+                            <input type="date" class="input" disabled name="date_activated"
+                                [ngModel]="model.date_activated">
                         </div>
                     </div>
                     <div class="field">
@@ -81,12 +87,14 @@
                     <div class="tile">
                         <div class="tile is-parent">
                             <div class="tile is-child notification">
-                                <p>Összes elszámolt ÉCS: 0 HUF</p>
+                                <p>Összes elszámolt ÉCS:
+                                    <br>{{cumulated_depreciation.toLocaleString()}} HUF</p>
                             </div>
                         </div>
                         <div class="tile is-parent">
                             <div class="tile is-child notification">
-                                <p>Jelenlegi nettó érték: 1.500 HUF</p>
+                                <p>Jelenlegi nettó érték:
+                                    <br>{{current_net_value.toLocaleString()}} HUF</p>
                             </div>
                         </div>
                     </div>
@@ -100,10 +108,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>2019-01</td>
-                            <td>1.700</td>
-                            <td>1.700</td>
+                        <tr *ngFor="let month of model.depreciation_monthly">
+                            <td>{{month.month}}</td>
+                            <td>{{month.monthly_value.toLocaleString()}} HUF</td>
+                            <td>{{month.cumulated.toLocaleString()}} HUF</td>
                         </tr>
                     </tbody>
                 </table>

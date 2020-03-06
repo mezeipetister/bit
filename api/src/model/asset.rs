@@ -36,7 +36,24 @@ pub struct Asset {
     pub depreciation_last_day_value: u32,
     pub depreciation_last_day: NaiveDate,
     pub depreciation_daily_value: u32,
-    pub depreciation_monthly: Vec<(NaiveDate, u32, u32)>,
+    pub depreciation_monthly: Vec<DepreciationMonthly>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DepreciationMonthly {
+    month: NaiveDate,
+    monthly_value: u32,
+    cumulated: u32,
+}
+
+impl DepreciationMonthly {
+    fn new(month: NaiveDate, monthly_value: u32, cumulated: u32) -> Self {
+        DepreciationMonthly {
+            month,
+            monthly_value,
+            cumulated,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,7 +71,11 @@ pub struct AssetNew {
 impl From<model::Asset> for Asset {
     fn from(f: model::Asset) -> Self {
         Asset {
-            depreciation_monthly: f.depreciation_monthly_vector(),
+            depreciation_monthly: f
+                .depreciation_monthly_vector()
+                .iter()
+                .map(|m| DepreciationMonthly::new(m.0, m.1, m.2))
+                .collect(),
             depreciation_last_day_value: f.depreciation_last_day_value(),
             depreciation_last_day: f.depreciation_last_day(),
             depreciation_daily_value: f.depreciation_daily_value(),

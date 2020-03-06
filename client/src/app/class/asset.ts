@@ -6,7 +6,7 @@ export class Asset {
         public account: string = "",
         public account_clearing: string = "",
         public value: number = 0,
-        public date_activated: Date = new Date(),
+        public date_activated: string = "",
         public depreciation_key: number = 0,
         public residual_value: number = 0,
         public date_created: Date = new Date(),
@@ -15,7 +15,15 @@ export class Asset {
         public depreciation_last_day_value: number = 0,
         public depreciation_last_day: Date = new Date(),
         public depreciation_daily_value: number = 0,
-        public depreciation_monthly: { date: Date, monthly: number, cummulated: number }[] = []
+        public depreciation_monthly: DepreciationMonthly[] = []
+    ) { }
+}
+
+export class DepreciationMonthly {
+    constructor(
+        public month: string = "",
+        public monthly_value: number = 0,
+        public cumulated: number = 0,
     ) { }
 }
 

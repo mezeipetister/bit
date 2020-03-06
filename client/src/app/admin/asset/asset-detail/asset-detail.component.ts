@@ -14,6 +14,8 @@ export class AssetDetailComponent implements OnInit {
   repository_id: string = this.params.hasParam("repository_id");
   asset_id: string = this.params.hasParam("asset_id");
   model: Asset = new Asset();
+  current_net_value: number = 0;
+  cumulated_depreciation: number = 0;
 
   constructor(
     private http: HttpClient,
@@ -21,9 +23,26 @@ export class AssetDetailComponent implements OnInit {
     private params: RouterParamService
   ) { }
 
+  calculateNetValue() {
+    this.current_net_value = this.model.value - this.cumulated_depreciation;
+  }
+  calculateCumulate() {
+    this.model.depreciation_monthly.forEach(m => {
+      if (new Date(m.month) < new Date()) {
+        this.cumulated_depreciation = this.cumulated_depreciation + m.monthly_value;
+      }
+    });
+  }
+
   ngOnInit() {
     this.http.get<Asset>("/repository/" + this.repository_id + "/asset/" + this.asset_id)
-      .subscribe(val => this.model = val);
+      .subscribe(val => {
+        this.model = val;
+        this.calculateCumulate();
+        this.calculateNetValue();
+      });
   }
+
+  update() { }
 
 }
