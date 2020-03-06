@@ -22,6 +22,7 @@ pub mod login;
 // pub mod document;
 // pub mod folder;
 pub mod account;
+pub mod asset;
 pub mod ledger;
 pub mod profile;
 pub mod repository;

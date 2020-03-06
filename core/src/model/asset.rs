@@ -209,7 +209,12 @@ impl Repository {
         depreciation_key: f32,
         residual_value: u32,
         created_by: String,
-    ) {
+    ) -> AppResult<Asset> {
+        if !self.is_valid_account(&account) || !self.is_valid_account(&account_clearing) {
+            return Err(Error::BadRequest(
+                "A megadott számlaszám nem létezik vagy nem könyvelhető".to_string(),
+            ));
+        }
         let new_asset = Asset::new(
             self.assets.len(),
             name,
@@ -222,7 +227,13 @@ impl Repository {
             residual_value,
             created_by,
         );
-        self.assets.push(new_asset);
+        if new_asset.depreciation_daily_value() > 0 {
+            self.assets.push(new_asset.clone());
+            return Ok(new_asset);
+        }
+        Err(Error::BadRequest(
+            "Az eszköz napi ÉCS-je 0 Ft. Kisértékű eszköz.".to_string(),
+        ))
     }
     pub fn remove_asset_by_id(&mut self, id: usize) -> AppResult<()> {
         for asset in &mut self.assets {
@@ -275,6 +286,16 @@ impl Repository {
             .map(|a| a.clone())
             .collect::<Vec<Asset>>()
     }
+    pub fn get_asset_by_id(&self, id: usize) -> AppResult<Asset> {
+        for asset in &self.assets {
+            if asset.get_id() == id {
+                return Ok(asset.clone());
+            }
+        }
+        Err(Error::BadRequest(
+            "A megadott eszköz ID nem létezik.".to_string(),
+        ))
+    }
     pub fn get_assets_by_account(&self, account: String) -> Vec<Asset> {
         self.assets
             .iter()
@@ -288,5 +309,39 @@ impl Repository {
             .filter(|a| a.get_account_clearing() == &account_clearing)
             .map(|a| a.clone())
             .collect::<Vec<Asset>>()
+    }
+    // pub fn get_statistics_account_clearings(&self) -> Vec<(String, u32, u32, u32)> {
+    //     let mut res: Vec<(String, u32, u32, u32)> = Vec::new();
+    //     let mut clearings = self
+    //         .assets
+    //         .iter()
+    //         .map(|a| a.get_account_clearing().to_string())
+    //         .collect::<Vec<String>>();
+    //     clearings.sort();
+    //     clearings.dedup();
+    //     res
+    // }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::*;
+    use chrono::prelude::*;
+    #[test]
+    fn test_monthly_vector() {
+        let asset = Asset::new(
+            0,
+            "demo1".to_string(),
+            "asd".to_string(),
+            "11".to_string(),
+            "119".to_string(),
+            1000000,
+            NaiveDate::from_ymd(2020, 03, 15),
+            2.0,
+            15,
+            "mezeipetister".to_string(),
+        );
+        assert_eq!(asset.get_account(), "11");
+        assert_eq!(asset.depreciation_monthly_vector().len() > 0, true);
     }
 }

@@ -16,10 +16,12 @@
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod account;
+pub mod asset;
 pub mod ledger;
 pub mod repository;
 pub mod transaction;
 pub use account::*;
+pub use asset::*;
 pub use ledger::*;
 pub use repository::*;
 pub use transaction::*;

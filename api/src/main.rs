@@ -136,6 +136,9 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::transaction::transaction_id_get,
                 controller::ledger::ledger_get,
                 controller::ledger::ledger_stat_get,
+                controller::asset::asset_all_get,
+                controller::asset::asset_new_put,
+                controller::asset::asset_id_get,
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])
