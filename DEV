@@ -6,9 +6,11 @@
                    Here we wrote all the technical questions
                    and solutions that we use in development.
 
+
+                                       1.
                                  Using Date(s)
 
-Problem (A)
+1.1 Problem (A)
 
     When using date we have many options based on Date, Date + Time and
     Timezone. We need to decide whether use Date or Date + Time, and a Timezone
@@ -30,7 +32,7 @@ Problem (A)
     Using UTC seems to be a good choice as in this case we can properly handle
     time zones.
 
-Problem (B)
+1.2 Problem (B)
 
     Using Utc for DateTime sounds good. But what can we do with single dates
     without time information? There can be situation where there are no time
@@ -43,7 +45,7 @@ Problem (B)
     transaction from Japan to our Hungarian books? And what if that person
     register a Hungarian bill from Japan?
         
-Solution (A)
+1.3 Solution (A)
 
     RFC3339
 
@@ -83,7 +85,7 @@ Solution (A)
           |---- Request: Date (RFC3339) ---->  API --> Store in DateTime<Utc>
 
 
-Solution (B)
+1.4 Solution (B)
 
     For now we avoid using time zones for this particular field
     (date_settlement) and just use NaiveDate and locale Date string from client
@@ -100,6 +102,78 @@ Solution (B)
     market need for this solution.
 
 
+                                       2.
+                                  Data storage
+
+
+2.1 Issue
+
+    Storing data is key from both technical and business side. Core questions to
+    choose the right technology:
+
+    * How big is the data we plan to use
+      
+      Do we have maximum a few MB of plain data, or we have GB or petabytes of
+      them? Can we store memory first? And use a storage just as a data store? I
+      mean using it in memory, all the data lookups and manipulation, and store
+      all the data change in a storage? Bot for read operations using just the
+      memory?
+
+    * Is it read or write heavy?
+
+      How fast should it be? Do we need many concurrent read operations and a
+      few write one; or it mainly many writes and a few reads, or we have
+      constantly both many read and write operations in the same time? Who has
+      time to wait? The reader or writer?
+
+      One thing is sure: we should have zero data race.
+
+    * How fast response time we need?
+
+      Do we need a fast response in 10-40 millisec or even faster? Do we need it
+      even for thousands of concurrent requests? Do we have concurrency and
+      parallel requests or do we have a queue?
+
+    * Do we have platform dependence?
+
+      Any Microsoft, Apple, or Linux platform dependence? Does it need to be
+      operational on both platforms? Maybe do we use it on both of them in the
+      same time? Do we have any ecosystem dependence that predestinate the
+      platform dependence that we have? e.g.: mssql for Microsoft
+
+    * Do we need to plan scaling?
+
+      Do we have an estimated constant size date in range of 0-10 MB? Or do we
+      have the same situation but with a few GB of data? Or do we have an
+      unknown size of data with an unknown size of scale?
+
+    * And how fast and big we need to scale up?
+
+      Do we need to count on using multiple instance of the same time with load
+      balancers? Or its enough to use a single instance and scale it up?
+      Do we need vertical or horizontal scaling as well?
+
+    * Data security, backups.
+
+      How frequenlty we need backups? And how big is the backup?
+
+    * Resource need to data storage.
+
+      Do we need to store everything in memory? If yes, we is it economical to
+      store everything in memory? Do we need that performance? Can we scale to
+      split data into memory and not-memory stored? So for extra low response
+      time use memory and using not memory storage for the other type for
+      requests?
+
+    * Learning curve of the data storage technology.
+
+      What background we have, technical and HR capabilities? What is our growth
+      strategy? The data technology determines our future advantage and
+      disadvantage as well. e.g.: using Microsoft related data technology
+      determines the team and their expertise as well. Using plain text
+      technology with in-memory operations using C or C++ also determines all
+      the benefits and threaths and fears.
+    
 ________________________
 
 Appendix

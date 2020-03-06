@@ -16,4 +16,3 @@
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod v1;
-pub mod v2;

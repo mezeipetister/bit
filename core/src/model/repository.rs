@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-pub use crate::model::version::repository::v2::*;
+pub use crate::model::version::repository::v1::*;
 use crate::prelude::*;
 use chrono::prelude::*;
 

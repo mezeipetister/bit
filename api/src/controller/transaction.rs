@@ -54,18 +54,15 @@ pub fn transaction_all_get(
     repository_id: String,
     filter: Form<Filter>,
 ) -> Result<StatusOk<Vec<apiSchema::Transaction>>, ApiError> {
-    let from = DateTime::parse_from_rfc3339(&filter.from).unwrap();
-    let till = DateTime::parse_from_rfc3339(&filter.till).unwrap();
+    let from = parse_date(&filter.from)?;
+    let till = parse_date(&filter.till)?;
 
     match data.inner().repositories.get_by_id(&repository_id) {
         Ok(repository) => Ok(StatusOk(repository.get(|f: &Repository| {
             let mut result: Vec<apiSchema::Transaction> = f
                 .get_transactions()
                 .into_iter()
-                .filter(|t| {
-                    t.date_settlement.naive_utc() >= from.naive_utc()
-                        && t.date_settlement.naive_utc() <= till.naive_utc()
-                })
+                .filter(|t| t.date_settlement >= from && t.date_settlement <= till)
                 .filter(|t| {
                     if filter.account.len() > 0 {
                         return t.debit == filter.account || t.credit == filter.account;

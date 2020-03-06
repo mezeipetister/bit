@@ -27,7 +27,7 @@ impl Transaction {
         debit: String,
         credit: String,
         amount: i32,
-        date_settlement: DateTime<Utc>,
+        date_settlement: NaiveDate,
         created_by: String,
     ) -> Self {
         Transaction {
@@ -63,7 +63,7 @@ impl Repository {
         debit: String,
         credit: String,
         amount: i32,
-        date_settlement: DateTime<Utc>,
+        date_settlement: NaiveDate,
         created_by: String,
     ) -> AppResult<Transaction> {
         if !self.is_valid_account(&debit) {

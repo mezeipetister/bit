@@ -27,7 +27,7 @@ pub struct Transaction {
     pub credit: String,
     pub amount: i32,
     pub date_created: DateTime<Utc>,
-    pub date_settlement: DateTime<Utc>,
+    pub date_settlement: NaiveDate,
     pub created_by: String,
 }
 
@@ -37,7 +37,7 @@ pub struct TransactionNew {
     pub debit: String,
     pub credit: String,
     pub amount: i32,
-    pub date_settlement: DateTime<Utc>,
+    pub date_settlement: NaiveDate,
 }
 
 impl From<model::Transaction> for Transaction {
