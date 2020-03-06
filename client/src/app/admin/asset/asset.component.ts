@@ -14,6 +14,7 @@ export class AssetComponent implements OnInit {
   repository_id: string = this.params.hasParam("repository_id");
   model: Asset[] = [];
   depreciation_current_year: number = 0;
+  depreciation_current_month: number = 0;
 
   constructor(
     private http: HttpClient,
@@ -36,11 +37,25 @@ export class AssetComponent implements OnInit {
     });
   }
 
+  calculateDepreciationCurrentMonth() {
+    let thisYear = new Date().getFullYear();
+    let thisMonth = new Date().getMonth();
+    this.model.forEach(a => {
+      a.depreciation_monthly.forEach(m => {
+        if (new Date(m.month).getFullYear() == thisYear
+          && new Date(m.month).getMonth() == thisMonth) {
+          this.depreciation_current_month = this.depreciation_current_month + m.monthly_value;
+        }
+      });
+    });
+  }
+
   ngOnInit() {
     this.http.get<Asset[]>("/repository/" + this.repository_id + "/asset/all")
       .subscribe(val => {
         this.model = val;
         this.calculateDepreciationCurrentYear();
+        this.calculateDepreciationCurrentMonth();
       });
   }
 
