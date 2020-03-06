@@ -105,21 +105,31 @@ impl Asset {
     pub fn depreciation_value(&self) -> u32 {
         self.value - self.residual_value
     }
+    /// We use static 365 as a number of days in a year
+    /// We do not use leap years in this model
     pub fn depreciation_daily_value(&self) -> u32 {
         (((self.value - self.residual_value) as f32 * self.depreciation_key) / 100.0 / 365.0)
             .round() as u32
     }
+    /// Days in u32 that we are going to use to depreciate asset
+    /// Ceil up and count the remnant on the last date.
+    /// Its value must be lower then the daily depreciation value.
     pub fn depreciation_days(&self) -> u32 {
         ((self.value - self.residual_value) as f32 / self.depreciation_daily_value() as f32).ceil()
             as u32
     }
+    /// Compute the last date based on the asset detail
+    /// Returns a naiveDate
     pub fn depreciation_last_day(&self) -> NaiveDate {
         // Minus 1 as we count depreciation for the first day as well
         self.date_activated + chrono::Duration::days(self.depreciation_days() as i64 - 1)
     }
+    /// Last day value, so the remainin from the total repreciation value.
+    /// Total value - previous depreciation values
     pub fn depreciation_last_day_value(&self) -> u32 {
         self.depreciation_value() - (self.depreciation_days() - 1) * self.depreciation_daily_value()
     }
+    /// Monthly depreciation value
     pub fn depreciation_by_month(&self, year: i32, month: i32) -> u32 {
         let last_day = self.depreciation_last_day();
         let date = NaiveDate::from_ymd(year, month as u32, 1);
@@ -258,5 +268,25 @@ impl Repository {
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
+    }
+    pub fn get_assets(&self) -> Vec<Asset> {
+        self.assets
+            .iter()
+            .map(|a| a.clone())
+            .collect::<Vec<Asset>>()
+    }
+    pub fn get_assets_by_account(&self, account: String) -> Vec<Asset> {
+        self.assets
+            .iter()
+            .filter(|a| a.get_account() == &account)
+            .map(|a| a.clone())
+            .collect::<Vec<Asset>>()
+    }
+    pub fn get_assets_by_account_clearing(&self, account_clearing: String) -> Vec<Asset> {
+        self.assets
+            .iter()
+            .filter(|a| a.get_account_clearing() == &account_clearing)
+            .map(|a| a.clone())
+            .collect::<Vec<Asset>>()
     }
 }

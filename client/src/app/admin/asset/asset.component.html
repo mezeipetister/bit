@@ -30,12 +30,40 @@
                 </div>
             </div>
         </div>
+        <table class="table is-striped">
+            <thead>
+                <tr>
+                    <th>Elszámolási számla</th>
+                    <th>Eszközök száma</th>
+                    <th>Halmozott ÉCS</th>
+                    <th>Aktuális havi ÉCS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>11</td>
+                    <td>2</td>
+                    <td>10 000</td>
+                    <td>2 500</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>25</td>
+                    <td>100 000 HUF</td>
+                    <td>25 000 HUF</td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="title">Eszközök</p>
         <table class="table is-fullwidth is-small">
             <thead>
                 <tr>
                     <th class="is-narrow">#</th>
                     <th class="is-narrow">Név</th>
                     <th>Leírása</th>
+                    <th>Főkönyvi számla</th>
                     <th class="is-narrow">ÉCS kulcs</th>
                     <th class="is-narrow">Maradványérték</th>
                     <th class="is-narrow">Aktiválás dátuma</th>
@@ -48,6 +76,7 @@
                         <a routerLink="./1">Audi LBG397</a>
                     </td>
                     <td>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis, quidem.</td>
+                    <td class="is-narrow">11</td>
                     <td>15%</td>
                     <td>500.000</td>
                     <td>2009.08.01</td>
