@@ -43,6 +43,24 @@ export class AssetDetailComponent implements OnInit {
       });
   }
 
-  update() { }
+  remove() {
+    this.http.post<Asset>("/repository/" + this.repository_id + "/asset/" + this.asset_id + "/remove", this.model)
+      .subscribe(val => this.model = val);
+  }
+  restore() {
+    this.http.post<Asset>("/repository/" + this.repository_id + "/asset/" + this.asset_id + "/restore", this.model)
+      .subscribe(val => this.model = val);
+  }
+
+  update() {
+    if (!this.model.is_active) {
+      return;
+    }
+    this.http.post<Asset>("/repository/" + this.repository_id + "/asset/" + this.asset_id, this.model)
+      .subscribe(val => {
+        this.model = val;
+        alert("Sikeres módosítás!");
+      });
+  }
 
 }

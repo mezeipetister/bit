@@ -3,19 +3,20 @@
         <div class="columns">
             <div class="column is-4">
                 <p class="title">{{model.name}}</p>
+                <p *ngIf="!model.is_active" class="subtitle has-text-danger">TÖRÖLVE!</p>
                 <form #Form="ngForm" (submit)="update()">
                     <div class="field">
                         <label class="label">Eszköz neve</label>
                         <div class="control">
                             <input class="input" type="text" placeholder="Példa eszköz" name="name"
-                                [(ngModel)]="model.name">
+                                [(ngModel)]="model.name" [disabled]="!model.is_active">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Eszköz rövid leírása</label>
                         <div class="control">
                             <textarea name="description" cols="30" rows="5" class="textarea"
-                                [(ngModel)]="model.description"></textarea>
+                                [(ngModel)]="model.description" [disabled]="!model.is_active"></textarea>
                         </div>
                     </div>
                     <div class="field">
@@ -75,8 +76,12 @@
                     <div class="field">
                         <div class="control">
                             <div class="buttons">
-                                <button class="button is-success is-outlined">Mentés</button>
-                                <button class="button is-danger is-outlined">Törlés</button>
+                                <button *ngIf="model.is_active" class="button is-success is-outlined"
+                                    type="submit">Mentés</button>
+                                <button *ngIf="model.is_active" class="button is-danger is-outlined" type="button"
+                                    (click)="remove()">Törlés</button>
+                                <button *ngIf="!model.is_active" class="button is-success is-outlined" type="button"
+                                    (click)="restore()">Helyreállítás</button>
                             </div>
                         </div>
                     </div>
