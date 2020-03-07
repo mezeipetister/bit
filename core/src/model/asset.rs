@@ -235,20 +235,20 @@ impl Repository {
             "Az eszköz napi ÉCS-je 0 Ft. Kisértékű eszköz.".to_string(),
         ))
     }
-    pub fn remove_asset_by_id(&mut self, id: usize) -> AppResult<()> {
+    pub fn remove_asset_by_id(&mut self, id: usize) -> AppResult<Asset> {
         for asset in &mut self.assets {
             if asset.get_id() == id {
                 asset.remove();
-                return Ok(());
+                return Ok(asset.clone());
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
     }
-    pub fn restore_asset_by_id(&mut self, id: usize) -> AppResult<()> {
+    pub fn restore_asset_by_id(&mut self, id: usize) -> AppResult<Asset> {
         for asset in &mut self.assets {
             if asset.get_id() == id {
                 asset.restore();
-                return Ok(());
+                return Ok(asset.clone());
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
@@ -261,21 +261,21 @@ impl Repository {
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
     }
-    pub fn asset_update_by_id(
+    pub fn update_asset_by_id(
         &mut self,
         id: usize,
         name: String,
         description: String,
         account: String,
         account_clearing: String,
-    ) -> AppResult<()> {
+    ) -> AppResult<Asset> {
         for asset in &mut self.assets {
             if asset.get_id() == id {
                 asset.set_name(name);
                 asset.set_description(description);
                 asset.set_account(account);
                 asset.set_account_clearing(account_clearing);
-                return Ok(());
+                return Ok(asset.clone());
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))

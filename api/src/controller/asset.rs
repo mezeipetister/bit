@@ -89,32 +89,66 @@ pub fn asset_id_get(
     }
 }
 
-// #[post(
-//     "/repository/<repository_id>/account/<account_id>",
-//     data = "<form>",
-//     rank = 3
-// )]
-// pub fn account_update_post(
-//     _user: Login,
-//     data: State<DataLoad>,
-//     repository_id: String,
-//     account_id: String,
-//     form: Json<SAccount>,
-// ) -> Result<StatusOk<SAccount>, ApiError> {
-//     match data.inner().repositories.get_by_id(&repository_id) {
-//         Ok(repository) => Ok(StatusOk(
-//             repository
-//                 .update(|r| {
-//                     r.update_account(
-//                         account_id.clone(),
-//                         form.name.clone(),
-//                         form.description.clone(),
-//                         form.is_working,
-//                         form.is_inverse,
-//                     )
-//                 })?
-//                 .into(),
-//         )),
-//         Err(_) => Err(ApiError::NotFound),
-//     }
-// }
+#[post(
+    "/repository/<repository_id>/asset/<asset_id>",
+    data = "<form>",
+    rank = 3
+)]
+pub fn asset_update_post(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    asset_id: usize,
+    form: Json<ApiSchema::Asset>,
+) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(repository) => Ok(StatusOk(
+            repository
+                .update(|r| {
+                    r.update_asset_by_id(
+                        asset_id,
+                        form.name.clone(),
+                        form.description.clone(),
+                        form.account.clone(),
+                        form.account_clearing.clone(),
+                    )
+                })?
+                .into(),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
+#[post("/repository/<repository_id>/asset/<asset_id>/remove", rank = 4)]
+pub fn asset_remove_post(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    asset_id: usize,
+) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(repository) => Ok(StatusOk(
+            repository
+                .update(|r| r.remove_asset_by_id(asset_id))?
+                .into(),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
+#[post("/repository/<repository_id>/asset/<asset_id>/restore", rank = 4)]
+pub fn asset_restore_post(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    asset_id: usize,
+) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(repository) => Ok(StatusOk(
+            repository
+                .update(|r| r.restore_asset_by_id(asset_id))?
+                .into(),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
