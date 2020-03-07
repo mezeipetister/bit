@@ -143,6 +143,8 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::asset::asset_remove_post,
                 controller::asset::asset_restore_post,
                 controller::asset::asset_statistics_by_clearing_get,
+                controller::asset::asset_depreciation_yearly_get,
+                controller::asset::asset_depreciation_monthly_get,
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])

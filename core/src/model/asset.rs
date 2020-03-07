@@ -310,6 +310,30 @@ impl Repository {
             .map(|a| a.clone())
             .collect::<Vec<Asset>>()
     }
+    pub fn get_yearly_depreciation(&self, year: i32) -> u32 {
+        self.assets
+            .iter()
+            .filter(|a| a.is_active)
+            .fold(0, |sum, a| {
+                sum + a
+                    .depreciation_monthly_vector()
+                    .iter()
+                    .filter(|i| i.0.year() == year)
+                    .fold(0, |sum, i| sum + i.1)
+            })
+    }
+    pub fn get_monthly_depreciation(&self, year: i32, month: u32) -> u32 {
+        self.assets
+            .iter()
+            .filter(|a| a.is_active)
+            .fold(0, |sum, a| {
+                sum + a
+                    .depreciation_monthly_vector()
+                    .iter()
+                    .filter(|i| i.0.year() == year && i.0.month() == month)
+                    .fold(0, |sum, i| sum + i.1)
+            })
+    }
     /// Return a vec of tuple
     /// tuple => (  clearing account: String,--------------------|
     ///             asset count: u32, ---------------------------|-----|

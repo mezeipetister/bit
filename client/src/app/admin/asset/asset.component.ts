@@ -24,41 +24,13 @@ export class AssetComponent implements OnInit {
     private params: RouterParamService
   ) { }
 
-  calculateDepreciationCurrentYear() {
-    let thisYear = new Date().getFullYear();
-    this.model.forEach(a => {
-      let date_activated = new Date(a.date_activated);
-      let date_jan1 = new Date(thisYear, 1, 1);
-      let date_dec31 = new Date(thisYear, 12, 31);
-      a.depreciation_monthly.forEach(m => {
-        if (new Date(m.month) >= date_jan1
-          && new Date(m.month) <= date_dec31) {
-          this.depreciation_current_year = this.depreciation_current_year + m.monthly_value;
-        }
-      });
-    });
-  }
-
-  calculateDepreciationCurrentMonth() {
-    let thisYear = new Date().getFullYear();
-    let thisMonth = new Date().getMonth();
-    this.model.forEach(a => {
-      a.depreciation_monthly.forEach(m => {
-        if (new Date(m.month).getFullYear() == thisYear
-          && new Date(m.month).getMonth() == thisMonth) {
-          this.depreciation_current_month = this.depreciation_current_month + m.monthly_value;
-        }
-      });
-    });
-  }
-
   ngOnInit() {
     this.http.get<Asset[]>("/repository/" + this.repository_id + "/asset/all")
-      .subscribe(val => {
-        this.model = val;
-        this.calculateDepreciationCurrentYear();
-        this.calculateDepreciationCurrentMonth();
-      });
+      .subscribe(val => this.model = val);
+    this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_yearly/" + new Date().getFullYear())
+      .subscribe(val => this.depreciation_current_year = val);
+    this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_monthly/" + new Date().getFullYear() + "/" + (new Date().getMonth() + 1))
+      .subscribe(val => this.depreciation_current_month = val);
     this.http.get<[string, number, number, number][]>("/repository/" + this.repository_id + "/asset/clearing_statistics")
       .subscribe(val => {
         this.clearing_statistics = val;

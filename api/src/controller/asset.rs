@@ -103,6 +103,41 @@ pub fn asset_statistics_by_clearing_get(
     }
 }
 
+#[get(
+    "/repository/<repository_id>/asset/depreciation_yearly/<year>",
+    rank = 5
+)]
+pub fn asset_depreciation_yearly_get(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    year: i32,
+) -> Result<StatusOk<u32>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(rep) => Ok(StatusOk(rep.get(|r| r.get_yearly_depreciation(year)))),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
+#[get(
+    "/repository/<repository_id>/asset/depreciation_monthly/<year>/<month>",
+    rank = 5
+)]
+pub fn asset_depreciation_monthly_get(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+    year: i32,
+    month: u32,
+) -> Result<StatusOk<u32>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(rep) => Ok(StatusOk(
+            rep.get(|r| r.get_monthly_depreciation(year, month)),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
 #[post(
     "/repository/<repository_id>/asset/<asset_id>",
     data = "<form>",

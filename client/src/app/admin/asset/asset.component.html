@@ -62,12 +62,12 @@
                 <tr class="is-size-7-touch">
                     <th class="is-narrow">#</th>
                     <th class="is-narrow">Név</th>
-                    <th class="is-hidden-touch">Leírása</th>
-                    <th>Főkönyvi számla</th>
-                    <th>Elszámolási számla</th>
+                    <th class="is-hidden-mobile">Főkönyvi számla</th>
+                    <th class="is-hidden-mobile">Elszámolási számla</th>
                     <th>ÉCS kulcs</th>
+                    <th>Aktivált HUF</th>
                     <th class="is-narrow is-hidden-touch">Maradványérték</th>
-                    <th>Aktiválás dátuma</th>
+                    <th class="is-hidden-mobile">Aktiválás dátuma</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,12 +76,12 @@
                     <td>
                         <a [routerLink]="['./', asset.id]">{{asset.name}}</a>
                     </td>
-                    <td class="is-hidden-touch">{{asset.description}}</td>
-                    <td class="is-narrow">{{asset.account}}</td>
-                    <td class="is-narrow">{{asset.account_clearing}}</td>
+                    <td class="is-narrow is-hidden-mobile">{{asset.account}}</td>
+                    <td class="is-narrow is-hidden-mobile">{{asset.account_clearing}}</td>
                     <td class="is-narrow">{{asset.depreciation_key}}%</td>
-                    <td class="is-narrow is-hidden-touch">{{asset.residual_value}} HUF</td>
-                    <td class="is-narrow">{{asset.date_activated | date:'yyyy-MM-dd'}}</td>
+                    <td class="is-narrow">{{asset.value.toLocaleString()}} HUF</td>
+                    <td class="is-narrow is-hidden-touch">{{asset.residual_value.toLocaleString()}} HUF</td>
+                    <td class="is-narrow is-hidden-mobile">{{asset.date_activated | date:'yyyy-MM-dd'}}</td>
                 </tr>
             </tbody>
         </table>
