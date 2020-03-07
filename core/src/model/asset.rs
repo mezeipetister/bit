@@ -310,17 +310,52 @@ impl Repository {
             .map(|a| a.clone())
             .collect::<Vec<Asset>>()
     }
-    // pub fn get_statistics_account_clearings(&self) -> Vec<(String, u32, u32, u32)> {
-    //     let mut res: Vec<(String, u32, u32, u32)> = Vec::new();
-    //     let mut clearings = self
-    //         .assets
-    //         .iter()
-    //         .map(|a| a.get_account_clearing().to_string())
-    //         .collect::<Vec<String>>();
-    //     clearings.sort();
-    //     clearings.dedup();
-    //     res
-    // }
+    /// Return a vec of tuple
+    /// tuple => (  clearing account: String,--------------------|
+    ///             asset count: u32, ---------------------------|-----|
+    ///             cummulated depreciation: u32,----------------|-----|----|
+    ///             actual depreciation in this month: u32  -----|-----|----|----|
+    ///          )                                               |     |    |    |
+    pub fn get_statistics_by_account_clearings(&self) -> Vec<(String, u32, u32, u32)> {
+        let mut res: Vec<(String, u32, u32, u32)> = Vec::new();
+        for asset in &self.assets {
+            if !asset.is_active {
+                continue;
+            }
+            let vector = asset.depreciation_monthly_vector();
+            let cummulated = vector
+                .iter()
+                .filter(|i| i.0 <= Utc::today().naive_utc())
+                .fold(0, |sum, i| sum + i.1);
+            let monthly_actual = vector
+                .iter()
+                .filter(|i| {
+                    let year = i.0.year();
+                    let month = i.0.month();
+                    let day = i.0.day();
+                    let today = Utc::today().naive_utc();
+                    year == today.year() && month == today.month() && day > today.day()
+                })
+                .map(|i| i.1)
+                .collect::<Vec<u32>>();
+            if let Some(p) = res.iter().position(|r| r.0 == asset.account_clearing) {
+                if let Some(i) = res.get_mut(p) {
+                    i.1 += 1;
+                    i.2 += cummulated;
+                    i.3 += monthly_actual.get(0).unwrap_or(&0);
+                }
+            } else {
+                res.push((
+                    asset.account_clearing.clone(),
+                    1,
+                    cummulated,
+                    *monthly_actual.get(0).unwrap_or(&0),
+                ));
+            }
+        }
+        res.sort_by(|a, b| a.0.cmp(&b.0));
+        res
+    }
 }
 
 #[cfg(test)]

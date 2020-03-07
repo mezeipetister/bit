@@ -15,6 +15,8 @@ export class AssetComponent implements OnInit {
   model: Asset[] = [];
   depreciation_current_year: number = 0;
   depreciation_current_month: number = 0;
+  clearing_statistics: [string, number, number, number][] = [];
+  clearing_footer: [number, number, number] = [0, 0, 0];
 
   constructor(
     private http: HttpClient,
@@ -56,6 +58,23 @@ export class AssetComponent implements OnInit {
         this.model = val;
         this.calculateDepreciationCurrentYear();
         this.calculateDepreciationCurrentMonth();
+      });
+    this.http.get<[string, number, number, number][]>("/repository/" + this.repository_id + "/asset/clearing_statistics")
+      .subscribe(val => {
+        this.clearing_statistics = val;
+        let total_piece = 0;
+        let total_cumulated = 0;
+        let total_month = 0;
+        val.forEach(i => {
+          total_piece = total_piece + i[1];
+          total_cumulated = total_cumulated + i[2];
+          total_month = total_month + i[3];
+        });
+        this.clearing_footer = [
+          total_piece,
+          total_cumulated,
+          total_month
+        ];
       });
   }
 

@@ -89,6 +89,20 @@ pub fn asset_id_get(
     }
 }
 
+#[get("/repository/<repository_id>/asset/clearing_statistics", rank = 5)]
+pub fn asset_statistics_by_clearing_get(
+    _user: Login,
+    data: State<DataLoad>,
+    repository_id: String,
+) -> Result<StatusOk<Vec<(String, u32, u32, u32)>>, ApiError> {
+    match data.inner().repositories.get_by_id(&repository_id) {
+        Ok(rep) => Ok(StatusOk(
+            rep.get(|r| r.get_statistics_by_account_clearings()),
+        )),
+        Err(_) => Err(ApiError::NotFound),
+    }
+}
+
 #[post(
     "/repository/<repository_id>/asset/<asset_id>",
     data = "<form>",
