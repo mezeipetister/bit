@@ -17,6 +17,8 @@ export class AssetComponent implements OnInit {
   depreciation_current_month: number = 0;
   clearing_statistics: [string, number, number, number][] = [];
   clearing_footer: [number, number, number] = [0, 0, 0];
+  this_year: number = new Date().getFullYear();
+  this_month: number = new Date().getMonth() + 1;
 
   constructor(
     private http: HttpClient,
@@ -27,9 +29,9 @@ export class AssetComponent implements OnInit {
   ngOnInit() {
     this.http.get<Asset[]>("/repository/" + this.repository_id + "/asset/all")
       .subscribe(val => this.model = val);
-    this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_yearly/" + new Date().getFullYear())
+    this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_yearly/" + this.this_year)
       .subscribe(val => this.depreciation_current_year = val);
-    this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_monthly/" + new Date().getFullYear() + "/" + (new Date().getMonth() + 1))
+    this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_monthly/" + this.this_year + "/" + this.this_month)
       .subscribe(val => this.depreciation_current_month = val);
     this.http.get<[string, number, number, number][]>("/repository/" + this.repository_id + "/asset/clearing_statistics")
       .subscribe(val => {

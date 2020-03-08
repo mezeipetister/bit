@@ -15,7 +15,7 @@
                 <div class="tile">
                     <div class="tile is-parent">
                         <article class="tile is-child notification">
-                            <p class="subtitle">Éves ÉCS</p>
+                            <p class="subtitle">Éves ÉCS - {{this_year}}</p>
                             <p class="title">{{depreciation_current_year.toLocaleString()}} HUF</p>
                         </article>
                     </div>
@@ -23,7 +23,7 @@
                 <div class="tile">
                     <div class="tile is-parent">
                         <article class="tile is-child notification is-primary">
-                            <p class="subtitle">Aktuális havi ÉCS</p>
+                            <p class="subtitle">Aktuális havi ÉCS - {{this_month}}</p>
                             <p class="title">{{depreciation_current_month.toLocaleString()}} HUF</p>
                         </article>
                     </div>
