@@ -74,6 +74,10 @@
                         </div>
                     </div>
                     <div class="field">
+                        <p>Hozzáadva: {{model.date_created | date}}</p>
+                        <p>Hozzáadta: {{model.created_by}}</p>
+                    </div>
+                    <div class="field">
                         <div class="control">
                             <div class="buttons">
                                 <button *ngIf="model.is_active" class="button is-success is-outlined"
