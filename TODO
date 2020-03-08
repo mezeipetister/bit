@@ -1,0 +1,12 @@
+                                     TODOs
+
+                      All the pending TODOs that we manage
+                    in project side. Code related todos are
+                            placed inside the code.
+
+
+1. Internalisation
+
+    Currently Hungarian is hardcoded in both the API error messages and the
+    client. We should use internalisation to set the proper - and avaialable -
+    language whenever we need.

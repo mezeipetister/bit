@@ -1,0 +1,23 @@
+                                   QUESTIONs
+
+1. Asset activation_date type
+
+    Currently we use NaiveDate as data type. But it makes a few question about
+    date localization. More precisely we cannot apply localization as we do not
+    have timezone.
+
+    For example we need to return a last depreciation date, but without timezone
+    details just as a NaiveDate. It it ok?
+
+2. BIT data model
+
+    We use Storage<T> as an in-memory data storage, so mainly we manage
+    everything in memory as a RUST data type and store the data modifications in
+    disk. In the case of BIT we use a data modell, like storing everything per
+    repository in a single storage, so in a single data file.
+
+    It's experimental, but should be fine till we have a few thousand records
+    per repository. After a million record its really experimental. Read should
+    be excellent till as many records we have - and as they can fit in memory -
+    but write is a question - as we do not know exactly how Storage<T> store the
+    data: storing everything in all the time, or just patching it? No idea.

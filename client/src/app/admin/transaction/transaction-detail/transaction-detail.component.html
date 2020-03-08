@@ -13,6 +13,18 @@
                     <div class="tile">
                         <div class="tile">
                             <div class="tile is-parent">
+                                <article class="tile is-child notification has-background-white">
+                                    <p class="subtitle is-6">Könyvelt összeg:</p>
+                                    <p class="title is-4">{{model.amount.toLocaleString()}} HUF</p>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tile is-ancestor">
+                    <div class="tile">
+                        <div class="tile">
+                            <div class="tile is-parent">
                                 <article class="tile is-child notification">
                                     <p class="title is-4">Tartozik</p>
                                     <p class="subtitle">{{model.debit}}</p>

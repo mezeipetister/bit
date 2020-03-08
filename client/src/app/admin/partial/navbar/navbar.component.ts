@@ -17,9 +17,8 @@ export class NavbarComponent implements OnInit {
   notifications: Notification[] = [];
   repository_id: String = null;
 
-  @HostListener('window:keyup', ['$event'])
-  keyEvent(event: KeyboardEvent) {
-    if (event.key === 'F1' && this.repository_id) {
+  shortcutNewTransaction() {
+    if (this.repository_id) {
       this.router.navigateByUrl("/repository/" + this.repository_id + "/transaction/new");
     }
   }

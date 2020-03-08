@@ -54,7 +54,6 @@ pub fn ledger_get(
     filter: Form<Filter>,
 ) -> Result<StatusOk<Vec<apiSchema::Ledger>>, ApiError> {
     let till = parse_date(&filter.till)?;
-
     // First get ledger vector;
     // TODO: Rename ledger to something like LedgerItem
     let mut ledger: Vec<apiSchema::Ledger> =

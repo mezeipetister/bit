@@ -15,13 +15,21 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod account;
-pub mod asset;
-pub mod ledger;
-pub mod repository;
-pub mod transaction;
-pub use account::*;
-pub use asset::*;
-pub use ledger::*;
-pub use repository::*;
-pub use transaction::*;
+use chrono::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Asset {
+    pub id: usize,
+    pub name: String,
+    pub description: String,
+    pub account: String,
+    pub account_clearing: String,
+    pub value: u32,
+    pub date_activated: NaiveDate,
+    pub depreciation_key: f32,
+    pub residual_value: u32,
+    pub date_created: DateTime<Utc>,
+    pub created_by: String,
+    pub is_active: bool,
+}

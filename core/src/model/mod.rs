@@ -15,13 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with GNStore.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod document;
-pub mod folder;
-pub mod history;
+pub mod account;
+pub mod asset;
+pub mod project;
 pub mod repository;
+pub mod transaction;
 pub mod user;
+pub mod version;
 
-pub use document::*;
-pub use folder::*;
+pub use account::*;
+pub use asset::*;
+pub use project::*;
 pub use repository::*;
+pub use transaction::*;
 pub use user::*;

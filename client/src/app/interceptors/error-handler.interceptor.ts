@@ -10,12 +10,16 @@ import { HttpError } from '../class/http-error';
 export class ErrorHandlerInterceptor implements HttpInterceptor {
     constructor() { }
 
+    /**
+     * TODO: Refact this whole error part
+     */
     private handleError(error: HttpErrorResponse) {
         if (error.error instanceof ErrorEvent) {
             // A client-side or network error occurred. Handle it accordingly.
             return throwError(new HttpError('danger', 'Oooo'))
         } else {
             if (error.status == 0) {
+                alert("HIBA: A szerver nem elérhető, kommunikációs hiba!");
                 return throwError(
                     new HttpError('danger', 'A Gardenova szerver nem elérhető! \
                     Vagy a szerver hibás, vagynincs internet kapcsolat'))
@@ -25,14 +29,17 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
                 // this.router.navigateByUrl('/login');
             }
             if (error.status == 400) {
+                alert("HIBA: " + error.error.message);
                 if (error.error instanceof ErrorResponse) {
                     // If standard API error
+
                     return throwError(new HttpError('warning', error.error.message))
                 } else {
                     // If unknown API error format
                     return throwError(new HttpError('warning', error.error.message))
                 }
             } else {
+                alert("HIBA: " + error.error.message);
                 if (error.error instanceof ErrorResponse) {
                     // If standard API error
                     return throwError(new HttpError('danger', error.error.message))

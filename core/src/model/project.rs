@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Peter Mezei
+// Copyright (C) 2020 peter
 //
 // This file is part of BIT.
 //
@@ -15,13 +15,4 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod account;
-pub mod asset;
-pub mod ledger;
-pub mod repository;
-pub mod transaction;
-pub use account::*;
-pub use asset::*;
-pub use ledger::*;
-pub use repository::*;
-pub use transaction::*;
+pub use crate::model::*;

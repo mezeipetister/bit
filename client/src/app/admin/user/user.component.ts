@@ -29,6 +29,7 @@ export class UserComponent implements OnInit {
 
   ngOnInit() {
     this.http.get<Profile[]>("/user/all").subscribe((val) => {
+      val = val.sort((a, b) => a.date_created > b.date_created ? 1 : -1);
       this.users.set_data(val);
       this.buffer = val;
     });

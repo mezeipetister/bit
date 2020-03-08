@@ -15,42 +15,73 @@
                 <div class="tile">
                     <div class="tile is-parent">
                         <article class="tile is-child notification">
-                            <p class="subtitle">Éves ÉCS</p>
-                            <p class="title">1.750.000</p>
+                            <p class="subtitle">Éves ÉCS - {{this_year}}</p>
+                            <p class="title">{{depreciation_current_year.toLocaleString()}} HUF</p>
                         </article>
                     </div>
                 </div>
                 <div class="tile">
                     <div class="tile is-parent">
                         <article class="tile is-child notification is-primary">
-                            <p class="subtitle">Aktuális havi ÉCS</p>
-                            <p class="title">250.000</p>
+                            <p class="subtitle">Aktuális havi ÉCS - {{this_month}}</p>
+                            <p class="title">{{depreciation_current_month.toLocaleString()}} HUF</p>
                         </article>
                     </div>
                 </div>
             </div>
         </div>
-        <table class="table is-fullwidth is-small">
+        <table class="table is-striped">
             <thead>
-                <tr>
-                    <th class="is-narrow">#</th>
-                    <th class="is-narrow">Név</th>
-                    <th>Leírása</th>
-                    <th class="is-narrow">ÉCS kulcs</th>
-                    <th class="is-narrow">Maradványérték</th>
-                    <th class="is-narrow">Aktiválás dátuma</th>
+                <tr class="is-size-7-touch">
+                    <th>Elszámolási számla</th>
+                    <th>Eszközök száma</th>
+                    <th>Halmozott ÉCS</th>
+                    <th>Aktuális havi ÉCS</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
+                <tr class="is-size-7-touch" *ngFor="let item of clearing_statistics">
+                    <td>{{item[0]}}</td>
+                    <td>{{item[1].toLocaleString()}}</td>
+                    <td>{{item[2].toLocaleString()}}</td>
+                    <td>{{item[3].toLocaleString()}}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="is-size-7-touch">
+                    <td></td>
+                    <td>{{clearing_footer[0]}}</td>
+                    <td>{{clearing_footer[1].toLocaleString()}} HUF</td>
+                    <td>{{clearing_footer[2].toLocaleString()}} HUF</td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="title">Eszközök</p>
+        <table class="table is-fullwidth is-small">
+            <thead>
+                <tr class="is-size-7-touch">
+                    <th class="is-narrow">#</th>
+                    <th class="is-narrow">Név</th>
+                    <th class="is-hidden-mobile">Főkönyvi számla</th>
+                    <th class="is-hidden-mobile">Elszámolási számla</th>
+                    <th>ÉCS kulcs</th>
+                    <th>Aktivált HUF</th>
+                    <th class="is-narrow is-hidden-touch">Maradványérték</th>
+                    <th class="is-hidden-mobile">Aktiválás dátuma</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="is-size-7-touch" *ngFor="let asset of model">
+                    <td>{{asset.id}}</td>
                     <td>
-                        <a routerLink="./1">Audi LBG397</a>
+                        <a [routerLink]="['./', asset.id]">{{asset.name}}</a>
                     </td>
-                    <td>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis, quidem.</td>
-                    <td>15%</td>
-                    <td>500.000</td>
-                    <td>2009.08.01</td>
+                    <td class="is-narrow is-hidden-mobile">{{asset.account}}</td>
+                    <td class="is-narrow is-hidden-mobile">{{asset.account_clearing}}</td>
+                    <td class="is-narrow">{{asset.depreciation_key}}%</td>
+                    <td class="is-narrow">{{asset.value.toLocaleString()}} HUF</td>
+                    <td class="is-narrow is-hidden-touch">{{asset.residual_value.toLocaleString()}} HUF</td>
+                    <td class="is-narrow is-hidden-mobile">{{asset.date_activated | date:'yyyy-MM-dd'}}</td>
                 </tr>
             </tbody>
         </table>

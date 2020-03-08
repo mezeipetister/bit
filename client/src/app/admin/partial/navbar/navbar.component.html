@@ -1,4 +1,5 @@
-<nav class="navbar is-light is-success" role="navigation" aria-label="main navigation">
+<nav class="navbar is-light is-success" role="navigation" aria-label="main navigation"
+    (document:keydown.alt.n)="shortcutNewTransaction();">
     <div class="container is-fullhd">
         <div class="navbar-brand">
             <a class="navbar-item" routerLink='/'>
@@ -30,8 +31,8 @@
             </div>
 
             <div class="navbar-end">
-                <a class="navbar-item" [routerLink]="['/repository', repository_id, 'transaction', 'new']"
-                    *ngIf="repository_id">
+                <a class="navbar-item is-hidden-touch"
+                    [routerLink]="['/repository', repository_id, 'transaction', 'new']" *ngIf="repository_id">
                     <span class="icon">
                         <i class="fas fa-plus"></i>
                     </span>
