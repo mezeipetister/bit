@@ -217,6 +217,26 @@
                     * Created BY
                     * Created DateTime
 
+
+    Examples
+
+        Yearly expected income
+        
+            event_id:           01
+            event_name:         Planned incomes
+            event_description:  Yearly plan about the planend monthly salaries
+            event_created_by:   johndoe
+            event_date_created: 2020-03-30T10:10:10Z
+
+            transaction_id:     01
+            transaction_subjct: January income
+            transaction_credit: 3841 - John Doe Bank account
+            transaction_debit:  97 - Salary
+            transaction_value:  3_000 USD
+            transaction_setd:   2020-01-10
+            transaction_creat.: johndoe
+            transaction_date_c: 2020-01-02T07:10:10Z
+
         
 ________________________
 
