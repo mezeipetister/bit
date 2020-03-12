@@ -173,7 +173,51 @@
       determines the team and their expertise as well. Using plain text
       technology with in-memory operations using C or C++ also determines all
       the benefits and threaths and fears.
-    
+
+
+                                       3.
+                                     Design
+
+3.1 Project
+
+    The main goal is to define a 'toolkit' to effectively plan future plans -
+    from economical and finane side. Project should be a part of BIT where we
+    can create future events and their related transactions. Using the same
+    transactions like under the BTI bookkeeping, we could then combine the
+    Project plan and Ledger data to display plan/fact diagram.
+
+    Core features should be:
+
+        *   Create future events
+        *   Create transactions under an event - with future settlement_date
+        *   Effectively create scenarios of future plans - based on which events
+            are in a scenario.
+        *   Display charts about future plans - a kind of ledger in the future
+        *   Display plan/fact diagram
+
+    Event
+      |
+      |----------   Main parameters
+      |             ===============
+      |                 * ID
+      |                 * Name
+      |                 * Description
+      |                 * Created BY
+      |                 * Created DateTime
+      |
+      |
+      *------   Transaction
+                ===========
+                    * ID
+                    * Subject
+                    * Credit
+                    * Debit
+                    * Value
+                    * SettlementDate
+                    * Created BY
+                    * Created DateTime
+
+        
 ________________________
 
 Appendix
