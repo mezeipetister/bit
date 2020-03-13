@@ -102,7 +102,7 @@
     market need for this solution.
 
 
-                                       2.
+                                      -2-
                                   Data storage
 
 
@@ -206,9 +206,10 @@
       |                 * Created DateTime
       |
       |
-      *------   Transaction
+      *------   Transaction[]
                 ===========
                     * ID
+                    * EventID
                     * Subject
                     * Credit
                     * Debit
@@ -237,6 +238,43 @@
             transaction_creat.: johndoe
             transaction_date_c: 2020-01-02T07:10:10Z
 
+            transaction_id:     02
+            ...                 ...
+            .                   .       <-------------- another 11 month
+            .                   .                       series of transactions
+            transaction_id:     12
+            transaction_subjct: December income
+            .                   .
+
+
+        Monthly food cost
+
+            12 month transactions, one per month. Each of them are almost the
+            same, with the same credit debit.
+
+        -------------------------------------------------------------------
+        |                                                                 |
+        | Example Event                                                   |
+        | - Yearly estimated monthly income                               |
+        |                                                                 |
+        -------------------------------------------------------------------
+            *   Transactions                                              |
+            |                                                             |
+            |       Date            |   Credit  |   Debit   |   Amount    |
+            |       ===================================================== |
+            |       * 2020-01-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-02-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-03-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-04-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-05-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-06-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-07-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-08-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-09-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-10-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-11-05    |   3841    |   97      |   2_000 USD |
+            |       * 2020-12-05    |   3841    |   97      |   2_000 USD |
+            --------------------------------------------------------------- 
         
 ________________________
 
