@@ -19,16 +19,9 @@ use crate::guard::Login;
 use crate::model::*;
 use crate::prelude::*;
 use crate::DataLoad;
-use chrono::prelude::*;
 use core_lib::model::*;
-use core_lib::prelude::AppResult;
-use rocket::response::NamedFile;
-use rocket::Data;
 use rocket::State;
 use rocket_contrib::json::Json;
-use serde::{Deserialize, Serialize};
-use std::io;
-use std::path::Path;
 
 #[get("/repository/<repository_id>/account/all")]
 pub fn account_all_get(
@@ -36,15 +29,17 @@ pub fn account_all_get(
     data: State<DataLoad>,
     repository_id: String,
 ) -> Result<StatusOk<Vec<SAccount>>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => Ok(StatusOk(repository.get(|f| {
-            f.get_accounts()
-                .iter()
-                .map(|a| a.clone().into())
-                .collect::<Vec<SAccount>>()
-        }))),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_accounts()
+        .iter()
+        .map(|a| (*a).clone().into())
+        .collect::<Vec<SAccount>>();
+    Ok(StatusOk(res))
 }
 
 #[put("/repository/<repository_id>/account/new", data = "<form>")]
@@ -62,16 +57,15 @@ pub fn account_new_put(
         form.is_working,
         form.is_inverse,
     );
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repo) => {
-            repo.update(|r| -> AppResult<()> {
-                r.add_account(account_new.clone())?;
-                Ok(())
-            })?;
-            Ok(StatusOk(account_new.into()))
-        }
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .as_mut()
+        .add_account(account_new.clone())?;
+    Ok(StatusOk(account_new.into()))
 }
 
 #[get("/repository/<repository_id>/account/<account_id>", rank = 2)]
@@ -81,12 +75,15 @@ pub fn account_id_get(
     repository_id: String,
     account_id: String,
 ) -> Result<StatusOk<SAccount>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(rep) => Ok(StatusOk(
-            rep.get(|r| r.get_account_by_id(account_id.clone()))?.into(),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_account_by_id(account_id.clone())?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post(
@@ -101,20 +98,19 @@ pub fn account_update_post(
     account_id: String,
     form: Json<SAccount>,
 ) -> Result<StatusOk<SAccount>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => Ok(StatusOk(
-            repository
-                .update(|r| {
-                    r.update_account(
-                        account_id.clone(),
-                        form.name.clone(),
-                        form.description.clone(),
-                        form.is_working,
-                        form.is_inverse,
-                    )
-                })?
-                .into(),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .as_mut()
+        .update_account(
+            account_id.clone(),
+            form.name.clone(),
+            form.description.clone(),
+            form.is_working,
+            form.is_inverse,
+        )?;
+    Ok(StatusOk(res.into()))
 }
