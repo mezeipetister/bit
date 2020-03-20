@@ -23,14 +23,7 @@ use chrono::prelude::*;
 use core_lib::model::*;
 use core_lib::prelude::AppResult;
 use rocket::request::Form;
-use rocket::response::NamedFile;
-use rocket::Data;
 use rocket::State;
-use rocket_contrib::json::Json;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::io;
-use std::path::Path;
 
 #[derive(FromForm)]
 pub struct Filter {
@@ -56,34 +49,35 @@ pub fn ledger_get(
     let till = parse_date(&filter.till)?;
     // First get ledger vector;
     // TODO: Rename ledger to something like LedgerItem
-    let mut ledger: Vec<apiSchema::Ledger> =
-        match data.inner().repositories.get_by_id(&repository_id) {
-            Ok(repository) => repository.get(|f| {
-                f.get_accounts()
-                    .iter()
-                    .map(|a: &Account| {
-                        // Create a new ledger item with account
-                        // details and 0 initial values
-                        apiSchema::Ledger::new(
-                            a.get_id().to_string(),
-                            a.get_name().to_string(),
-                            a.get_is_working(),
-                            a.get_is_inverse(),
-                            a.get_is_active(),
-                            0,
-                            0,
-                            0,
-                        )
-                    })
-                    .collect::<Vec<apiSchema::Ledger>>()
-            }),
-            Err(_) => Vec::new(),
-        };
+    let mut ledger: Vec<apiSchema::Ledger> = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_accounts()
+        .iter()
+        .map(|a: &Account| {
+            apiSchema::Ledger::new(
+                a.get_id().to_string(),
+                a.get_name().to_string(),
+                a.get_is_working(),
+                a.get_is_inverse(),
+                a.get_is_active(),
+                0,
+                0,
+                0,
+            )
+        })
+        .collect::<Vec<apiSchema::Ledger>>();
 
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => repository.update(|f: &mut Repository| {
+    data.inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .update(|f: &mut Repository| {
             for transaction in f.get_transactions().into_iter() {
-                // Apply date filter
                 if transaction.date_settlement <= till {
                     for ledger_item in &mut ledger {
                         if transaction.debit == ledger_item.account_id {
@@ -95,9 +89,7 @@ pub fn ledger_get(
                     }
                 }
             }
-        }),
-        Err(_) => return Err(ApiError::NotFound),
-    }
+        });
 
     for item in &mut ledger {
         item.total = item.debit_total - item.credit_total;
@@ -122,10 +114,13 @@ pub fn ledger_stat_get(
     // Init result array
     let mut result: [Option<i32>; 12] = [None; 12];
 
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => repository.update(|f: &mut Repository| {
+    data.inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .update(|f: &mut Repository| {
             for transaction in f.get_transactions() {
-                // Filter just the current year events
                 if transaction.date_settlement.year() != Utc::now().naive_utc().year() {
                     continue;
                 }
@@ -143,9 +138,6 @@ pub fn ledger_stat_get(
                     }
                 }
             }
-        }),
-        Err(_) => return Err(ApiError::NotFound),
-    }
-
+        });
     Ok(StatusOk(result))
 }

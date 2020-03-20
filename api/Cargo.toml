@@ -15,7 +15,7 @@ serde_derive = "1.0"
 serde_json = "1.0"
 maud = { version = "*", features = ["rocket"]}
 chrono = { version = "0.4", features = ["serde"] }
-storaget = "0.6.0"
+storaget = "0.7.1"
 num-format = "*"
 ifeq = "*"
 rust-crypto = "0.2"

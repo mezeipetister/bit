@@ -141,20 +141,23 @@ impl From<core_lib::Error> for ApiError {
     }
 }
 
-// storaget::Error => ApiError
-impl From<storaget::Error> for ApiError {
-    fn from(err: storaget::Error) -> Self {
+// storaget::PackError => ApiError
+impl From<storaget::PackError> for ApiError {
+    fn from(err: storaget::PackError) -> Self {
         match err {
-            storaget::Error::DeserializeError(err) => ApiError::InternalError(err),
-            storaget::Error::InternalError(err) => ApiError::InternalError(err),
-            storaget::Error::IOError(err) => ApiError::InternalError(err),
-            storaget::Error::ObjectNotFound => {
+            storaget::PackError::DeserializeError(err) => ApiError::InternalError(err),
+            storaget::PackError::InternalError(err) => ApiError::InternalError(err),
+            storaget::PackError::IOError(err) => ApiError::InternalError(err),
+            storaget::PackError::ObjectNotFound => {
                 ApiError::InternalError("Adatobjektum nem található a megadott ID-val".to_string())
             }
-            storaget::Error::PathNotFound => {
+            storaget::PackError::PathNotFound => {
                 ApiError::InternalError("Storage<T> path not found!".to_string())
             }
-            storaget::Error::SerializeError(err) => ApiError::InternalError(err),
+            storaget::PackError::SerializeError(err) => ApiError::InternalError(err),
+            storaget::PackError::IDTaken => {
+                ApiError::BadRequest("A megadott ID már foglalt!".to_string())
+            }
         }
     }
 }

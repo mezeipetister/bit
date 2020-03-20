@@ -72,7 +72,7 @@
             </thead>
             <tbody>
                 <tr class="is-size-7-touch" *ngFor="let asset of model">
-                    <td>{{asset.id}}</td>
+                    <td class="is-narrow">{{asset.id}}</td>
                     <td>
                         <a [routerLink]="['./', asset.id]">{{asset.name}}</a>
                     </td>

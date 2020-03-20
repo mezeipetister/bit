@@ -36,6 +36,21 @@ pub struct User {
     customers: Vec<String>,
 }
 
+impl Default for User {
+    fn default() -> Self {
+        User {
+            id: String::default(),
+            name: String::default(),
+            email: String::default(),
+            phone: String::default(),
+            password_hash: String::default(),
+            date_created: Utc::now(),
+            created_by: String::default(),
+            customers: Vec::new(),
+        }
+    }
+}
+
 // impl DateCreated for User {
 //     fn get_date_created(&self) -> DateTime<Utc> {
 //         self.date_created
@@ -169,7 +184,7 @@ impl User {
             Ok(())
         } else {
             Err(BadRequest(
-                "Rossz email formátum. Legyen legalább 5 karakter, és tartalmazzon @ jelet és pontot"
+                    "Rossz email formátum. Legyen legalább 5 karakter, és tartalmazzon @ jelet és pontot"
                     .into(),
             ))
         }
@@ -262,17 +277,16 @@ impl User {
 //     }
 // }
 
-impl StorageObject for User {
-    type ResultType = User;
+impl VecPackMember for User {
     fn get_id(&self) -> &str {
         &self.id
     }
-    fn try_from(from: &str) -> StorageResult<Self::ResultType> {
-        match deserialize_object(from) {
-            Ok(res) => Ok(res),
-            Err(_) => Err(Error::DeserializeError("user has wrong format".to_string())),
-        }
-    }
+    // fn try_from(from: &str) -> StorageResult<Self::ResultType> {
+    //     match deserialize_object(from) {
+    //         Ok(res) => Ok(res),
+    //         Err(_) => Err(Error::DeserializeError("user has wrong format".to_string())),
+    //     }
+    // }
 }
 
 #[cfg(test)]

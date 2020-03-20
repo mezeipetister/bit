@@ -42,16 +42,16 @@ pub mod prelude;
 use crate::prelude::*;
 use core_lib::model::*;
 use guard::*;
-use rocket::response::NamedFile;
 use rocket::Request;
 use rocket_cors::AllowedHeaders;
 use serde::Serialize;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+use std::sync::Mutex;
 use storaget::*;
 
 #[get("/")]
 fn index() -> String {
-    "Gardenova Welcome".to_owned()
+    "BIT Welcome".to_owned()
 }
 
 #[derive(Debug, Serialize)]
@@ -65,11 +65,6 @@ fn api_welcome(_user: Login) -> StatusOk<ApiWelcomeSchema> {
         message: "Welcome to Gardenova API",
     })
 }
-
-// #[get("/<file..>")]
-// pub fn static_file(file: PathBuf) -> Option<NamedFile> {
-//     NamedFile::open(Path::new("static/").join(file)).ok()
-// }
 
 #[catch(404)]
 fn not_found(_: &Request<'_>) -> ApiError {
@@ -151,14 +146,14 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
 }
 
 pub struct DataLoad {
-    users: Storage<User>,
-    repositories: Storage<Repository>,
+    users: Mutex<VecPack<User>>,
+    repositories: Mutex<VecPack<Repository>>,
 }
 
-fn main() -> StorageResult<()> {
+fn main() -> PackResult<()> {
     let data = DataLoad {
-        users: Storage::load_or_init::<User>("data/users")?,
-        repositories: Storage::load_or_init::<Repository>("data/repositories")?,
+        users: Mutex::new(VecPack::load_or_init(PathBuf::from("data/users"))?),
+        repositories: Mutex::new(VecPack::load_or_init(PathBuf::from("data/repositories"))?),
     };
     rocket(data).launch();
     Ok(())

@@ -54,17 +54,33 @@ pub struct Repository {
     pub is_active: bool,
 }
 
-impl StorageObject for Repository {
-    type ResultType = Repository;
+impl Default for Repository {
+    fn default() -> Self {
+        Repository {
+            id: String::default(),
+            name: String::default(),
+            description: String::default(),
+            accounts: Vec::new(),
+            transactions: Vec::new(),
+            assets: Vec::new(),
+            projects: Vec::new(),
+            created_by: String::default(),
+            date_created: Utc::now(),
+            is_active: true,
+        }
+    }
+}
+
+impl VecPackMember for Repository {
     fn get_id(&self) -> &str {
         &self.id
     }
-    fn try_from(from: &str) -> StorageResult<Self::ResultType> {
-        match deserialize_object(from) {
-            Ok(res) => Ok(res),
-            Err(_) => Err(storaget::Error::DeserializeError(
-                "document has wrong format".to_string(),
-            )),
-        }
-    }
+    // fn try_from(from: &str) -> StorageResult<Self::ResultType> {
+    //     match deserialize_object(from) {
+    //         Ok(res) => Ok(res),
+    //         Err(_) => Err(storaget::Error::DeserializeError(
+    //             "document has wrong format".to_string(),
+    //         )),
+    //     }
+    // }
 }

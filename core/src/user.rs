@@ -36,16 +36,19 @@ use storaget::*;
 
 /// Find user in users by ID.
 /// Return NONE if not exist, return &user if exists.
-pub fn get_user_by_id<'a>(users: &'a Storage<User>, id: &str) -> AppResult<DataObject<User>> {
-    let user = users.get_by_id(id)?;
+pub fn get_user_by_id<'a>(users: &'a mut VecPack<User>, id: &str) -> AppResult<&'a mut Pack<User>> {
+    let user = users.find_id_mut(id)?;
     Ok(user)
 }
 
 /// Find user by email
 /// Return NONE or &user.
-pub fn get_user_by_email<'a>(users: &'a Storage<User>, email: &str) -> AppResult<DataObject<User>> {
+pub fn get_user_by_email<'a>(
+    users: &'a mut Vec<Pack<User>>,
+    email: &str,
+) -> AppResult<&'a mut Pack<User>> {
     for user in users {
-        if user.get(|u| u.get_user_email() == email) {
+        if user.get_user_email() == email {
             return Ok(user);
         }
     }

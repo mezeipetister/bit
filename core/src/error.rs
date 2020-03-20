@@ -44,10 +44,8 @@ impl fmt::Debug for Error {
 }
 
 // storaget::Error => core_lib::Error
-impl From<storaget::Error> for Error {
-    fn from(err: storaget::Error) -> Self {
-        match err {
-            _ => Error::InternalError("Storage error".into()),
-        }
+impl From<storaget::PackError> for Error {
+    fn from(err: storaget::PackError) -> Self {
+        Error::InternalError(format!("Storage error: {}", err))
     }
 }

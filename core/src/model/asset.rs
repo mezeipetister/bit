@@ -215,6 +215,17 @@ impl Repository {
                 "A megadott számlaszám nem létezik vagy nem könyvelhető".to_string(),
             ));
         }
+        if residual_value >= value {
+            return Err(Error::BadRequest(
+                "A maradványértéknek kisebbnek kell lennie, mint az eszköz bekerülési értéke."
+                    .to_string(),
+            ));
+        }
+        if depreciation_key < 0.0 || depreciation_key > 100.0 {
+            return Err(Error::BadRequest(
+                "A leírási kulcsnak 0-100 között kell lennie.".to_string(),
+            ));
+        }
         let new_asset = Asset::new(
             self.assets.len(),
             name,

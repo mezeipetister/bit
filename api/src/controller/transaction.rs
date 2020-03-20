@@ -57,7 +57,13 @@ pub fn transaction_all_get(
     let from = parse_date(&filter.from)?;
     let till = parse_date(&filter.till)?;
 
-    match data.inner().repositories.get_by_id(&repository_id) {
+    match data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)
+    {
         Ok(repository) => Ok(StatusOk(repository.get(|f: &Repository| {
             let mut result: Vec<apiSchema::Transaction> = f
                 .get_transactions()
@@ -94,7 +100,13 @@ pub fn transaction_id_get(
     repository_id: String,
     transaction_id: usize,
 ) -> Result<StatusOk<apiSchema::Transaction>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
+    match data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)
+    {
         Ok(rep) => Ok(StatusOk(
             rep.get(|r: &Repository| r.get_transaction_by_id(transaction_id))?
                 .into(),
@@ -110,7 +122,13 @@ pub fn transaction_new_put(
     form: Json<apiSchema::TransactionNew>,
     repository_id: String,
 ) -> Result<StatusOk<apiSchema::Transaction>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
+    match data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)
+    {
         Ok(repo) => {
             let transaction = repo.update(|r: &mut Repository| -> AppResult<Transaction> {
                 r.add_transaction(
@@ -121,7 +139,7 @@ pub fn transaction_new_put(
                     form.date_settlement.clone(),
                     user.userid().to_string(),
                 )
-            })?;
+            })??;
             Ok(StatusOk(transaction.into()))
         }
         Err(_) => Err(ApiError::NotFound),
