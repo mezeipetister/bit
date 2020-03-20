@@ -44,7 +44,7 @@ pub fn get_user_by_id<'a>(users: &'a mut VecPack<User>, id: &str) -> AppResult<&
 /// Find user by email
 /// Return NONE or &user.
 pub fn get_user_by_email<'a>(
-    users: &'a mut VecPack<User>,
+    users: &'a mut Vec<Pack<User>>,
     email: &str,
 ) -> AppResult<&'a mut Pack<User>> {
     for user in users {

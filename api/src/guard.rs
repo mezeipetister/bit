@@ -56,7 +56,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Login {
                 return Outcome::Failure((Status::Unauthorized, ()));
             }
         };
-        match user::get_user_by_id(&data.inner().users, &userid) {
+        match data.inner().users.lock().unwrap().find_id(&userid) {
             Ok(user) => {
                 let login = Login {
                     userid: userid,

@@ -57,8 +57,7 @@ pub fn account_new_put(
         form.is_working,
         form.is_inverse,
     );
-    let res = data
-        .inner()
+    data.inner()
         .repositories
         .lock()
         .unwrap()

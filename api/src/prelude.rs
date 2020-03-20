@@ -155,6 +155,9 @@ impl From<storaget::PackError> for ApiError {
                 ApiError::InternalError("Storage<T> path not found!".to_string())
             }
             storaget::PackError::SerializeError(err) => ApiError::InternalError(err),
+            storaget::PackError::IDTaken => {
+                ApiError::BadRequest("A megadott ID már foglalt!".to_string())
+            }
         }
     }
 }

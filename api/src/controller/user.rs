@@ -74,6 +74,8 @@ pub fn user_all_get(
     let res = data
         .inner()
         .users
+        .lock()
+        .unwrap()
         .into_iter()
         .map(|d| d.get(|c| c.into()))
         .collect::<Vec<Profile>>();
@@ -94,12 +96,18 @@ pub fn user_new_post(
         user.userid().to_string(),
     )?;
     // Check if user exist;
-    if let Ok(_) = data.inner().users.get_by_id(&new_user.get_id()) {
+    if let Ok(_) = data
+        .inner()
+        .users
+        .lock()
+        .unwrap()
+        .find_id_mut(&new_user.get_id())
+    {
         return Err(ApiError::BadRequest(
             "A kért user ID már foglalt!".to_owned(),
         ));
     };
-    match data.inner().users.add_to_storage(new_user.clone()) {
+    match data.inner().users.lock().unwrap().insert(new_user.clone()) {
         Ok(_) => return Ok(StatusOk((&new_user).into())),
         Err(err) => return Err(err.into()),
     }
@@ -111,8 +119,8 @@ pub fn user_id_get(
     data: State<DataLoad>,
     id: String,
 ) -> Result<StatusOk<Profile>, ApiError> {
-    match data.inner().users.get_by_id(&id) {
-        Ok(user) => Ok(StatusOk((&user.clone_data()).into())),
+    match data.inner().users.lock().unwrap().find_id(&id) {
+        Ok(user) => Ok(StatusOk((&**user).into())),
         Err(_) => Err(ApiError::NotFound),
     }
 }

@@ -19,15 +19,9 @@ use crate::guard::Login;
 use crate::model::*;
 use crate::prelude::*;
 use crate::DataLoad;
-use chrono::prelude::*;
 use core_lib::model::*;
-use rocket::response::NamedFile;
-use rocket::Data;
 use rocket::State;
 use rocket_contrib::json::Json;
-use serde::{Deserialize, Serialize};
-use std::io;
-use std::path::Path;
 
 #[get("/repository/all")]
 pub fn repository_all_get(
@@ -37,6 +31,8 @@ pub fn repository_all_get(
     let res = data
         .inner()
         .repositories
+        .lock()
+        .unwrap()
         .into_iter()
         .filter(|d| d.get(|r| r.get_is_active()))
         .map(|d| d.get(|c| c.clone().into()))
@@ -58,7 +54,9 @@ pub fn repository_new_put(
     match data
         .inner()
         .repositories
-        .add_to_storage(repository_new.clone())
+        .lock()
+        .unwrap()
+        .insert(repository_new.clone())
     {
         Ok(_) => return Ok(StatusOk(repository_new.into())),
         Err(err) => return Err(err.into()),
@@ -71,11 +69,11 @@ pub fn repository_remove_post(
     data: State<DataLoad>,
     id: String,
 ) -> Result<StatusOk<SRepositoryShort>, ApiError> {
-    match data.inner().repositories.get_by_id(&id) {
+    match data.inner().repositories.lock().unwrap().find_id_mut(&id) {
         Ok(repository) => Ok(StatusOk(repository.update(|f| {
             f.remove();
             f.clone().into()
-        }))),
+        })?)),
         Err(_) => Err(ApiError::NotFound),
     }
 }
@@ -86,8 +84,8 @@ pub fn repository_id_get(
     data: State<DataLoad>,
     id: String,
 ) -> Result<StatusOk<SRepositoryShort>, ApiError> {
-    match data.inner().repositories.get_by_id(&id) {
-        Ok(rep) => Ok(StatusOk(rep.clone_data().into())),
+    match data.inner().repositories.lock().unwrap().find_id(&id) {
+        Ok(res) => Ok(StatusOk((**res).clone().into())),
         Err(_) => Err(ApiError::NotFound),
     }
 }
@@ -99,12 +97,12 @@ pub fn repository_update_post(
     id: String,
     form: Json<SRepositoryNew>,
 ) -> Result<StatusOk<SRepositoryShort>, ApiError> {
-    match data.inner().repositories.get_by_id(&id) {
+    match data.inner().repositories.lock().unwrap().find_id_mut(&id) {
         Ok(repository) => Ok(StatusOk(repository.update(|f| {
             f.set_name(form.name.to_string());
             f.set_description(form.description.to_string());
             f.clone().into()
-        }))),
+        })?)),
         Err(_) => Err(ApiError::NotFound),
     }
 }
@@ -115,11 +113,11 @@ pub fn repository_restore_post(
     data: State<DataLoad>,
     id: String,
 ) -> Result<StatusOk<SRepositoryShort>, ApiError> {
-    match data.inner().repositories.get_by_id(&id) {
+    match data.inner().repositories.lock().unwrap().find_id_mut(&id) {
         Ok(repository) => Ok(StatusOk(repository.update(|f| {
             f.restore();
             f.clone().into()
-        }))),
+        })?)),
         Err(_) => Err(ApiError::NotFound),
     }
 }

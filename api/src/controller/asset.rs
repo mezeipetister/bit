@@ -30,16 +30,18 @@ pub fn asset_all_get(
     data: State<DataLoad>,
     repository_id: String,
 ) -> Result<StatusOk<Vec<ApiSchema::Asset>>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => Ok(StatusOk(repository.get(|f: &Repository| {
-            f.get_assets()
-                .iter()
-                .filter(|a| a.get_is_active())
-                .map(|a| a.clone().into())
-                .collect::<Vec<ApiSchema::Asset>>()
-        }))),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_assets()
+        .iter()
+        .filter(|a| a.get_is_active())
+        .map(|a| a.clone().into())
+        .collect::<Vec<ApiSchema::Asset>>();
+    Ok(StatusOk(res))
 }
 
 #[put("/repository/<repository_id>/asset/new", data = "<form>")]
@@ -49,25 +51,26 @@ pub fn asset_new_put(
     form: Json<ApiSchema::AssetNew>,
     repository_id: String,
 ) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repo) => Ok(StatusOk(
-            repo.update(|r| -> AppResult<Asset> {
-                r.add_asset(
-                    form.name.clone(),
-                    form.description.clone(),
-                    form.account.clone(),
-                    form.account_clearing.clone(),
-                    form.value,
-                    form.date_activated,
-                    form.depreciation_key,
-                    form.residual_value,
-                    user.userid().to_string(),
-                )
-            })?
-            .into(),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .as_mut()
+        .add_asset(
+            form.name.clone(),
+            form.description.clone(),
+            form.account.clone(),
+            form.account_clearing.clone(),
+            form.value,
+            form.date_activated,
+            form.depreciation_key,
+            form.residual_value,
+            user.userid().to_string(),
+        )?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[get("/repository/<repository_id>/asset/<asset_id>", rank = 2)]
@@ -77,10 +80,15 @@ pub fn asset_id_get(
     repository_id: String,
     asset_id: usize,
 ) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(rep) => Ok(StatusOk(rep.get(|r| r.get_asset_by_id(asset_id))?.into())),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_asset_by_id(asset_id)?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[get("/repository/<repository_id>/asset/clearing_statistics", rank = 5)]
@@ -89,12 +97,14 @@ pub fn asset_statistics_by_clearing_get(
     data: State<DataLoad>,
     repository_id: String,
 ) -> Result<StatusOk<Vec<(String, u32, u32, u32)>>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(rep) => Ok(StatusOk(
-            rep.get(|r| r.get_statistics_by_account_clearings()),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_statistics_by_account_clearings();
+    Ok(StatusOk(res))
 }
 
 #[get(
@@ -107,10 +117,14 @@ pub fn asset_depreciation_yearly_get(
     repository_id: String,
     year: i32,
 ) -> Result<StatusOk<u32>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(rep) => Ok(StatusOk(rep.get(|r| r.get_yearly_depreciation(year)))),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_yearly_depreciation(year);
+    Ok(StatusOk(res))
 }
 
 #[get(
@@ -124,12 +138,14 @@ pub fn asset_depreciation_monthly_get(
     year: i32,
     month: u32,
 ) -> Result<StatusOk<u32>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(rep) => Ok(StatusOk(
-            rep.get(|r| r.get_monthly_depreciation(year, month)),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id(&repository_id)?
+        .get_monthly_depreciation(year, month);
+    Ok(StatusOk(res))
 }
 
 #[post(
@@ -144,22 +160,22 @@ pub fn asset_update_post(
     asset_id: usize,
     form: Json<ApiSchema::Asset>,
 ) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => Ok(StatusOk(
-            repository
-                .update(|r| {
-                    r.update_asset_by_id(
-                        asset_id,
-                        form.name.clone(),
-                        form.description.clone(),
-                        form.account.clone(),
-                        form.account_clearing.clone(),
-                    )
-                })?
-                .into(),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .as_mut()
+        .update_asset_by_id(
+            asset_id,
+            form.name.clone(),
+            form.description.clone(),
+            form.account.clone(),
+            form.account_clearing.clone(),
+        )?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/asset/<asset_id>/remove", rank = 4)]
@@ -169,14 +185,16 @@ pub fn asset_remove_post(
     repository_id: String,
     asset_id: usize,
 ) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => Ok(StatusOk(
-            repository
-                .update(|r| r.remove_asset_by_id(asset_id))?
-                .into(),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .as_mut()
+        .remove_asset_by_id(asset_id)?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/asset/<asset_id>/restore", rank = 4)]
@@ -186,12 +204,14 @@ pub fn asset_restore_post(
     repository_id: String,
     asset_id: usize,
 ) -> Result<StatusOk<ApiSchema::Asset>, ApiError> {
-    match data.inner().repositories.get_by_id(&repository_id) {
-        Ok(repository) => Ok(StatusOk(
-            repository
-                .update(|r| r.restore_asset_by_id(asset_id))?
-                .into(),
-        )),
-        Err(_) => Err(ApiError::NotFound),
-    }
+    let res = data
+        .inner()
+        .repositories
+        .lock()
+        .unwrap()
+        .find_id_mut(&repository_id)?
+        .as_mut()
+        .restore_asset_by_id(asset_id)?
+        .into();
+    Ok(StatusOk(res))
 }

@@ -62,7 +62,7 @@ impl From<&User> for Profile {
 
 #[get("/profile")]
 pub fn profile_get(user: Login, data: State<DataLoad>) -> Result<StatusOk<Profile>, ApiError> {
-    match user::get_user_by_id(&data.inner().users, &user.userid()) {
+    match data.inner().users.lock().unwrap().find_id(&user.userid()) {
         Ok(usr) => {
             let profile = usr.get(|user| -> Profile { user.into() });
             return Ok(StatusOk(profile));
@@ -81,14 +81,20 @@ pub fn profile_post(
     data: State<DataLoad>,
     form: Json<Profile>,
 ) -> Result<StatusOk<Profile>, ApiError> {
-    match user::get_user_by_id(&data.inner().users, &user.userid()) {
+    match data
+        .inner()
+        .users
+        .lock()
+        .unwrap()
+        .find_id_mut(&user.userid())
+    {
         Ok(usr) => {
             let result = usr.update(|user| -> AppResult<User> {
                 user.set_user_name(form.name.clone())?;
                 user.set_user_email(form.email.clone())?;
                 user.set_user_phone(form.phone.clone())?;
                 Ok(user.clone())
-            })?;
+            })??;
             return Ok(StatusOk((&result).into()));
         }
         Err(_) => {
@@ -124,9 +130,15 @@ pub fn password_change(
             "A két jelszó nem egyezik meg egymással".to_owned(),
         ));
     }
-    match user::get_user_by_id(&data.inner().users, &user.userid()) {
+    match data
+        .inner()
+        .users
+        .lock()
+        .unwrap()
+        .find_id_mut(&user.userid())
+    {
         Ok(usr) => usr.update(|u| u.set_password(password1.clone()))?,
         Err(_) => return Err(ApiError::InternalError("Azonosítási hiba".to_owned())),
-    }
+    };
     Ok(StatusOk(()))
 }
