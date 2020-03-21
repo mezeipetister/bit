@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Asset } from 'src/app/class/asset';
+import { Asset, AssetShort } from 'src/app/class/asset';
 import { RouterParamService } from 'src/app/services/router-param/router-param.service';
 
 @Component({
@@ -12,7 +12,7 @@ import { RouterParamService } from 'src/app/services/router-param/router-param.s
 export class AssetComponent implements OnInit {
 
   repository_id: string = this.params.hasParam("repository_id");
-  model: Asset[] = [];
+  model: AssetShort[] = [];
   depreciation_current_year: number = 0;
   depreciation_current_month: number = 0;
   clearing_statistics: [string, number, number, number][] = [];
@@ -27,7 +27,7 @@ export class AssetComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.http.get<Asset[]>("/repository/" + this.repository_id + "/asset/all")
+    this.http.get<AssetShort[]>("/repository/" + this.repository_id + "/asset/all")
       .subscribe(val => this.model = val);
     this.http.get<number>("/repository/" + this.repository_id + "/asset/depreciation_yearly/" + this.this_year)
       .subscribe(val => this.depreciation_current_year = val);

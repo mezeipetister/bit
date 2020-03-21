@@ -18,7 +18,6 @@
 use crate::login::create_token;
 use crate::prelude::*;
 use crate::DataLoad;
-use core_lib::model::User;
 use core_lib::password;
 use core_lib::user;
 use rocket::State;
