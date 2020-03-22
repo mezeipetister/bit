@@ -23,13 +23,8 @@ use chrono::prelude::*;
 use core_lib::model::*;
 use core_lib::prelude::AppResult;
 use rocket::request::Form;
-use rocket::response::NamedFile;
-use rocket::Data;
 use rocket::State;
 use rocket_contrib::json::Json;
-use serde::{Deserialize, Serialize};
-use std::io;
-use std::path::Path;
 
 #[derive(FromForm)]
 pub struct Filter {

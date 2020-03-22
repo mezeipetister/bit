@@ -40,6 +40,25 @@ pub struct Asset {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct AssetShort {
+    pub id: usize,
+    pub name: String,
+    pub description: String,
+    pub account: String,
+    pub account_clearing: String,
+    pub value: u32,
+    pub date_activated: NaiveDate,
+    pub depreciation_key: f32,
+    pub residual_value: u32,
+    pub date_created: DateTime<Utc>,
+    pub created_by: String,
+    pub is_active: bool,
+    pub depreciation_last_day_value: u32,
+    pub depreciation_last_day: NaiveDate,
+    pub depreciation_daily_value: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepreciationMonthly {
     month: NaiveDate,
     monthly_value: u32,
@@ -76,6 +95,28 @@ impl From<model::Asset> for Asset {
                 .iter()
                 .map(|m| DepreciationMonthly::new(m.0, m.1, m.2))
                 .collect(),
+            depreciation_last_day_value: f.depreciation_last_day_value(),
+            depreciation_last_day: f.depreciation_last_day(),
+            depreciation_daily_value: f.depreciation_daily_value(),
+            id: f.id,
+            name: f.name,
+            description: f.description,
+            account: f.account,
+            account_clearing: f.account_clearing,
+            value: f.value,
+            date_activated: f.date_activated,
+            depreciation_key: f.depreciation_key,
+            residual_value: f.residual_value,
+            date_created: f.date_created,
+            created_by: f.created_by,
+            is_active: f.is_active,
+        }
+    }
+}
+
+impl From<model::Asset> for AssetShort {
+    fn from(f: model::Asset) -> Self {
+        AssetShort {
             depreciation_last_day_value: f.depreciation_last_day_value(),
             depreciation_last_day: f.depreciation_last_day(),
             depreciation_daily_value: f.depreciation_daily_value(),

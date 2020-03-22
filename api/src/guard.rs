@@ -17,7 +17,6 @@
 
 use crate::login::verify_token;
 use crate::DataLoad;
-use core_lib::user;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;

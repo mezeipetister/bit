@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-use chrono::prelude::*;
-use core_lib::model;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]

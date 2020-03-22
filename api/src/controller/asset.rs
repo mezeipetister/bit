@@ -19,8 +19,6 @@ use crate::guard::Login;
 use crate::model as ApiSchema;
 use crate::prelude::*;
 use crate::DataLoad;
-use core_lib::model::*;
-use core_lib::prelude::AppResult;
 use rocket::State;
 use rocket_contrib::json::Json;
 
@@ -29,7 +27,7 @@ pub fn asset_all_get(
     _user: Login,
     data: State<DataLoad>,
     repository_id: String,
-) -> Result<StatusOk<Vec<ApiSchema::Asset>>, ApiError> {
+) -> Result<StatusOk<Vec<ApiSchema::AssetShort>>, ApiError> {
     let res = data
         .inner()
         .repositories
@@ -40,7 +38,7 @@ pub fn asset_all_get(
         .iter()
         .filter(|a| a.get_is_active())
         .map(|a| a.clone().into())
-        .collect::<Vec<ApiSchema::Asset>>();
+        .collect::<Vec<ApiSchema::AssetShort>>();
     Ok(StatusOk(res))
 }
 

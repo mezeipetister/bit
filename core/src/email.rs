@@ -74,8 +74,7 @@ impl<'a> Email<'a> for EmailData<'a> {
             .build()?;
 
         // Open a remote connection to SMTP server
-        SmtpClient::new_simple(&env::var("SMTP_SERVER_DOMAIN")?)
-            .unwrap()
+        SmtpClient::new_simple(&env::var("SMTP_SERVER_DOMAIN")?)?
             .credentials(Credentials::new(
                 env::var("SMTP_USERNAME")?,
                 env::var("SMTP_PASSWORD")?,

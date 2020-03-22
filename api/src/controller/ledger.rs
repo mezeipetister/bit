@@ -89,7 +89,7 @@ pub fn ledger_get(
                     }
                 }
             }
-        });
+        })?;
 
     for item in &mut ledger {
         item.total = item.debit_total - item.credit_total;
@@ -138,6 +138,6 @@ pub fn ledger_stat_get(
                     }
                 }
             }
-        });
+        })?;
     Ok(StatusOk(result))
 }
