@@ -19,6 +19,7 @@ COPY --from=api_builder /app/target/release/api .
 RUN apt update
 # Install libssl as dependency
 RUN apt install libssl-dev -y
+RUN apt install curl -y
 ENV ROCKET_PORT=8002
 ENTRYPOINT ["./api"]
 EXPOSE 8002/tcp

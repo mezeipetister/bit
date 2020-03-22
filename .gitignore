@@ -29,3 +29,4 @@ Cargo.lock
 
 ENV.sh
 secret.pem
+ENV.list
