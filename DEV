@@ -195,29 +195,87 @@
         *   Display charts about future plans - a kind of ledger in the future
         *   Display plan/fact diagram
 
-    Event
+    
+    VecPack<Event>      <--------------- Project
+    ~~~~~~~~~~~~~~~                      =======
+              |
+              |
+              |
+      *-------/
       |
-      |----------   Main parameters
-      |             ===============
-      |                 * ID
-      |                 * Name
-      |                 * Description
-      |                 * Created BY
-      |                 * Created DateTime
-      |
-      |
-      *------   Transaction[]
-                ===========
-                    * ID
-                    * EventID
-                    * Subject
-                    * Credit
-                    * Debit
-                    * Value
-                    * SettlementDate
-                    * Created BY
-                    * Created DateTime
+    Event                                               Transaction
+    ==============                        /----------- ====================
+        * ID                              |                 * ID
+        * Name                            |                 * Subject
+        * Description                     |                 * Credit
+        * Transaction[] ------------------/                 * Debit
+        * CreatedBy                                         * Value
+        * Created DateTime                                  * SettlementDate
+                                                            * CreatedBy
+                                                            * Created DateTime
+       
 
+    Client Backlog
+    ==============
+
+        * Create new project
+        * List all project
+        * Lock / Unlock project
+        * 
+        * Enable / Disable project
+        * Get Transaction details
+        * List transaction
+        * Get Project
+            * Get project details
+            * Get transactions
+            * Get profit-and-loss statement
+        * Get charts (Plan / Fact)
+            * Future
+
+    API Backlog
+    ===========
+
+        * Project
+
+            *   Create      Create new project by given input data such as name,
+                            description.
+
+            *   List all    List all the projects. Generate a list of all the non-removed
+                            projects.
+
+            *   Get one by ID
+                            Get one project and all its details by its ID.
+
+            *   Remove by ID
+                            Remove a project by ID. We use logical remove?
+
+            *   Restore by ID
+                            Restore a project by ID. Only if we use logical
+                            remove.
+
+            *   Lock / Unlock by ID
+                            Lock Project. Lock means, its not editable. When a
+                            project is locked, we should display it visually,
+                            and we can be sure that nothing changes. When we
+                            unlock a project, then we can edit its details, and
+                            in this case unlock as a state should be displayed.
+
+            *   Enable / Disable by ID
+                            Enable means project - and its transactions - are a
+                            part of the diagrams and future plans. Disable
+                            means, project and its transactions are not the part
+                            of the future plan.
+
+            *   Get profit-and-loss statement by Project ID
+                            Get profit and loss statement details by Project ID
+                            - calculated by the project transactions.
+                            
+        
+        * Transaction
+            
+            *   Get one by ID
+            *   Remove one by ID
+            *   Update on by ID
 
     Examples
 
