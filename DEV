@@ -240,8 +240,8 @@
             *   Create      Create new project by given input data such as name,
                             description.
 
-            *   List all    List all the projects. Generate a list of all the non-removed
-                            projects.
+            *   List all    List all the projects. Generate a list of all the
+                            non-removed projects.
 
             *   Get one by ID
                             Get one project and all its details by its ID.
