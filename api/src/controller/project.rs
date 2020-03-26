@@ -54,18 +54,19 @@ pub fn project_new_put(
         form.description.clone(),
         user.userid().to_string(),
     );
-    data.inner()
+    let p = data
+        .inner()
         .repositories
         .lock()
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
         .add_project(
-            project_new.name.clone(),
-            project_new.description.clone(),
+            project_new.name,
+            project_new.description,
             user.userid().to_string(),
         )?;
-    Ok(StatusOk(project_new.into()))
+    Ok(StatusOk(p.into()))
 }
 
 #[get("/repository/<repository_id>/project/<project_id>", rank = 2)]

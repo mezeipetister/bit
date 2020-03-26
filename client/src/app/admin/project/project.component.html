@@ -1,13 +1,36 @@
 <section class="section">
     <div class="container">
-        <!-- <nav class="level">
+        <nav class="level">
             <div class="level-left">
-
+                <div class="level-item">
+                    <p class="title">Projektek</p>
+                </div>
             </div>
             <div class="level-right">
-                <button class="button is-success is-outlined">Új projekt</button>
+                <button class="button is-success is-outlined" routerLink="./new">Új projekt</button>
             </div>
-        </nav> -->
-
+        </nav>
+        <div class="columns">
+            <div class="column is-6">
+                <table class="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Név</th>
+                            <th>Aktív</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let project of model" [class.has-text-grey]="!project.is_enabled">
+                            <td class="is-narrow">{{project.id}}</td>
+                            <td><a [routerLink]="['./', project.id]">{{project.name}}</a></td>
+                            <td class="is-narrow"><button class="button is-small" disabled
+                                    [class.is-success]="project.is_enabled">{{project.is_enabled ? 'Aktív' : 'Deaktív'}}</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </section>

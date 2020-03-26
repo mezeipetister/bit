@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { RouterParamService } from 'src/app/services/router-param/router-param.service';
+import { Project } from 'src/app/class/project';
 
 @Component({
   selector: 'app-project',
@@ -7,9 +11,18 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ProjectComponent implements OnInit {
 
-  constructor() { }
+  repository_id: string = this.params.hasParam("repository_id");
+  model: Project[] = [];
+
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private params: RouterParamService
+  ) { }
 
   ngOnInit() {
+    this.http.get<Project[]>("/repository/" + this.repository_id + "/project/all")
+      .subscribe(res => this.model = res);
   }
 
 }
