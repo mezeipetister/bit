@@ -140,6 +140,13 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::asset::asset_statistics_by_clearing_get,
                 controller::asset::asset_depreciation_yearly_get,
                 controller::asset::asset_depreciation_monthly_get,
+                controller::project::project_new_put,
+                controller::project::project_all_get,
+                controller::project::project_id_get,
+                controller::project::project_update_post,
+                controller::project::project_remove_post,
+                controller::project::project_enable_post,
+                controller::project::project_disable_post
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 peter
+// Copyright (C) 2020 Peter Mezei
 //
 // This file is part of BIT.
 //
@@ -15,17 +15,42 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-// use crate::model::*;
-// use chrono::prelude::*;
 use chrono::prelude::*;
+use core_lib::model;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Project {
     pub id: String,
     pub name: String,
     pub description: String,
-    pub is_enabled: bool,
     pub created_by: String,
     pub date_created: DateTime<Utc>,
+    pub is_enabled: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProjectNew {
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProjectUpdate {
+    pub name: String,
+    pub description: String,
+    pub is_enabled: bool,
+}
+
+impl From<model::Project> for Project {
+    fn from(from: model::Project) -> Self {
+        Project {
+            id: from.get_id().to_string(),
+            name: from.get_name().to_string(),
+            description: from.get_description().to_string(),
+            created_by: from.get_created_by().to_string(),
+            date_created: from.get_date_created(),
+            is_enabled: from.is_enabled(),
+        }
+    }
 }
