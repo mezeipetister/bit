@@ -146,7 +146,10 @@ fn rocket(data: DataLoad) -> rocket::Rocket {
                 controller::project::project_update_post,
                 controller::project::project_remove_post,
                 controller::project::project_enable_post,
-                controller::project::project_disable_post
+                controller::project::project_disable_post,
+                controller::project::project_transaction_new_put,
+                controller::project::project_transaction_remove_post,
+                controller::project::project_ledger_stat_get
             ],
         )
         .register(catchers![not_found, unauthorized, form_error])

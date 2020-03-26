@@ -1,3 +1,5 @@
+import { Transaction } from './transaction';
+
 export class Project {
     constructor(
         public id: String = "",
@@ -6,6 +8,7 @@ export class Project {
         public created_by: String = "",
         public date_created: Date = new Date(),
         public is_enabled: boolean = true,
+        public transactions: Transaction[] = []
     ) { }
 }
 

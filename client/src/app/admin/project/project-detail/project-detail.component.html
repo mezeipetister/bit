@@ -2,43 +2,84 @@
     <div class="container">
         <div class="columns">
             <div class="column is-4">
-                <p class="title">{{model.name}}</p>
-                <!-- <form #Form="ngForm" (submit)="update()">
+                <p class="title">{{model.name}} <button
+                        (click)="model.is_enabled ? project_disable() : project_enable()" class="button is-small"
+                        [class.is-success]="model.is_enabled">{{model.is_enabled ? 'Aktív' : 'Deaktív'}}</button></p>
+                <p class="subtitle">{{model.description}}</p>
+            </div>
+        </div>
+        <div class="columns">
+            <div class="column is-6">
+                <p class="title is-5">Tranzakciók</p>
+                <div class="box has-background-lighter" *ngFor="let transaction of model.transactions">
+                    <p class="is-size-7 header">
+                        <a>{{transaction.date_settlement | date}}</a>
+                        <a>@{{transaction.created_by}}</a>
+                        <a>#{{transaction.id}}</a>
+                    </p>
+                    <p class="is-6">
+                        <a class="has-text-dark" [routerLink]="['./', transaction.id]">{{transaction.subject}}</a>
+                    </p>
+                    <p class="has-text-grey is-size-7 is-inline-block ft">
+                        <span>Összeg: <strong>{{transaction.amount.toLocaleString()}} HUF</strong></span>
+                        <span>Kontír tételek: {{transaction.debit}} / {{transaction.credit}}</span>
+                        <span>Könyvelés dátuma: {{transaction.date_created | date}}</span>
+                    </p>
+                    <p>
+                        <button class="button is-small" (click)="remove_transaction(transaction.id)">Törlés</button>
+                    </p>
+                </div>
+            </div>
+            <div class="column is-6">
+                <p class="title is-5">Új tétel</p>
+                <form #loginForm="ngForm" (submit)="submit(false)">
                     <div class="field">
-                        <label class="label">Projekt neve</label>
+                        <label class="label">Megnevezés</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa eszköz" name="name"
-                                [(ngModel)]="model.name" [disabled]="!model.is_active">
+                            <textarea class="textarea" name="event" cols="30" rows="5"
+                                [(ngModel)]="new_transaction_model.subject" #subject autofocus="true"></textarea>
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label">Eszköz rövid leírása</label>
+                        <label class="label">Tartozik</label>
+                    </div>
+                    <div class="field is-grouped">
                         <div class="control">
-                            <textarea name="description" cols="30" rows="5" class="textarea"
-                                [(ngModel)]="model.description" [disabled]="!model.is_active"></textarea>
+                            <input type="text" class="input" placeholder="Tartozik" name="debit"
+                                [(ngModel)]="new_transaction_model.debit" #debit (ngModelChange)="updateNames()"
+                                (keydown.control.h)="displayHelper(true); false">
+                        </div>
+                        <div class="control">
+                            <button class="button" type="button" tabindex="-1" (click)="displayHelper(true)">+</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label">Főkönyvi számla</label>
+                        <p class="help">{{debit_name || '-'}}</p>
+                    </div>
+                    <div class="field">
+                        <label class="label">Követel</label>
+                    </div>
+                    <div class="field is-grouped">
                         <div class="control">
-                            <input class="input" type="text" placeholder="Példa számla" disabled name="account"
-                                [ngModel]="model.account">
+                            <input type="text" class="input" placeholder="Követel" name="credit"
+                                [(ngModel)]="new_transaction_model.credit" #credit (ngModelChange)="updateNames()"
+                                (keydown.control.h)="displayHelper(false); false">
+                        </div>
+                        <div class="control">
+                            <button class="button" type="button" tabindex="-1" (click)="displayHelper(false)">+</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label">ÉCS elszámolási számla</label>
-                        <div class="control">
-                            <input class="input" type="text" placeholder="Példa számla" disabled name="account_clearing"
-                                [ngModel]="model.account_clearing">
-                        </div>
+                        <p class="help">{{credit_name || '-'}}</p>
                     </div>
                     <div class="field">
-                        <label class="label">Aktiválási érték</label>
+                        <label class="label">Összeg</label>
                     </div>
                     <div class="field has-addons">
-                        <div class="control">
-                            <input type="number" class="input" disabled name="value" [ngModel]="model.value">
-                        </div>
+                        <p class="control">
+                            <input class="input" type="number" placeholder="1000" name="amount"
+                                [(ngModel)]="new_transaction_model.amount">
+                        </p>
                         <p class="control">
                             <a class="button is-static">
                                 HUF
@@ -46,50 +87,52 @@
                         </p>
                     </div>
                     <div class="field">
-                        <label class="label">ÉCS kulcs (%)</label>
-                        <div class="control">
-                            <input type="number" class="input" disabled name="key" [ngModel]="model.depreciation_key">
-                        </div>
+                        <p class="help">{{new_transaction_model.amount.toLocaleString()}} HUF</p>
                     </div>
                     <div class="field">
-                        <label class="label">Maradványérték</label>
-                    </div>
-                    <div class="field has-addons">
+                        <label class="label">Teljesítés dátuma</label>
                         <div class="control">
-                            <input type="number" class="input" disabled name="residual_value"
-                                [ngModel]="model.residual_value">
+                            <input type="date" class="input" name="date_settlement"
+                                [ngModel]="new_transaction_model.date_settlement"
+                                (ngModelChange)="model.date_settlement = $event">
                         </div>
-                        <p class="control">
-                            <a class="button is-static">
-                                HUF
-                            </a>
-                        </p>
-                    </div>
-                    <div class="field">
-                        <label class="label">Aktiválás dátuma</label>
-                        <div class="control">
-                            <input type="date" class="input" disabled name="date_activated"
-                                [ngModel]="model.date_activated">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <p>Hozzáadva: {{model.date_created | date}}</p>
-                        <p>Hozzáadta: {{model.created_by}}</p>
                     </div>
                     <div class="field">
                         <div class="control">
                             <div class="buttons">
-                                <button *ngIf="model.is_active" class="button is-success is-outlined"
-                                    type="submit">Mentés</button>
-                                <button *ngIf="model.is_active" class="button is-danger is-outlined" type="button"
-                                    (click)="remove()">Törlés</button>
-                                <button *ngIf="!model.is_active" class="button is-success is-outlined" type="button"
-                                    (click)="restore()">Helyreállítás</button>
+                                <button class="button is-success" type="submit">Hozzáad</button>
                             </div>
                         </div>
                     </div>
-                </form> -->
+                </form>
             </div>
         </div>
     </div>
 </section>
+
+<div class="modal is-overlay" [class.is-active]="helperIsActive" (document:keydown.esc)="helperIsActive = false">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Számlaszámok</p>
+            <button class="delete" aria-label="close" (click)="helperIsActive = false"></button>
+        </header>
+        <section class="modal-card-body">
+            <table class="table is-fullwidth is-striped">
+                <tbody>
+                    <ng-container *ngFor="let account of accounts">
+                        <tr *ngIf="account.is_working && account.is_active">
+                            <td [class.has-text-success]="account.is_working" class="is-narrow">{{account.id}}</td>
+                            <td><a (click)="target_is_debit
+                                    ? new_transaction_model.debit = account.id
+                                    : new_transaction_model.credit = account.id;
+                                    updateNames();
+                                    helperIsActive = false;">{{account.name}}</a>
+                            </td>
+                        </tr>
+                    </ng-container>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</div>

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with BIT.  If not, see <http://www.gnu.org/licenses/>.
 
-// use crate::model::*;
+use crate::model::*;
 // use chrono::prelude::*;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -28,4 +28,5 @@ pub struct Project {
     pub is_enabled: bool,
     pub created_by: String,
     pub date_created: DateTime<Utc>,
+    pub transactions: Vec<Transaction>,
 }

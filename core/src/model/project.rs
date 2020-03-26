@@ -29,6 +29,7 @@ impl Project {
             is_enabled: true,
             created_by,
             date_created: Utc::now(),
+            transactions: Vec::new(),
         }
     }
     pub fn get_id(&self) -> &str {
@@ -60,6 +61,12 @@ impl Project {
     }
     pub fn disable(&mut self) {
         self.is_enabled = false;
+    }
+    pub fn get_transactions(&self) -> Vec<Transaction> {
+        self.transactions
+            .iter()
+            .map(|t| t.clone())
+            .collect::<Vec<Transaction>>()
     }
 }
 
@@ -159,5 +166,88 @@ impl Repository {
             }
         }
         Err(Error::BadRequest("Project id not found".to_string()))
+    }
+    pub fn remove_project_transaction_by_id(
+        &mut self,
+        project_id: &str,
+        transaction_id: usize,
+    ) -> AppResult<Vec<Transaction>> {
+        for project in &mut self.projects {
+            if project.get_id() == project_id {
+                if let Some(position) = &mut project
+                    .transactions
+                    .iter()
+                    .position(|t| t.id == transaction_id)
+                {
+                    project.transactions.remove(*position);
+                    return Ok(project
+                        .transactions
+                        .iter()
+                        .map(|t| t.clone())
+                        .collect::<Vec<Transaction>>());
+                } else {
+                    return Err(Error::BadRequest(
+                        "A megadott tranzakció azonosító nem létezik!".to_string(),
+                    ));
+                }
+            }
+        }
+        Err(Error::BadRequest(
+            "A megadott projekt ID nem létezik!".to_string(),
+        ))
+    }
+    pub fn add_project_transaction(
+        &mut self,
+        project_id: &str,
+        subject: String,
+        debit: String,
+        credit: String,
+        amount: i32,
+        date_settlement: NaiveDate,
+        created_by: String,
+    ) -> AppResult<Transaction> {
+        if !self.is_valid_account(&debit) {
+            return Err(Error::BadRequest(
+                "A megadott debit ID nem könyvelhető".to_string(),
+            ));
+        }
+        if !self.is_valid_account(&credit) {
+            return Err(Error::BadRequest(
+                "A megadott credit ID nem könyvelhető".to_string(),
+            ));
+        }
+        for project in &mut self.projects {
+            if project.get_id() == project_id {
+                let transaction = Transaction::new(
+                    project.transactions.len(),
+                    subject,
+                    debit,
+                    credit,
+                    amount,
+                    date_settlement,
+                    created_by,
+                );
+                project.transactions.push(transaction.clone());
+                return Ok(transaction);
+            }
+        }
+        Err(Error::BadRequest(
+            "A megadott projekt ID nem létezik!".to_string(),
+        ))
+    }
+    pub fn get_project_transactions(&self, project_id: &str) -> AppResult<Vec<Transaction>> {
+        for project in &self.projects {
+            if project.get_id() == project_id {
+                let res = project
+                    .transactions
+                    .iter()
+                    .map(|t| t.clone())
+                    .collect::<Vec<Transaction>>();
+                return Ok(res);
+            }
+        }
+        Err(Error::BadRequest(
+            "A megadott projekt ID nem létezik".to_string(),
+        ))
     }
 }

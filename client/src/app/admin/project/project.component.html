@@ -11,12 +11,22 @@
             </div>
         </nav>
         <div class="columns">
+            <div class="column is-12">
+                Pénzeszköz alakulása
+                <canvas baseChart [datasets]="stat38.data" [labels]="stat38.labels" [options]="stat38.ChartOptions"
+                    [colors]="stat38.lineChartColors" [legend]="stat38.lineChartLegend" [chartType]="stat38.chartType"
+                    [plugins]="stat38.lineChartPlugins">
+                </canvas>
+            </div>
+        </div>
+        <div class="columns">
             <div class="column is-6">
                 <table class="table is-fullwidth">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Név</th>
+                            <th>Tételek</th>
                             <th>Aktív</th>
                         </tr>
                     </thead>
@@ -24,6 +34,7 @@
                         <tr *ngFor="let project of model" [class.has-text-grey]="!project.is_enabled">
                             <td class="is-narrow">{{project.id}}</td>
                             <td><a [routerLink]="['./', project.id]">{{project.name}}</a></td>
+                            <td class="is-narrow">{{project.transactions.length}}</td>
                             <td class="is-narrow"><button class="button is-small" disabled
                                     [class.is-success]="project.is_enabled">{{project.is_enabled ? 'Aktív' : 'Deaktív'}}</button>
                             </td>
