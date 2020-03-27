@@ -17,11 +17,11 @@ export class LineChart {
     public ChartOptions = {
         responsive: true,
         tooltips: {
-            // callbacks: {
-            //     label: function (tooltipItems, data) {
-            //         return data.labels[tooltipItems.index] + '' + data.datasets[0].data[tooltipItems.index].toLocaleString();
-            //     }
-            // }
+            callbacks: {
+                label: function (tooltipItems, data) {
+                    return data.labels[tooltipItems.index] + ' ' + data.datasets[0].data[tooltipItems.index].toLocaleString();
+                }
+            }
         },
         scales: {
             yAxes: [{
