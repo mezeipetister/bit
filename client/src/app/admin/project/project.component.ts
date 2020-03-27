@@ -25,8 +25,17 @@ export class ProjectComponent implements OnInit {
 
   cumulateData(val: number[]): number[] {
     val.forEach((value, index) => {
+      if (index > 0 && value != null) {
+        val[index] = value + val[index - 1];
+      }
+    });
+    return val;
+  }
+
+  cumulateDataFull(val: number[]): number[] {
+    val.forEach((value, index) => {
       if (index > 0) {
-        value += val[index - 1];
+        val[index] = value + val[index - 1];
       }
     });
     return val;
@@ -42,7 +51,7 @@ export class ProjectComponent implements OnInit {
         let fact = new Data(val, 'Minden 38-as HUF (TÉNY)');
         this.http.get<number[]>("/repository/" + this.repository_id + "/project/stat?account=" + 38)
           .subscribe(val => {
-            val = this.cumulateData(val);
+            val = this.cumulateDataFull(val);
             let plan = new Data(val, 'Minden 38-as HUF (TERV)');
             this.stat38 = new LineChart('line', [plan, fact]);
           });

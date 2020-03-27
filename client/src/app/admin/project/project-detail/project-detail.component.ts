@@ -85,6 +85,12 @@ export class ProjectDetailComponent implements OnInit {
     this.http.post<Project>("/repository/" + this.repository_id + "/project/" + this.project_id + "/disable", [])
       .subscribe(val => this.model = val);
   }
+  clone(transaction: Transaction) {
+    this.new_transaction_model.amount = transaction.amount;
+    this.new_transaction_model.credit = transaction.credit;
+    this.new_transaction_model.debit = transaction.debit;
+    this.new_transaction_model.subject = transaction.subject;
+  }
   ngOnInit() {
     this.load_project();
     this.loadAccounts();

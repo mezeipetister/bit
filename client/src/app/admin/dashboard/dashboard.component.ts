@@ -27,8 +27,8 @@ export class DashboardComponent implements OnInit {
 
   cumulateData(val: number[]): number[] {
     val.forEach((value, index) => {
-      if (index > 0) {
-        value += val[index - 1];
+      if (index > 0 && value != null) {
+        val[index] = value + val[index - 1];
       }
     });
     return val;

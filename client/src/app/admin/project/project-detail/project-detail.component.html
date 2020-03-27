@@ -25,9 +25,10 @@
                         <span>Kontír tételek: {{transaction.debit}} / {{transaction.credit}}</span>
                         <span>Könyvelés dátuma: {{transaction.date_created | date}}</span>
                     </p>
-                    <p>
+                    <div class="buttons">
                         <button class="button is-small" (click)="remove_transaction(transaction.id)">Törlés</button>
-                    </p>
+                        <button class="button is-small" (click)="clone(transaction)">Lemásol</button>
+                    </div>
                 </div>
             </div>
             <div class="column is-6">
@@ -94,7 +95,7 @@
                         <div class="control">
                             <input type="date" class="input" name="date_settlement"
                                 [ngModel]="new_transaction_model.date_settlement"
-                                (ngModelChange)="model.date_settlement = $event">
+                                (ngModelChange)="new_transaction_model.date_settlement = $event">
                         </div>
                     </div>
                     <div class="field">
