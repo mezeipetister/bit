@@ -75,12 +75,8 @@ impl VecPackMember for Repository {
     fn get_id(&self) -> &str {
         &self.id
     }
-    // fn try_from(from: &str) -> StorageResult<Self::ResultType> {
-    //     match deserialize_object(from) {
-    //         Ok(res) => Ok(res),
-    //         Err(_) => Err(storaget::Error::DeserializeError(
-    //             "document has wrong format".to_string(),
-    //         )),
-    //     }
-    // }
+}
+
+impl TryFrom for Repository {
+    type TryFrom = Repository;
 }

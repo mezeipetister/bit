@@ -3,7 +3,7 @@ import { ChartDataSets, ChartOptions, ChartType } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
 import { HttpClient } from '@angular/common/http';
 import { RouterParamService } from 'src/app/services/router-param/router-param.service';
-import { LineChart } from 'src/app/class/chart';
+import { LineChart, Data } from 'src/app/class/chart';
 import { concat } from 'rxjs'
 import { map } from 'rxjs/operators';
 
@@ -27,8 +27,8 @@ export class DashboardComponent implements OnInit {
 
   cumulateData(val: number[]): number[] {
     val.forEach((value, index) => {
-      if (index > 0) {
-        value += val[index - 1];
+      if (index > 0 && value != null) {
+        val[index] = value + val[index - 1];
       }
     });
     return val;
@@ -44,31 +44,31 @@ export class DashboardComponent implements OnInit {
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 38)
       .subscribe(val => {
         val = this.cumulateData(val);
-        this.stat38 = new LineChart('line', val, 'Minden 38-as HUF');
+        this.stat38 = new LineChart('line', [new Data(val, 'Minden 38-as HUF')]);
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 161)
       .subscribe(val => {
         val = this.cumulateData(val);
-        this.stat161 = new LineChart('line', val, '161-es HUF');
+        this.stat161 = new LineChart('line', [new Data(val, '161-es HUF')]);
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 5)
       .subscribe(val => {
         // val = this.cumulateData(val);
-        this.stat5 = new LineChart('bar', val, 'Minden 5-ös HUF');
+        this.stat5 = new LineChart('bar', [new Data(val, 'Minden 5-ös HUF')]);
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 4)
       .subscribe(val => {
         val = this.cumulateData(val);
-        this.stat4 = new LineChart('line', val, '4-esek összegezve HUF');
+        this.stat4 = new LineChart('line', [new Data(val, '4-esek összegezve HUF')]);
       });
 
     this.http.get<number[]>("/repository/" + this.id + "/ledger/stat?account=" + 468)
       .subscribe(val => {
         // val = this.cumulateData(val);
-        this.stat468 = new LineChart('bar', val, '468 HUF');
+        this.stat468 = new LineChart('bar', [new Data(val, '468 HUF')]);
       });
 
     let d9: number[] = [];
@@ -88,7 +88,7 @@ export class DashboardComponent implements OnInit {
       }));
     concat(c9, c8, c5).subscribe(v => {
       let data = d9.map((x, index) => x - d8[index] - d5[index]);
-      this.stat985 = new LineChart('bar', data, '(9*-1)-8-5 HUF');
+      this.stat985 = new LineChart('bar', [new Data(data, '(9*-1)-8-5 HUF')]);
     });
   }
 

@@ -1,14 +1,14 @@
 
-                             BIT Development Notes
+BIT Development Notes
 
-                                      ***
+***
 
-                   Here we wrote all the technical questions
-                   and solutions that we use in development.
+Here we wrote all the technical questions
+and solutions that we use in development.
 
 
-                                       1.
-                                 Using Date(s)
+    1.
+Using Date(s)
 
 1.1 Problem (A)
 
@@ -16,16 +16,16 @@
     Timezone. We need to decide whether use Date or Date + Time, and a Timezone
     is a core question indeed. Found problems:
 
-        • As we do not know the client side local settings, as we do not know
-        the client side timezone, it's better to use timezone aware date format
-        at server side. But using dates its hard to tell the timezone.
+    • As we do not know the client side local settings, as we do not know
+    the client side timezone, it's better to use timezone aware date format
+    at server side. But using dates its hard to tell the timezone.
 
     In Rust using Chrono.rs we have the following date types:
 
-            - Date<Offset>
-            - DateTime<Offset>
-            - NaiveDate
-            - NaiveDateTime
+    - Date<Offset>
+    - DateTime<Offset>
+    - NaiveDate
+    - NaiveDateTime
 
     As for the Offset we can use Local or Fixed offset, or Utc.
 
@@ -44,7 +44,7 @@
     without timezone can also be confusing. What if a team member register a
     transaction from Japan to our Hungarian books? And what if that person
     register a Hungarian bill from Japan?
-        
+
 1.3 Solution (A)
 
     RFC3339
@@ -55,8 +55,8 @@
 
     Example RFC3339
 
-        2020-03-05T13:07:56+00:00
-        2020-03-05T13:07:56Z
+    2020-03-05T13:07:56+00:00
+    2020-03-05T13:07:56Z
 
     Using JavaScript Date() has a built in method to generate RFC3339 format.
     It's called toISOString() and it produces the date format as UTC based on
@@ -64,25 +64,25 @@
 
     Example:
 
-        new Date().toISOString()
+new Date().toISOString()
 
     Suggested solution workflow:
 
-        1.  We store date as DateTime<Utc> at server side
-        2.  At client side we use Date as date type, and working with dates as
-            ilocal dates
-        3.  We transform client JS side Date to ISOString() and send the data
-            model to the server
-        4.  At server side we accept date as String and convert them to RFC3339
-            format at the beginning. + validation!
-        5.  Store date in UTC, automatically converted from client side locale
-            date
+    1.  We store date as DateTime<Utc> at server side
+    2.  At client side we use Date as date type, and working with dates as
+    ilocal dates
+    3.  We transform client JS side Date to ISOString() and send the data
+    model to the server
+    4.  At server side we accept date as String and convert them to RFC3339
+    format at the beginning. + validation!
+    5.  Store date in UTC, automatically converted from client side locale
+    date
 
-        Workflow diagram
+    Workflow diagram
 
-        [CLIENT]                             [Server]
-          |                                     |
-          |---- Request: Date (RFC3339) ---->  API --> Store in DateTime<Utc>
+    [CLIENT]                             [Server]
+    |                                     |
+    |---- Request: Date (RFC3339) ---->  API --> Store in DateTime<Utc>
 
 
 1.4 Solution (B)
@@ -102,83 +102,83 @@
     market need for this solution.
 
 
-                                      -2-
-                                  Data storage
+    -2-
+    Data storage
 
 
-2.1 Issue
+    2.1 Issue
 
     Storing data is key from both technical and business side. Core questions to
     choose the right technology:
 
     * How big is the data we plan to use
-      
-      Do we have maximum a few MB of plain data, or we have GB or petabytes of
-      them? Can we store memory first? And use a storage just as a data store? I
-      mean using it in memory, all the data lookups and manipulation, and store
-      all the data change in a storage? Bot for read operations using just the
-      memory?
+
+    Do we have maximum a few MB of plain data, or we have GB or petabytes of
+    them? Can we store memory first? And use a storage just as a data store? I
+    mean using it in memory, all the data lookups and manipulation, and store
+    all the data change in a storage? Bot for read operations using just the
+    memory?
 
     * Is it read or write heavy?
 
-      How fast should it be? Do we need many concurrent read operations and a
-      few write one; or it mainly many writes and a few reads, or we have
-      constantly both many read and write operations in the same time? Who has
-      time to wait? The reader or writer?
+    How fast should it be? Do we need many concurrent read operations and a
+    few write one; or it mainly many writes and a few reads, or we have
+    constantly both many read and write operations in the same time? Who has
+    time to wait? The reader or writer?
 
-      One thing is sure: we should have zero data race.
+    One thing is sure: we should have zero data race.
 
     * How fast response time we need?
 
-      Do we need a fast response in 10-40 millisec or even faster? Do we need it
-      even for thousands of concurrent requests? Do we have concurrency and
-      parallel requests or do we have a queue?
+    Do we need a fast response in 10-40 millisec or even faster? Do we need it
+    even for thousands of concurrent requests? Do we have concurrency and
+    parallel requests or do we have a queue?
 
     * Do we have platform dependence?
 
-      Any Microsoft, Apple, or Linux platform dependence? Does it need to be
-      operational on both platforms? Maybe do we use it on both of them in the
-      same time? Do we have any ecosystem dependence that predestinate the
-      platform dependence that we have? e.g.: mssql for Microsoft
+    Any Microsoft, Apple, or Linux platform dependence? Does it need to be
+    operational on both platforms? Maybe do we use it on both of them in the
+    same time? Do we have any ecosystem dependence that predestinate the
+    platform dependence that we have? e.g.: mssql for Microsoft
 
     * Do we need to plan scaling?
 
-      Do we have an estimated constant size date in range of 0-10 MB? Or do we
-      have the same situation but with a few GB of data? Or do we have an
-      unknown size of data with an unknown size of scale?
+    Do we have an estimated constant size date in range of 0-10 MB? Or do we
+    have the same situation but with a few GB of data? Or do we have an
+    unknown size of data with an unknown size of scale?
 
     * And how fast and big we need to scale up?
 
-      Do we need to count on using multiple instance of the same time with load
-      balancers? Or its enough to use a single instance and scale it up?
-      Do we need vertical or horizontal scaling as well?
+    Do we need to count on using multiple instance of the same time with load
+    balancers? Or its enough to use a single instance and scale it up?
+    Do we need vertical or horizontal scaling as well?
 
     * Data security, backups.
 
-      How frequenlty we need backups? And how big is the backup?
+    How frequenlty we need backups? And how big is the backup?
 
     * Resource need to data storage.
 
-      Do we need to store everything in memory? If yes, we is it economical to
-      store everything in memory? Do we need that performance? Can we scale to
-      split data into memory and not-memory stored? So for extra low response
-      time use memory and using not memory storage for the other type for
-      requests?
+    Do we need to store everything in memory? If yes, we is it economical to
+    store everything in memory? Do we need that performance? Can we scale to
+    split data into memory and not-memory stored? So for extra low response
+    time use memory and using not memory storage for the other type for
+    requests?
 
     * Learning curve of the data storage technology.
 
-      What background we have, technical and HR capabilities? What is our growth
-      strategy? The data technology determines our future advantage and
-      disadvantage as well. e.g.: using Microsoft related data technology
-      determines the team and their expertise as well. Using plain text
-      technology with in-memory operations using C or C++ also determines all
-      the benefits and threaths and fears.
+    What background we have, technical and HR capabilities? What is our growth
+    strategy? The data technology determines our future advantage and
+    disadvantage as well. e.g.: using Microsoft related data technology
+    determines the team and their expertise as well. Using plain text
+    technology with in-memory operations using C or C++ also determines all
+    the benefits and threaths and fears.
 
 
-                                       3.
-                                     Design
+    3.
+    Design
 
-3.1 Project
+    3.1 Project
 
     The main goal is to define a 'toolkit' to effectively plan future plans -
     from economical and finane side. Project should be a part of BIT where we
@@ -188,105 +188,172 @@
 
     Core features should be:
 
-        *   Create future events
-        *   Create transactions under an event - with future settlement_date
-        *   Effectively create scenarios of future plans - based on which events
-            are in a scenario.
-        *   Display charts about future plans - a kind of ledger in the future
-        *   Display plan/fact diagram
+    *   Create future events
+    *   Create transactions under an event - with future settlement_date
+    *   Effectively create scenarios of future plans - based on which events
+    are in a scenario.
+    *   Display charts about future plans - a kind of ledger in the future
+    *   Display plan/fact diagram
 
-    Event
-      |
-      |----------   Main parameters
-      |             ===============
-      |                 * ID
-      |                 * Name
-      |                 * Description
-      |                 * Created BY
-      |                 * Created DateTime
-      |
-      |
-      *------   Transaction[]
-                ===========
-                    * ID
-                    * EventID
-                    * Subject
-                    * Credit
-                    * Debit
-                    * Value
-                    * SettlementDate
-                    * Created BY
-                    * Created DateTime
 
+    VecPack<Event>      <--------------- Project
+    ~~~~~~~~~~~~~~~                      =======
+    |
+    |                                         VecPack<Transaction>
+    |                                         ====================
+    |                                                   \  /
+    |                                                    \/
+    Event                                               Transaction
+    ==============                                     ================
+    * ID                                                * ID
+    * Name                                              * Subject
+    * Description                                       * Credit
+    * CreatedBy                                         * Debit
+    * Created DateTime                                  * Value
+    * CreatedBy                                         * ProjectId
+    * Created DateTime                                  * SettlementDate
+
+
+
+
+    ***
+
+    Client Backlog
+    ==============
+
+    * Create new project
+    * List all project
+    * Lock / Unlock project
+    *
+    * Enable / Disable project
+    * Get Transaction details
+    * List transaction
+    * Get Project
+    * Get project details
+    * Get transactions
+    * Get profit-and-loss statement
+* Get charts (Plan / Fact)
+    * Future
+
+    API Backlog
+    ===========
+
+    Project
+
+    Create      Create new project by given input data such as name,
+    description.
+
+    List all    List all the projects. Generate a list of all the
+    non-removed projects.
+
+    Get one by ID
+    Get one project and all its details by its ID.
+
+    Remove by ID
+    Remove a project by ID. We use logical remove?
+
+    Restore by ID
+    Restore a project by ID. Only if we use logical
+    remove.
+
+    Lock / Unlock by ID
+    Lock Project. Lock means, its not editable. When a
+    project is locked, we should display it visually,
+    and we can be sure that nothing changes. When we
+    unlock a project, then we can edit its details, and
+    in this case unlock as a state should be displayed.
+
+    Enable / Disable by ID
+    Enable means project - and its transactions - are a
+    part of the diagrams and future plans. Disable
+    means, project and its transactions are not the part
+    of the future plan.
+
+    Get profit-and-loss statement by Project ID
+    Get profit and loss statement details by Project ID
+    - calculated by the project transactions.
+
+
+    Transaction
+
+    Get one by ID
+    Get one transaction and all its details by its
+    transaction ID. Should a project transaction has a
+    unique ID?
+    Remove one by ID
+    Remove one transaction by its ID. Logically or
+    phisically?
+    Update on by ID
+    Update a transaction by its ID.
 
     Examples
 
-        Yearly expected income
-        
-            event_id:           01
-            event_name:         Planned incomes
-            event_description:  Yearly plan about the planend monthly salaries
-            event_created_by:   johndoe
-            event_date_created: 2020-03-30T10:10:10Z
+    Yearly expected income
 
-            transaction_id:     01
-            transaction_subjct: January income
-            transaction_credit: 3841 - John Doe Bank account
-            transaction_debit:  97 - Salary
-            transaction_value:  3_000 USD
-            transaction_setd:   2020-01-10
-            transaction_creat.: johndoe
-            transaction_date_c: 2020-01-02T07:10:10Z
+    event_id:           01
+    event_name:         Planned incomes
+    event_description:  Yearly plan about the planend monthly salaries
+    event_created_by:   johndoe
+    event_date_created: 2020-03-30T10:10:10Z
 
-            transaction_id:     02
-            ...                 ...
-            .                   .       <-------------- another 11 month
-            .                   .                       series of transactions
-            transaction_id:     12
-            transaction_subjct: December income
-            .                   .
+    transaction_id:     01
+    transaction_subjct: January income
+    transaction_credit: 3841 - John Doe Bank account
+    transaction_debit:  97 - Salary
+    transaction_value:  3_000 USD
+    transaction_setd:   2020-01-10
+    transaction_creat.: johndoe
+    transaction_date_c: 2020-01-02T07:10:10Z
+
+    transaction_id:     02
+    ...                 ...
+    .                   .       <-------------- another 11 month
+    .                   .                       series of transactions
+    transaction_id:     12
+    transaction_subjct: December income
+    .                   .
 
 
-        Monthly food cost
+    Monthly food cost
 
-            12 month transactions, one per month. Each of them are almost the
-            same, with the same credit debit.
+    12 month transactions, one per month. Each of them are almost the
+    same, with the same credit debit.
 
-        -------------------------------------------------------------------
-        |                                                                 |
-        | Example Event                                                   |
-        | - Yearly estimated monthly income                               |
-        |                                                                 |
-        -------------------------------------------------------------------
-            *   Transactions                                              |
-            |                                                             |
-            |       Date            |   Credit  |   Debit   |   Amount    |
-            |       ===================================================== |
-            |       * 2020-01-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-02-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-03-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-04-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-05-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-06-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-07-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-08-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-09-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-10-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-11-05    |   3841    |   97      |   2_000 USD |
-            |       * 2020-12-05    |   3841    |   97      |   2_000 USD |
-            --------------------------------------------------------------- 
-        
-________________________
+    -------------------------------------------------------------------
+    |                                                                 |
+    | Example Event                                                   |
+    | - Yearly estimated monthly income                               |
+    |                                                                 |
+    -------------------------------------------------------------------
+    *   Transactions                                              |
+    |                                                             |
+    |       Date            |   Credit  |   Debit   |   Amount    |
+    |       ===================================================== |
+    |       * 2020-01-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-02-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-03-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-04-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-05-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-06-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-07-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-08-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-09-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-10-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-11-05    |   3841    |   97      |   2_000 USD |
+    |       * 2020-12-05    |   3841    |   97      |   2_000 USD |
+    ---------------------------------------------------------------
 
-Appendix
+    ________________________
+
+    Appendix
 
     Unicode's
-    
-        In this project I use sometimes Unicode characters. Here you can find
-        the used
-        
-        characters and their codes:
-    
-        •   => 2022
-        ⭐  => eb50
-        😍  => 1f60d
+
+    In this project I use sometimes Unicode characters. Here you can find
+    the used
+
+    characters and their codes:
+
+    •   => 2022
+    ⭐  => eb50
+    😍  => 1f60d

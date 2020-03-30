@@ -24,6 +24,8 @@ import { AssetNewComponent } from './asset/asset-new/asset-new.component';
 import { AssetDetailComponent } from './asset/asset-detail/asset-detail.component';
 import { TransactionNewComponent } from './transaction/transaction-new/transaction-new.component';
 import { TransactionDetailComponent } from './transaction/transaction-detail/transaction-detail.component';
+import { ProjectNewComponent } from './project/project-new/project-new.component';
+import { ProjectDetailComponent } from './project/project-detail/project-detail.component';
 
 const routes: Routes = [
   {
@@ -56,7 +58,13 @@ const routes: Routes = [
                   { path: ':asset_id', component: AssetDetailComponent }
                 ]
               },
-              { path: 'project', component: ProjectComponent, data: { breadcrumb: 'Projektek' } },
+              {
+                path: 'project', component: EmptyComponent, data: { breadcrumb: 'Projektek' }, children: [
+                  { path: '', component: ProjectComponent },
+                  { path: "new", component: ProjectNewComponent },
+                  { path: ":project_id", component: ProjectDetailComponent }
+                ]
+              },
               {
                 path: 'account', component: EmptyComponent, data: { breadcrumb: 'Számlatükör' }, children: [
                   { path: '', component: AccountComponent },

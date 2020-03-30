@@ -25,6 +25,7 @@ pub mod account;
 pub mod asset;
 pub mod ledger;
 pub mod profile;
+pub mod project;
 pub mod repository;
 pub mod transaction;
 pub mod user;

@@ -1,19 +1,25 @@
-import { ChartDataSets, ChartOptions, ChartType } from 'chart.js';
+import { ChartDataSets, ChartOptions, ChartType, ChartData } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
 
 export class Chart {
 
 }
 
+export class Data {
+    constructor(
+        public data: number[],
+        public label: string) { }
+}
+
 export class LineChart {
-    public data: ChartDataSets[] = [];
+    // public data: ChartDataSets[] = [];
     public lineChartColors: Color[] = [];
     public ChartOptions = {
         responsive: true,
         tooltips: {
             callbacks: {
                 label: function (tooltipItems, data) {
-                    return data.labels[tooltipItems.index] + '' + data.datasets[0].data[tooltipItems.index].toLocaleString();
+                    return data.labels[tooltipItems.index] + ' ' + data.datasets[0].data[tooltipItems.index].toLocaleString();
                 }
             }
         },
@@ -30,8 +36,7 @@ export class LineChart {
     };
     constructor(
         public chartType: string = 'line',
-        private dt: number[] = [],
-        private dataLabel: string = '',
+        public data = [new Data([], '')],
         public labels: Label[] = [
             "Január", "Február", "Március",
             "Április", "Május", "Június",
@@ -42,7 +47,7 @@ export class LineChart {
         public lineChartLegend: boolean = true,
         public lineChartPlugins = [],
     ) {
-        this.data = [{ data: this.dt, label: this.dataLabel }];
+        // this.data = dt;
         this.lineChartColors = [
             {
                 borderColor: this.borderColor,

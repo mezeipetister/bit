@@ -31,6 +31,8 @@ import { AssetDetailComponent } from './asset/asset-detail/asset-detail.componen
 import { AssetNewComponent } from './asset/asset-new/asset-new.component';
 import { TransactionNewComponent } from './transaction/transaction-new/transaction-new.component';
 import { TransactionDetailComponent } from './transaction/transaction-detail/transaction-detail.component';
+import { ProjectNewComponent } from './project/project-new/project-new.component';
+import { ProjectDetailComponent } from './project/project-detail/project-detail.component';
 
 @NgModule({
   declarations: [
@@ -60,6 +62,8 @@ import { TransactionDetailComponent } from './transaction/transaction-detail/tra
     AssetNewComponent,
     TransactionNewComponent,
     TransactionDetailComponent,
+    ProjectNewComponent,
+    ProjectDetailComponent,
   ],
   imports: [
     ChartsModule,
