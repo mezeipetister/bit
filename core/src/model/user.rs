@@ -51,6 +51,10 @@ impl Default for User {
     }
 }
 
+impl TryFrom for User {
+    type TryFrom = User;
+}
+
 // impl DateCreated for User {
 //     fn get_date_created(&self) -> DateTime<Utc> {
 //         self.date_created

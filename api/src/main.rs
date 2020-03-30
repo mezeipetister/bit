@@ -162,8 +162,10 @@ pub struct DataLoad {
 
 fn main() -> PackResult<()> {
     let data = DataLoad {
-        users: Mutex::new(VecPack::load_or_init(PathBuf::from("data/users"))?),
-        repositories: Mutex::new(VecPack::load_or_init(PathBuf::from("data/repositories"))?),
+        users: Mutex::new(VecPack::try_load_or_init(PathBuf::from("data/users"))?),
+        repositories: Mutex::new(VecPack::try_load_or_init(PathBuf::from(
+            "data/repositories",
+        ))?),
     };
     rocket(data).launch();
     Ok(())
