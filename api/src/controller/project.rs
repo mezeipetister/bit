@@ -66,8 +66,8 @@ pub fn project_new_put(
             project_new.description,
             user.userid().to_string(),
         )?
-        .clone();
-    Ok(StatusOk(p.into()))
+        .into();
+    Ok(StatusOk(p))
 }
 
 #[get("/repository/<repository_id>/project/<project_id>", rank = 2)]
@@ -84,8 +84,8 @@ pub fn project_id_get(
         .unwrap()
         .find_id(&repository_id)?
         .get_project_by_id(&project_id)?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post(
@@ -113,8 +113,8 @@ pub fn project_update_post(
             form.description.clone(),
             form.is_enabled,
         )?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/project/<project_id>/remove", rank = 3)]
@@ -150,8 +150,8 @@ pub fn project_enable_post(
         .find_id_mut(&repository_id)?
         .as_mut()
         .enable_project(&project_id)?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/project/<project_id>/disable", rank = 3)]
@@ -169,8 +169,8 @@ pub fn project_disable_post(
         .find_id_mut(&repository_id)?
         .as_mut()
         .disable_project(&project_id)?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[put(
@@ -200,8 +200,8 @@ pub fn project_transaction_new_put(
             form.date_settlement,
             user.userid().to_string(),
         )?
-        .clone();
-    Ok(StatusOk(p.into()))
+        .into();
+    Ok(StatusOk(p))
 }
 
 #[post("/repository/<repository_id>/project/<project_id>/transaction/<transaction_id>/remove")]

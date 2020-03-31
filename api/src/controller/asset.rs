@@ -67,8 +67,8 @@ pub fn asset_new_put(
             form.residual_value,
             user.userid().to_string(),
         )?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[get("/repository/<repository_id>/asset/<asset_id>", rank = 2)]
@@ -85,8 +85,8 @@ pub fn asset_id_get(
         .unwrap()
         .find_id(&repository_id)?
         .get_asset_by_id(asset_id)?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[get("/repository/<repository_id>/asset/clearing_statistics", rank = 5)]
@@ -172,8 +172,8 @@ pub fn asset_update_post(
             form.account.clone(),
             form.account_clearing.clone(),
         )?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/asset/<asset_id>/remove", rank = 4)]
@@ -191,8 +191,8 @@ pub fn asset_remove_post(
         .find_id_mut(&repository_id)?
         .as_mut()
         .remove_asset_by_id(asset_id)?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/asset/<asset_id>/restore", rank = 4)]
@@ -210,6 +210,6 @@ pub fn asset_restore_post(
         .find_id_mut(&repository_id)?
         .as_mut()
         .restore_asset_by_id(asset_id)?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }

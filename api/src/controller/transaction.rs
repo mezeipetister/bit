@@ -134,8 +134,8 @@ pub fn transaction_new_put(
                     form.date_settlement.clone(),
                     user.userid().to_string(),
                 )?
-                .clone();
-            Ok(StatusOk(transaction.into()))
+                .into();
+            Ok(StatusOk(transaction))
         }
         Err(_) => Err(ApiError::NotFound),
     }

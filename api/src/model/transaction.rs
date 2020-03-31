@@ -54,3 +54,18 @@ impl From<model::Transaction> for Transaction {
         }
     }
 }
+
+impl From<&model::Transaction> for Transaction {
+    fn from(from: &model::Transaction) -> Self {
+        Transaction {
+            id: from.id,
+            subject: from.subject.to_string(),
+            debit: from.debit.to_string(),
+            credit: from.credit.to_string(),
+            amount: from.amount,
+            date_created: from.date_created,
+            date_settlement: from.date_settlement,
+            created_by: from.created_by.to_string(),
+        }
+    }
+}

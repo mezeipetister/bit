@@ -47,3 +47,16 @@ impl From<Repository> for SRepositoryShort {
         }
     }
 }
+
+impl From<&Repository> for SRepositoryShort {
+    fn from(from: &Repository) -> Self {
+        SRepositoryShort {
+            id: from.get_id().to_string(),
+            name: from.get_name().to_string(),
+            description: from.get_description().to_string(),
+            created_by: from.get_created_by().to_string(),
+            date_created: from.get_date_created(),
+            is_active: from.get_is_active(),
+        }
+    }
+}
