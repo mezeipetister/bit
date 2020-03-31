@@ -57,14 +57,16 @@ pub fn account_new_put(
         form.is_working,
         form.is_inverse,
     );
-    data.inner()
+    let res = data
+        .inner()
         .repositories
         .lock()
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .add_account(account_new.clone())?;
-    Ok(StatusOk(account_new.into()))
+        .add_account(account_new)?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[get("/repository/<repository_id>/account/<account_id>", rank = 2)]
@@ -81,8 +83,8 @@ pub fn account_id_get(
         .unwrap()
         .find_id(&repository_id)?
         .get_account_by_id(account_id.clone())?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post(
@@ -111,6 +113,6 @@ pub fn account_update_post(
             form.is_working,
             form.is_inverse,
         )?
-        .clone();
-    Ok(StatusOk(res.into()))
+        .into();
+    Ok(StatusOk(res))
 }

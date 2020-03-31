@@ -76,7 +76,7 @@ impl Account {
 }
 
 impl Repository {
-    pub fn add_account(&mut self, account: Account) -> AppResult<()> {
+    pub fn add_account(&mut self, account: Account) -> AppResult<&Account> {
         if let Some(_) = self
             .accounts
             .iter()
@@ -94,7 +94,12 @@ impl Repository {
         }
         self.accounts.push(account);
         self.accounts.sort_by(|a, b| a.get_id().cmp(&b.get_id()));
-        Ok(())
+        if let Some(account) = self.accounts.first() {
+            return Ok(&account);
+        }
+        Err(Error::InternalError(
+            "Cannot get the last added account ref".to_string(),
+        ))
     }
     pub fn get_accounts(&self) -> &Vec<Account> {
         &self.accounts

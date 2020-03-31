@@ -54,3 +54,18 @@ impl From<Account> for SAccount {
         }
     }
 }
+
+impl From<&Account> for SAccount {
+    fn from(from: &Account) -> Self {
+        SAccount {
+            id: from.get_id().to_string(),
+            name: from.get_name().to_string(),
+            description: from.get_description().to_string(),
+            created_by: from.get_created_by().to_string(),
+            date_created: from.get_date_created(),
+            is_working: from.get_is_working(),
+            is_inverse: from.get_is_inverse(),
+            is_active: from.get_is_active(),
+        }
+    }
+}
