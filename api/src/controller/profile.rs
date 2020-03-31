@@ -54,7 +54,11 @@ impl From<&User> for Profile {
             phone: user.get_user_phone().to_string(),
             date_created: user.get_date_created(),
             created_by: user.get_created_by().to_string(),
-            customers: user.get_customers(),
+            customers: user
+                .get_customers()
+                .iter()
+                .map(|u| u.clone())
+                .collect::<Vec<String>>(),
         }
     }
 }

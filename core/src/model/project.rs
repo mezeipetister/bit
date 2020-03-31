@@ -62,11 +62,8 @@ impl Project {
     pub fn disable(&mut self) {
         self.is_enabled = false;
     }
-    pub fn get_transactions(&self) -> Vec<Transaction> {
-        self.transactions
-            .iter()
-            .map(|t| t.clone())
-            .collect::<Vec<Transaction>>()
+    pub fn get_transactions(&self) -> &Vec<Transaction> {
+        &self.transactions
     }
 }
 
@@ -76,12 +73,18 @@ impl Repository {
         name: String,
         description: String,
         created_by: String,
-    ) -> AppResult<Project> {
+    ) -> AppResult<&Project> {
         let p = Project::new(name, description, created_by);
         match self.check_project_id_available(p.get_id()) {
             true => {
-                self.projects.push(p.clone());
-                return Ok(p);
+                self.projects.push(p);
+                return if let Some(project) = self.projects.last() {
+                    Ok(project)
+                } else {
+                    Err(Error::InternalError(
+                        "Error while getting last inserted project".to_string(),
+                    ))
+                };
             }
             false => {
                 return Err(Error::BadRequest(
@@ -98,30 +101,27 @@ impl Repository {
         }
         true
     }
-    pub fn get_projects(&self) -> Vec<Project> {
-        self.projects
-            .iter()
-            .map(|p| p.clone())
-            .collect::<Vec<Project>>()
+    pub fn get_projects(&self) -> &Vec<Project> {
+        &self.projects
     }
-    pub fn get_projects_enabled(&self) -> Vec<Project> {
+    pub fn get_projects_enabled(&self) -> Vec<&Project> {
         self.projects
             .iter()
             .filter(|p| p.is_enabled())
-            .map(|p| p.clone())
-            .collect::<Vec<Project>>()
+            .map(|p| p)
+            .collect::<Vec<&Project>>()
     }
-    pub fn get_projects_disabled(&self) -> Vec<Project> {
+    pub fn get_projects_disabled(&self) -> Vec<&Project> {
         self.projects
             .iter()
             .filter(|p| !p.is_enabled())
-            .map(|p| p.clone())
-            .collect::<Vec<Project>>()
+            .map(|p| p)
+            .collect::<Vec<&Project>>()
     }
-    pub fn get_project_by_id(&self, id: &str) -> AppResult<Project> {
+    pub fn get_project_by_id(&self, id: &str) -> AppResult<&Project> {
         for project in &self.projects {
             if project.get_id() == id {
-                return Ok(project.clone());
+                return Ok(project);
             }
         }
         Err(Error::BadRequest(
@@ -140,29 +140,29 @@ impl Repository {
         name: String,
         description: String,
         is_enabled: bool,
-    ) -> AppResult<Project> {
+    ) -> AppResult<&Project> {
         for project in &mut self.projects {
             if project.get_id() == id {
                 project.update(name, description, is_enabled);
-                return Ok(project.clone());
+                return Ok(project);
             }
         }
         Err(Error::BadRequest("Project id not found".to_string()))
     }
-    pub fn enable_project(&mut self, id: &str) -> AppResult<Project> {
+    pub fn enable_project(&mut self, id: &str) -> AppResult<&Project> {
         for project in &mut self.projects {
             if project.get_id() == id {
                 project.enable();
-                return Ok(project.clone());
+                return Ok(project);
             }
         }
         Err(Error::BadRequest("Project id not found".to_string()))
     }
-    pub fn disable_project(&mut self, id: &str) -> AppResult<Project> {
+    pub fn disable_project(&mut self, id: &str) -> AppResult<&Project> {
         for project in &mut self.projects {
             if project.get_id() == id {
                 project.disable();
-                return Ok(project.clone());
+                return Ok(project);
             }
         }
         Err(Error::BadRequest("Project id not found".to_string()))
@@ -171,7 +171,7 @@ impl Repository {
         &mut self,
         project_id: &str,
         transaction_id: usize,
-    ) -> AppResult<Vec<Transaction>> {
+    ) -> AppResult<&Vec<Transaction>> {
         for project in &mut self.projects {
             if project.get_id() == project_id {
                 if let Some(position) = &mut project
@@ -180,11 +180,7 @@ impl Repository {
                     .position(|t| t.id == transaction_id)
                 {
                     project.transactions.remove(*position);
-                    return Ok(project
-                        .transactions
-                        .iter()
-                        .map(|t| t.clone())
-                        .collect::<Vec<Transaction>>());
+                    return Ok(&project.transactions);
                 } else {
                     return Err(Error::BadRequest(
                         "A megadott tranzakció azonosító nem létezik!".to_string(),
@@ -205,7 +201,7 @@ impl Repository {
         amount: i32,
         date_settlement: NaiveDate,
         created_by: String,
-    ) -> AppResult<Transaction> {
+    ) -> AppResult<&Transaction> {
         if !self.is_valid_account(&debit) {
             return Err(Error::BadRequest(
                 "A megadott debit ID nem könyvelhető".to_string(),
@@ -228,22 +224,23 @@ impl Repository {
                     created_by,
                 );
                 project.transactions.push(transaction.clone());
-                return Ok(transaction);
+                return if let Some(transaction) = project.transactions.last() {
+                    Ok(transaction)
+                } else {
+                    Err(Error::InternalError(
+                        "Error while getting last inserted project".to_string(),
+                    ))
+                };
             }
         }
         Err(Error::BadRequest(
             "A megadott projekt ID nem létezik!".to_string(),
         ))
     }
-    pub fn get_project_transactions(&self, project_id: &str) -> AppResult<Vec<Transaction>> {
+    pub fn get_project_transactions(&self, project_id: &str) -> AppResult<&Vec<Transaction>> {
         for project in &self.projects {
             if project.get_id() == project_id {
-                let res = project
-                    .transactions
-                    .iter()
-                    .map(|t| t.clone())
-                    .collect::<Vec<Transaction>>();
-                return Ok(res);
+                return Ok(&project.transactions);
             }
         }
         Err(Error::BadRequest(

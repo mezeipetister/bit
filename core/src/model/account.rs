@@ -99,10 +99,10 @@ impl Repository {
     pub fn get_accounts(&self) -> &Vec<Account> {
         &self.accounts
     }
-    pub fn get_account_by_id(&self, id: String) -> AppResult<Account> {
+    pub fn get_account_by_id(&self, id: String) -> AppResult<&Account> {
         for account in &self.accounts {
             if account.get_id() == id {
-                return Ok(account.clone());
+                return Ok(&account);
             }
         }
         Err(Error::BadRequest(
@@ -124,14 +124,14 @@ impl Repository {
         description: String,
         is_working: bool,
         is_inverse: bool,
-    ) -> AppResult<Account> {
+    ) -> AppResult<&Account> {
         for account in &mut self.accounts {
             if account.get_id() == account_id {
                 account.name = name;
                 account.description = description;
                 account.is_working = is_working;
                 account.is_inverse = is_inverse;
-                return Ok(account.clone());
+                return Ok(account);
             }
         }
         Err(Error::BadRequest(

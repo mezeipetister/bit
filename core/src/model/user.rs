@@ -206,11 +206,11 @@ impl User {
             ))
         }
     }
-    pub fn get_created_by(&self) -> String {
-        self.created_by.clone()
+    pub fn get_created_by(&self) -> &str {
+        &self.created_by
     }
-    pub fn get_customers(&self) -> Vec<String> {
-        self.customers.clone()
+    pub fn get_customers(&self) -> &Vec<String> {
+        &self.customers
     }
     pub fn get_password_hash(&self) -> &str {
         &self.password_hash

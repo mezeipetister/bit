@@ -81,8 +81,8 @@ pub fn account_id_get(
         .unwrap()
         .find_id(&repository_id)?
         .get_account_by_id(account_id.clone())?
-        .into();
-    Ok(StatusOk(res))
+        .clone();
+    Ok(StatusOk(res.into()))
 }
 
 #[post(
@@ -110,6 +110,7 @@ pub fn account_update_post(
             form.description.clone(),
             form.is_working,
             form.is_inverse,
-        )?;
+        )?
+        .clone();
     Ok(StatusOk(res.into()))
 }

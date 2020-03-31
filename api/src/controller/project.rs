@@ -65,7 +65,8 @@ pub fn project_new_put(
             project_new.name,
             project_new.description,
             user.userid().to_string(),
-        )?;
+        )?
+        .clone();
     Ok(StatusOk(p.into()))
 }
 
@@ -83,8 +84,8 @@ pub fn project_id_get(
         .unwrap()
         .find_id(&repository_id)?
         .get_project_by_id(&project_id)?
-        .into();
-    Ok(StatusOk(res))
+        .clone();
+    Ok(StatusOk(res.into()))
 }
 
 #[post(
@@ -111,7 +112,8 @@ pub fn project_update_post(
             form.name.clone(),
             form.description.clone(),
             form.is_enabled,
-        )?;
+        )?
+        .clone();
     Ok(StatusOk(res.into()))
 }
 
@@ -147,7 +149,8 @@ pub fn project_enable_post(
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .enable_project(&project_id)?;
+        .enable_project(&project_id)?
+        .clone();
     Ok(StatusOk(res.into()))
 }
 
@@ -165,7 +168,8 @@ pub fn project_disable_post(
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .disable_project(&project_id)?;
+        .disable_project(&project_id)?
+        .clone();
     Ok(StatusOk(res.into()))
 }
 
@@ -195,7 +199,8 @@ pub fn project_transaction_new_put(
             form.amount,
             form.date_settlement,
             user.userid().to_string(),
-        )?;
+        )?
+        .clone();
     Ok(StatusOk(p.into()))
 }
 
@@ -214,10 +219,11 @@ pub fn project_transaction_remove_post(
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .remove_project_transaction_by_id(&project_id, transaction_id)?;
+        .remove_project_transaction_by_id(&project_id, transaction_id)?
+        .clone();
     Ok(StatusOk(
         p.iter()
-            .map(|t| (*t).clone().into())
+            .map(|t| t.clone().into())
             .collect::<Vec<ApiSchema::Transaction>>(),
     ))
 }
