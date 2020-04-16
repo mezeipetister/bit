@@ -21,6 +21,7 @@ use rocket::Request;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::io::Cursor;
+use std::sync::{MutexGuard, PoisonError};
 
 #[derive(Debug)]
 // Wrapper for 200 Ok response code
@@ -128,6 +129,12 @@ impl<'r> Responder<'static> for ApiError {
                 .unwrap(),
             }))
             .ok()
+    }
+}
+
+impl<T> From<PoisonError<MutexGuard<'_, T>>> for ApiError {
+    fn from(err: PoisonError<MutexGuard<'_, T>>) -> Self {
+        ApiError::InternalError(format!("FATAL ERROR, Mutex LOCK error. Error: {}", err))
     }
 }
 

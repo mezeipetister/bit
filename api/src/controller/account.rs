@@ -22,7 +22,6 @@ use crate::DataLoad;
 use core_lib::model::*;
 use rocket::State;
 use rocket_contrib::json::Json;
-use std::ops::Deref;
 
 #[get("/repository/<repository_id>/account/all")]
 pub fn account_all_get(
@@ -33,8 +32,7 @@ pub fn account_all_get(
     let res = data
         .inner()
         .repositories
-        .lock()
-        .unwrap()
+        .lock()?
         .find_id(&repository_id)?
         .get_accounts()
         .iter()
@@ -61,8 +59,7 @@ pub fn account_new_put(
     let res = data
         .inner()
         .repositories
-        .lock()
-        .unwrap()
+        .lock()?
         .find_id_mut(&repository_id)?
         .as_mut()
         .add_account(account_new)?
@@ -85,7 +82,7 @@ pub fn account_id_get(
     //     .find_id(&repository_id)?
     //     .get_account_by_id(account_id.clone())?
     //     .into();
-    let db = data.inner().repositories.lock().unwrap();
+    let db = data.inner().repositories.lock()?;
     let repository = db.find_id(&repository_id)?;
     let account = (**repository).get_account_by_id(account_id.clone())?;
     Ok(StatusOk(account.into()))
@@ -106,8 +103,7 @@ pub fn account_update_post(
     let res = data
         .inner()
         .repositories
-        .lock()
-        .unwrap()
+        .lock()?
         .find_id_mut(&repository_id)?
         .as_mut()
         .update_account(

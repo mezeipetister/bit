@@ -2,8 +2,8 @@
 .PHONY: release, test, dev
 
 release:
-	cargo build --release
-	strip target/release/website
+	cargo build --release --bin api
+	strip target/release/api
 
 build:
 	cargo build
@@ -13,7 +13,7 @@ build:
 # then starts server
 dev:
 	. ./ENV.sh; \
-	cargo run --bin website;
+	cargo run --bin api;
 
 test:
 	cargo test
