@@ -22,6 +22,7 @@ use crate::DataLoad;
 use core_lib::model::*;
 use rocket::State;
 use rocket_contrib::json::Json;
+use std::ops::Deref;
 
 #[get("/repository/<repository_id>/account/all")]
 pub fn account_all_get(
@@ -76,15 +77,18 @@ pub fn account_id_get(
     repository_id: String,
     account_id: String,
 ) -> Result<StatusOk<SAccount>, ApiError> {
-    let res = data
-        .inner()
-        .repositories
-        .lock()
-        .unwrap()
-        .find_id(&repository_id)?
-        .get_account_by_id(account_id.clone())?
-        .into();
-    Ok(StatusOk(res))
+    // let res = data
+    //     .inner()
+    //     .repositories
+    //     .lock()
+    //     .unwrap()
+    //     .find_id(&repository_id)?
+    //     .get_account_by_id(account_id.clone())?
+    //     .into();
+    let db = data.inner().repositories.lock().unwrap();
+    let repository = db.find_id(&repository_id)?;
+    let account = (**repository).get_account_by_id(account_id.clone())?;
+    Ok(StatusOk(account.into()))
 }
 
 #[post(
