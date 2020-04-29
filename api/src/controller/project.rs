@@ -65,8 +65,9 @@ pub fn project_new_put(
             project_new.name,
             project_new.description,
             user.userid().to_string(),
-        )?;
-    Ok(StatusOk(p.into()))
+        )?
+        .into();
+    Ok(StatusOk(p))
 }
 
 #[get("/repository/<repository_id>/project/<project_id>", rank = 2)]
@@ -111,8 +112,9 @@ pub fn project_update_post(
             form.name.clone(),
             form.description.clone(),
             form.is_enabled,
-        )?;
-    Ok(StatusOk(res.into()))
+        )?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/project/<project_id>/remove", rank = 3)]
@@ -147,8 +149,9 @@ pub fn project_enable_post(
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .enable_project(&project_id)?;
-    Ok(StatusOk(res.into()))
+        .enable_project(&project_id)?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[post("/repository/<repository_id>/project/<project_id>/disable", rank = 3)]
@@ -165,8 +168,9 @@ pub fn project_disable_post(
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .disable_project(&project_id)?;
-    Ok(StatusOk(res.into()))
+        .disable_project(&project_id)?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[put(
@@ -195,8 +199,9 @@ pub fn project_transaction_new_put(
             form.amount,
             form.date_settlement,
             user.userid().to_string(),
-        )?;
-    Ok(StatusOk(p.into()))
+        )?
+        .into();
+    Ok(StatusOk(p))
 }
 
 #[post("/repository/<repository_id>/project/<project_id>/transaction/<transaction_id>/remove")]
@@ -214,10 +219,11 @@ pub fn project_transaction_remove_post(
         .unwrap()
         .find_id_mut(&repository_id)?
         .as_mut()
-        .remove_project_transaction_by_id(&project_id, transaction_id)?;
+        .remove_project_transaction_by_id(&project_id, transaction_id)?
+        .clone();
     Ok(StatusOk(
         p.iter()
-            .map(|t| (*t).clone().into())
+            .map(|t| t.clone().into())
             .collect::<Vec<ApiSchema::Transaction>>(),
     ))
 }

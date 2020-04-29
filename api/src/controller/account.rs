@@ -32,8 +32,7 @@ pub fn account_all_get(
     let res = data
         .inner()
         .repositories
-        .lock()
-        .unwrap()
+        .lock()?
         .find_id(&repository_id)?
         .get_accounts()
         .iter()
@@ -57,14 +56,15 @@ pub fn account_new_put(
         form.is_working,
         form.is_inverse,
     );
-    data.inner()
+    let res = data
+        .inner()
         .repositories
-        .lock()
-        .unwrap()
+        .lock()?
         .find_id_mut(&repository_id)?
         .as_mut()
-        .add_account(account_new.clone())?;
-    Ok(StatusOk(account_new.into()))
+        .add_account(account_new)?
+        .into();
+    Ok(StatusOk(res))
 }
 
 #[get("/repository/<repository_id>/account/<account_id>", rank = 2)]
@@ -74,15 +74,18 @@ pub fn account_id_get(
     repository_id: String,
     account_id: String,
 ) -> Result<StatusOk<SAccount>, ApiError> {
-    let res = data
-        .inner()
-        .repositories
-        .lock()
-        .unwrap()
-        .find_id(&repository_id)?
-        .get_account_by_id(account_id.clone())?
-        .into();
-    Ok(StatusOk(res))
+    // let res = data
+    //     .inner()
+    //     .repositories
+    //     .lock()
+    //     .unwrap()
+    //     .find_id(&repository_id)?
+    //     .get_account_by_id(account_id.clone())?
+    //     .into();
+    let db = data.inner().repositories.lock()?;
+    let repository = db.find_id(&repository_id)?;
+    let account = (**repository).get_account_by_id(account_id.clone())?;
+    Ok(StatusOk(account.into()))
 }
 
 #[post(
@@ -100,8 +103,7 @@ pub fn account_update_post(
     let res = data
         .inner()
         .repositories
-        .lock()
-        .unwrap()
+        .lock()?
         .find_id_mut(&repository_id)?
         .as_mut()
         .update_account(
@@ -110,6 +112,7 @@ pub fn account_update_post(
             form.description.clone(),
             form.is_working,
             form.is_inverse,
-        )?;
-    Ok(StatusOk(res.into()))
+        )?
+        .into();
+    Ok(StatusOk(res))
 }

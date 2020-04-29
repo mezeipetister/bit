@@ -56,3 +56,17 @@ impl From<model::Project> for Project {
         }
     }
 }
+
+impl From<&model::Project> for Project {
+    fn from(from: &model::Project) -> Self {
+        Project {
+            id: from.get_id().to_string(),
+            name: from.get_name().to_string(),
+            description: from.get_description().to_string(),
+            created_by: from.get_created_by().to_string(),
+            date_created: from.get_date_created(),
+            is_enabled: from.is_enabled(),
+            transactions: from.transactions.clone(),
+        }
+    }
+}

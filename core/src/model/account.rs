@@ -76,7 +76,7 @@ impl Account {
 }
 
 impl Repository {
-    pub fn add_account(&mut self, account: Account) -> AppResult<()> {
+    pub fn add_account(&mut self, account: Account) -> AppResult<&Account> {
         if let Some(_) = self
             .accounts
             .iter()
@@ -94,15 +94,20 @@ impl Repository {
         }
         self.accounts.push(account);
         self.accounts.sort_by(|a, b| a.get_id().cmp(&b.get_id()));
-        Ok(())
+        if let Some(account) = self.accounts.first() {
+            return Ok(&account);
+        }
+        Err(Error::InternalError(
+            "Cannot get the last added account ref".to_string(),
+        ))
     }
     pub fn get_accounts(&self) -> &Vec<Account> {
         &self.accounts
     }
-    pub fn get_account_by_id(&self, id: String) -> AppResult<Account> {
+    pub fn get_account_by_id(&self, id: String) -> AppResult<&Account> {
         for account in &self.accounts {
             if account.get_id() == id {
-                return Ok(account.clone());
+                return Ok(&account);
             }
         }
         Err(Error::BadRequest(
@@ -124,14 +129,14 @@ impl Repository {
         description: String,
         is_working: bool,
         is_inverse: bool,
-    ) -> AppResult<Account> {
+    ) -> AppResult<&Account> {
         for account in &mut self.accounts {
             if account.get_id() == account_id {
                 account.name = name;
                 account.description = description;
                 account.is_working = is_working;
                 account.is_inverse = is_inverse;
-                return Ok(account.clone());
+                return Ok(account);
             }
         }
         Err(Error::BadRequest(

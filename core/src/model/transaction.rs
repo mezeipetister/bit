@@ -47,10 +47,10 @@ impl Repository {
     pub fn get_transactions(&self) -> &Vec<Transaction> {
         &self.transactions
     }
-    pub fn get_transaction_by_id(&self, id: usize) -> AppResult<Transaction> {
+    pub fn get_transaction_by_id(&self, id: usize) -> AppResult<&Transaction> {
         for item in &self.transactions {
             if item.id == id {
-                return Ok(item.clone());
+                return Ok(item);
             }
         }
         Err(Error::BadRequest(
@@ -65,7 +65,7 @@ impl Repository {
         amount: i32,
         date_settlement: NaiveDate,
         created_by: String,
-    ) -> AppResult<Transaction> {
+    ) -> AppResult<&Transaction> {
         if !self.is_valid_account(&debit) {
             return Err(Error::BadRequest(
                 "A megadott debit ID nem könyvelhető".to_string(),
@@ -88,6 +88,12 @@ impl Repository {
         self.transactions.push(transaction.clone());
         self.transactions
             .sort_by(|a, b| a.date_settlement.cmp(&b.date_settlement));
-        Ok(transaction)
+        return if let Some(transaction) = self.transactions.last() {
+            Ok(transaction)
+        } else {
+            Err(Error::InternalError(
+                "Error while getting last inserted transaction".to_string(),
+            ))
+        };
     }
 }

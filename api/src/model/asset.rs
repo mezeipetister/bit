@@ -114,6 +114,33 @@ impl From<model::Asset> for Asset {
     }
 }
 
+impl From<&model::Asset> for Asset {
+    fn from(f: &model::Asset) -> Self {
+        Asset {
+            depreciation_monthly: f
+                .depreciation_monthly_vector()
+                .iter()
+                .map(|m| DepreciationMonthly::new(m.0, m.1, m.2))
+                .collect(),
+            depreciation_last_day_value: f.depreciation_last_day_value(),
+            depreciation_last_day: f.depreciation_last_day(),
+            depreciation_daily_value: f.depreciation_daily_value(),
+            id: f.id,
+            name: f.name.to_string(),
+            description: f.description.to_string(),
+            account: f.account.to_string(),
+            account_clearing: f.account_clearing.to_string(),
+            value: f.value,
+            date_activated: f.date_activated,
+            depreciation_key: f.depreciation_key,
+            residual_value: f.residual_value,
+            date_created: f.date_created,
+            created_by: f.created_by.to_string(),
+            is_active: f.is_active,
+        }
+    }
+}
+
 impl From<model::Asset> for AssetShort {
     fn from(f: model::Asset) -> Self {
         AssetShort {
@@ -131,6 +158,28 @@ impl From<model::Asset> for AssetShort {
             residual_value: f.residual_value,
             date_created: f.date_created,
             created_by: f.created_by,
+            is_active: f.is_active,
+        }
+    }
+}
+
+impl From<&model::Asset> for AssetShort {
+    fn from(f: &model::Asset) -> Self {
+        AssetShort {
+            depreciation_last_day_value: f.depreciation_last_day_value(),
+            depreciation_last_day: f.depreciation_last_day(),
+            depreciation_daily_value: f.depreciation_daily_value(),
+            id: f.id,
+            name: f.name.to_string(),
+            description: f.description.to_string(),
+            account: f.account.to_string(),
+            account_clearing: f.account_clearing.to_string(),
+            value: f.value,
+            date_activated: f.date_activated,
+            depreciation_key: f.depreciation_key,
+            residual_value: f.residual_value,
+            date_created: f.date_created,
+            created_by: f.created_by.to_string(),
             is_active: f.is_active,
         }
     }

@@ -103,8 +103,7 @@ pub fn transaction_id_get(
         .find_id(&repository_id)
     {
         Ok(rep) => Ok(StatusOk(
-            rep.get(|r: &Repository| r.get_transaction_by_id(transaction_id))?
-                .into(),
+            (*rep.get_transaction_by_id(transaction_id)?).clone().into(),
         )),
         Err(_) => Err(ApiError::NotFound),
     }
@@ -125,17 +124,18 @@ pub fn transaction_new_put(
         .find_id_mut(&repository_id)
     {
         Ok(repo) => {
-            let transaction = repo.update(|r: &mut Repository| -> AppResult<Transaction> {
-                r.add_transaction(
+            let transaction = repo
+                .as_mut()
+                .add_transaction(
                     form.subject.clone(),
                     form.debit.clone(),
                     form.credit.clone(),
                     form.amount.clone(),
                     form.date_settlement.clone(),
                     user.userid().to_string(),
-                )
-            })??;
-            Ok(StatusOk(transaction.into()))
+                )?
+                .into();
+            Ok(StatusOk(transaction))
         }
         Err(_) => Err(ApiError::NotFound),
     }

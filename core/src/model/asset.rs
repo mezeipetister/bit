@@ -209,7 +209,7 @@ impl Repository {
         depreciation_key: f32,
         residual_value: u32,
         created_by: String,
-    ) -> AppResult<Asset> {
+    ) -> AppResult<&Asset> {
         if !self.is_valid_account(&account) || !self.is_valid_account(&account_clearing) {
             return Err(Error::BadRequest(
                 "A megadott számlaszám nem létezik vagy nem könyvelhető".to_string(),
@@ -239,35 +239,41 @@ impl Repository {
             created_by,
         );
         if new_asset.depreciation_daily_value() > 0 {
-            self.assets.push(new_asset.clone());
-            return Ok(new_asset);
+            self.assets.push(new_asset);
+            return if let Some(v) = self.assets.last() {
+                Ok(v)
+            } else {
+                Err(Error::InternalError(
+                    "Failed to resolve the last inserted asset".to_string(),
+                ))
+            };
         }
         Err(Error::BadRequest(
             "Az eszköz napi ÉCS-je 0 Ft. Kisértékű eszköz.".to_string(),
         ))
     }
-    pub fn remove_asset_by_id(&mut self, id: usize) -> AppResult<Asset> {
+    pub fn remove_asset_by_id(&mut self, id: usize) -> AppResult<&Asset> {
         for asset in &mut self.assets {
             if asset.get_id() == id {
                 asset.remove();
-                return Ok(asset.clone());
+                return Ok(asset);
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
     }
-    pub fn restore_asset_by_id(&mut self, id: usize) -> AppResult<Asset> {
+    pub fn restore_asset_by_id(&mut self, id: usize) -> AppResult<&Asset> {
         for asset in &mut self.assets {
             if asset.get_id() == id {
                 asset.restore();
-                return Ok(asset.clone());
+                return Ok(asset);
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
     }
-    pub fn asset_get_by_id(&mut self, id: usize) -> AppResult<Asset> {
+    pub fn asset_get_by_id(&mut self, id: usize) -> AppResult<&Asset> {
         for asset in &self.assets {
             if asset.get_id() == id {
-                return Ok(asset.clone());
+                return Ok(asset);
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
@@ -279,47 +285,44 @@ impl Repository {
         description: String,
         account: String,
         account_clearing: String,
-    ) -> AppResult<Asset> {
+    ) -> AppResult<&Asset> {
         for asset in &mut self.assets {
             if asset.get_id() == id {
                 asset.set_name(name);
                 asset.set_description(description);
                 asset.set_account(account);
                 asset.set_account_clearing(account_clearing);
-                return Ok(asset.clone());
+                return Ok(asset);
             }
         }
         Err(Error::BadRequest("Asset id not found".to_string()))
     }
-    pub fn get_assets(&self) -> Vec<Asset> {
-        self.assets
-            .iter()
-            .map(|a| a.clone())
-            .collect::<Vec<Asset>>()
+    pub fn get_assets(&self) -> &Vec<Asset> {
+        &self.assets
     }
-    pub fn get_asset_by_id(&self, id: usize) -> AppResult<Asset> {
+    pub fn get_asset_by_id(&self, id: usize) -> AppResult<&Asset> {
         for asset in &self.assets {
             if asset.get_id() == id {
-                return Ok(asset.clone());
+                return Ok(asset);
             }
         }
         Err(Error::BadRequest(
             "A megadott eszköz ID nem létezik.".to_string(),
         ))
     }
-    pub fn get_assets_by_account(&self, account: String) -> Vec<Asset> {
+    pub fn get_assets_by_account(&self, account: String) -> Vec<&Asset> {
         self.assets
             .iter()
             .filter(|a| a.get_account() == &account)
-            .map(|a| a.clone())
-            .collect::<Vec<Asset>>()
+            .map(|a| a)
+            .collect::<Vec<&Asset>>()
     }
-    pub fn get_assets_by_account_clearing(&self, account_clearing: String) -> Vec<Asset> {
+    pub fn get_assets_by_account_clearing(&self, account_clearing: String) -> Vec<&Asset> {
         self.assets
             .iter()
             .filter(|a| a.get_account_clearing() == &account_clearing)
-            .map(|a| a.clone())
-            .collect::<Vec<Asset>>()
+            .map(|a| a)
+            .collect::<Vec<&Asset>>()
     }
     pub fn get_yearly_depreciation(&self, year: i32) -> u32 {
         self.assets
