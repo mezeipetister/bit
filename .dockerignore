@@ -2,7 +2,3 @@
 .cache
 target/
 data/
-node_modules/
-docker/
-design/
-client/

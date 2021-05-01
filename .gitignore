@@ -24,9 +24,6 @@ Cargo.lock
 # Clion ide file
 .idea
 
-# Skip node modules folder
-/node_modules
-
 ENV.sh
 secret.pem
 ENV.list
