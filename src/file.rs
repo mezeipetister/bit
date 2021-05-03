@@ -6,7 +6,7 @@ use std::{
   time::SystemTime,
 };
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct File {
   path: PathBuf,
   name: Option<OsString>,
