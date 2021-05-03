@@ -43,7 +43,16 @@ fn pre_process(input: &str) -> Vec<PreProcessToken> {
         // Doc comment
         '#' => PreProcessToken::Comment(line.trim().trim_matches('#').trim().to_string()),
         // Else
-        _ => PreProcessToken::Text(line.trim().to_string()),
+        _ => PreProcessToken::Text(
+          line
+            .trim()
+            .split("//")
+            .collect::<Vec<_>>()
+            .first()
+            .unwrap()
+            .trim()
+            .to_string(),
+        ),
       };
       match &mut token {
         Some(tkn) => match tkn {
@@ -147,15 +156,15 @@ mod tests {
       # lorem ipsum dolorem;
       # set ami
 
-      lorem ipsum dolorem
+      lorem ipsum dolorem    // line comment B
 
       #     ab
 
-            line A
+            line A // line comment A
 
           #ab
 
-      line B
+      line B // line comment C
 
 
 
