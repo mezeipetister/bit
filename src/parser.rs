@@ -5,7 +5,7 @@ trait Parser
 where
   Self: Sized,
 {
-  fn parse(from: &Vec<(String, String)>) -> Result<Self, String>;
+  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String>;
 }
 
 #[derive(Debug, Clone)]
@@ -199,10 +199,10 @@ pub enum ModeExp {
 }
 
 impl Parser for ModeExp {
-  fn parse(params: &Vec<(String, String)>) -> Result<Self, String> {
+  fn parse_params(params: &Vec<(String, String)>) -> Result<Self, String> {
     let first = &params[0];
     match first.0.as_str() {
-      "NAME" => match first.1.as_str() {
+      "set" => match first.1.as_str() {
         "account" => Ok(ModeExp::Account),
         "balance" => Ok(ModeExp::Balance),
         "profit" => Ok(ModeExp::Profit),
@@ -221,6 +221,24 @@ pub struct AccountExp {
   name: String,
 }
 
+impl Parser for AccountExp {
+  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
+    let mut id: Option<String> = None;
+    let mut name: Option<String> = None;
+    for row in from {
+      match row.0.as_str() {
+        x if x == "id" => id = Some(x.to_string()),
+        x if x == "name" => name = Some(x.to_string()),
+        _ => return Err("Unknown parameter".to_string()),
+      }
+    }
+    Ok(Self {
+      id: id.ok_or("No ID given".to_string())?,
+      name: name.ok_or("No NAME given".to_string())?,
+    })
+  }
+}
+
 pub struct TransactionExp {
   debit: String,
   credit: String,
@@ -228,6 +246,27 @@ pub struct TransactionExp {
   cdate: Option<NaiveDate>,
   amount: i32,
 }
+
+// impl Parser for TransactionExp {
+//   fn parse(from: &Vec<(String, String)>) -> Result<Self, String> {
+//     let mut debit: Option<String> = None;
+//     let mut credit: Option<String> = None;
+//     let mut event_id: Option<String> = None;
+//     let mut cdate: Option<String> = None;
+//     let mut amount: Option<String> = None;
+//     for row in from {
+//       match row.0.as_str() {
+//         x if x == "id" => id = Some(x.to_string()),
+//         x if x == "name" => name = Some(x.to_string()),
+//         _ => return Err("Unknown parameter".to_string()),
+//       }
+//     }
+//     Ok(Self {
+//       id: id.ok_or("No ID given".to_string())?,
+//       name: name.ok_or("No NAME given".to_string())?,
+//     })
+//   }
+// }
 
 pub struct ReferenceExp {
   id: String,
