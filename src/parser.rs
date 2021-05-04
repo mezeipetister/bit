@@ -474,6 +474,7 @@ pub fn parse(input: &str) -> Result<Vec<Expression>, String> {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use test::Bencher;
 
   #[test]
   fn test_preprocess() {
@@ -623,5 +624,296 @@ mod tests {
     "#;
     let res = parse(source);
     println!("{:?}", &res);
+  }
+
+  #[bench]
+  fn bench_add_two(b: &mut Bencher) {
+    let source = r#"
+    
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000;  // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
+
+
+    "#;
+    b.iter(|| {
+      let a = parse(&source);
+      a.is_ok();
+    });
   }
 }
