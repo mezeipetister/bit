@@ -5,7 +5,7 @@ trait Parser
 where
   Self: Sized,
 {
-  fn parse(from: &str) -> Result<Self, String>;
+  fn parse(from: &Vec<(String, String)>) -> Result<Self, String>;
 }
 
 #[derive(Debug, Clone)]
@@ -199,10 +199,17 @@ pub enum ModeExp {
 }
 
 impl Parser for ModeExp {
-  fn parse(from: &str) -> Result<Self, String> {
-    match from {
-      "account" => Ok(Self::Account),
-      _ => Err(format!("Unknown mode: {}", from)),
+  fn parse(params: &Vec<(String, String)>) -> Result<Self, String> {
+    let first = &params[0];
+    match first.0.as_str() {
+      "NAME" => match first.1.as_str() {
+        "account" => Ok(ModeExp::Account),
+        "balance" => Ok(ModeExp::Balance),
+        "profit" => Ok(ModeExp::Profit),
+        "transaction" => Ok(ModeExp::Transaction),
+        _ => Err("Unknown mode".to_string()),
+      },
+      _ => Err("Unknown parameter for MODE".to_string()),
     }
   }
 }
