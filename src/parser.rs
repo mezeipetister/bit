@@ -182,6 +182,7 @@ impl ExpressionCandidate {
   }
 }
 
+#[derive(Debug)]
 pub enum Expression {
   DocComment(CommentExp),
   Mode(ModeExp),
@@ -357,6 +358,7 @@ impl Parser for ReferenceExp {
   }
 }
 
+#[derive(Debug)]
 pub struct EventExp {
   reference_id: String,
   name: Option<String>,
@@ -414,12 +416,33 @@ impl Parser for EventExp {
 }
 
 fn parse_exp_candidate(candidate: &str) -> Result<Expression, String> {
-  todo!()
+  let candidate = ExpressionCandidate::from_str(candidate)?;
+  match candidate.command.as_str() {
+    "mode" | "MODE" => Ok(Expression::Mode(ModeExp::parse_params(
+      &candidate.parameters,
+    )?)),
+    "reference" | "REFERENCE" => Ok(Expression::Reference(ReferenceExp::parse_params(
+      &candidate.parameters,
+    )?)),
+    "event" | "EVENT" => Ok(Expression::Event(EventExp::parse_params(
+      &candidate.parameters,
+    )?)),
+    "transaction" | "TRANSACTION" => Ok(Expression::Transaction(TransactionExp::parse_params(
+      &candidate.parameters,
+    )?)),
+    "account" | "ACCOUNT" => Ok(Expression::Account(AccountExp::parse_params(
+      &candidate.parameters,
+    )?)),
+    _ => Err(format!("Unknown command: {}", candidate.command)),
+  }
 }
 
 fn parse_text_block(text_block: &str) -> Result<Vec<Expression>, String> {
   let mut res = Vec::new();
-  let exp_candidates = text_block.split(";").collect::<Vec<_>>();
+  let exp_candidates = text_block
+    .split(";")
+    .filter(|i| !i.is_empty())
+    .collect::<Vec<_>>();
   for ec in exp_candidates {
     res.push(parse_exp_candidate(ec)?);
   }
@@ -494,13 +517,13 @@ mod tests {
 
   #[test]
   fn test_expression_candidate() {
-    let expr = r#"TRANSACTION name Lorem debit 161 credit 3841 amount 4500"#;
+    let expr = r#"TRANSACTION name Lorem debit 161 credit 3841 amount 4500;"#;
     let res = ExpressionCandidate::from_str(&expr);
     println!("{:?}", &res);
     assert_eq!(res.is_ok(), true);
 
     let expr_quoted =
-      r#"TRANSACTION name "Lorem ipsum dolorem set ami" debit 161 credit 3841 amount 4500"#;
+      r#"TRANSACTION name "Lorem ipsum dolorem set ami" debit 161 credit 3841 amount 4500; "#;
     let res = ExpressionCandidate::from_str(&expr_quoted);
     println!("{:?}", &res);
     assert_eq!(res.is_ok(), true);
@@ -559,5 +582,36 @@ mod tests {
     ];
     let res = EventExp::parse_params(&params);
     assert_eq!(res.is_ok(), true);
+  }
+
+  #[test]
+  fn test_parse_complete() {
+    let source = r#"
+    
+      # Hello bello
+      # ===========
+      # lorem ipsum dolorem;
+      # set ami
+
+      # set mode
+      MODE set account;
+
+      reference
+        id demo_ref_id
+        name "Demo reference"
+        cdate 2021-01-01;
+
+      EVENT reference_id demo_event_id name demo_event;
+
+      # Demo transaction
+      transaction
+        debit 161       // Beruházás számla
+        credit 3811     // Pénztár
+        amount 34_000   // Könyvelt nettó összeg
+
+
+    "#;
+    let res = parse(source);
+    println!("{:?}", &res);
   }
 }
