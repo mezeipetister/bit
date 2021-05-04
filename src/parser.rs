@@ -601,6 +601,11 @@ mod tests {
         name "Demo reference"
         cdate 2021-01-01;
 
+      REFERENCE
+        ID demo_ref_id
+        NAME "Demo reference"
+        CDATE 2021-01-01;
+
       EVENT reference_id demo_event_id name demo_event;
 
       # Demo transaction
@@ -608,6 +613,11 @@ mod tests {
         debit 161       // Beruházás számla
         credit 3811     // Pénztár
         amount 34_000   // Könyvelt nettó összeg
+
+      # Demo account
+      ACCOUNT
+        ID 161
+        NAME "Beruházás számla";
 
 
     "#;
