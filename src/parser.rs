@@ -242,6 +242,7 @@ impl Parser for AccountExp {
   }
 }
 
+#[derive(Debug)]
 pub struct TransactionExp {
   debit: String,
   credit: String,
@@ -299,19 +300,117 @@ impl Parser for TransactionExp {
   }
 }
 
+#[derive(Debug)]
 pub struct ReferenceExp {
   id: String,
+  name: Option<String>,
   idate: Option<NaiveDate>,
   cdate: NaiveDate,
   ddate: Option<NaiveDate>,
 }
 
+impl Parser for ReferenceExp {
+  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
+    let mut id: Option<String> = None;
+    let mut name: Option<String> = None;
+    let mut idate: Option<NaiveDate> = None;
+    let mut cdate: Option<NaiveDate> = None;
+    let mut ddate: Option<NaiveDate> = None;
+    for row in from {
+      match row.0.as_str() {
+        "id" | "ID" => id = Some(row.1.to_string()),
+        "name" | "NAME" => name = Some(row.1.to_string()),
+        "idate" | "IDATE" => {
+          idate = Some(
+            row
+              .1
+              .parse::<NaiveDate>()
+              .map_err(|_| "Wrong IDATE date format")?,
+          )
+        }
+        "cdate" | "CDATE" => {
+          cdate = Some(
+            row
+              .1
+              .parse::<NaiveDate>()
+              .map_err(|_| "Wrong CDATE date format")?,
+          )
+        }
+        "ddate" | "DDATE" => {
+          ddate = Some(
+            row
+              .1
+              .parse::<NaiveDate>()
+              .map_err(|_| "Wrong DDATE date format")?,
+          )
+        }
+        _ => return Err("Unknown parameter".to_string()),
+      }
+    }
+    Ok(Self {
+      id: id.ok_or("Missing reference ID")?,
+      name,
+      idate,
+      cdate: cdate.ok_or("Missing CDATE")?,
+      ddate,
+    })
+  }
+}
+
 pub struct EventExp {
   reference_id: String,
-  name: String,
+  name: Option<String>,
   idate: Option<NaiveDate>,
   cdate: Option<NaiveDate>,
   ddate: Option<NaiveDate>,
+}
+
+impl Parser for EventExp {
+  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
+    let mut reference_id: Option<String> = None;
+    let mut name: Option<String> = None;
+    let mut idate: Option<NaiveDate> = None;
+    let mut cdate: Option<NaiveDate> = None;
+    let mut ddate: Option<NaiveDate> = None;
+    for row in from {
+      match row.0.as_str() {
+        "reference_id" | "REFERENCE_ID" => reference_id = Some(row.1.to_string()),
+        "name" | "NAME" => name = Some(row.1.to_string()),
+        "idate" | "IDATE" => {
+          idate = Some(
+            row
+              .1
+              .parse::<NaiveDate>()
+              .map_err(|_| "Wrong IDATE date format")?,
+          )
+        }
+        "cdate" | "CDATE" => {
+          cdate = Some(
+            row
+              .1
+              .parse::<NaiveDate>()
+              .map_err(|_| "Wrong CDATE date format")?,
+          )
+        }
+        "ddate" | "DDATE" => {
+          ddate = Some(
+            row
+              .1
+              .parse::<NaiveDate>()
+              .map_err(|_| "Wrong DDATE date format")?,
+          )
+        }
+        _ => return Err("Unknown parameter".to_string()),
+      }
+    }
+    Ok(Self {
+      reference_id: reference_id.ok_or("Missing reference ID")?,
+      name,
+      idate,
+      cdate,
+      ddate,
+    })
+  }
 }
 
 fn parse_exp_candidate(candidate: &str) -> Result<Expression, String> {
@@ -435,6 +534,30 @@ mod tests {
       ("amount".to_string(), "40000".to_string()),
       ("amount".to_string(), "40_000".to_string()),
     ];
-    assert_eq!(TransactionExp::parse_params(&params).is_ok(), true);
+    let res = TransactionExp::parse_params(&params);
+    assert_eq!(res.is_ok(), true);
+  }
+
+  #[test]
+  fn test_exp_reference() {
+    let params = vec![
+      ("id".to_string(), "lorem ipsum dolorem".to_string()),
+      ("cdate".to_string(), "2021-04-04".to_string()),
+    ];
+    let res = ReferenceExp::parse_params(&params);
+    assert_eq!(res.is_ok(), true);
+  }
+
+  #[test]
+  fn test_exp_event() {
+    let params = vec![
+      (
+        "reference_id".to_string(),
+        "lorem ipsum dolorem".to_string(),
+      ),
+      ("cdate".to_string(), "2021-04-04".to_string()),
+    ];
+    let res = EventExp::parse_params(&params);
+    assert_eq!(res.is_ok(), true);
   }
 }
