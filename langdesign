@@ -17,6 +17,34 @@ MODE, ACCOUNT, REFERENCE, EVENT, TRANSACTION.
 |                         |
 |                         *--- arguments in KEY VALUE pairs
 
+Design & prettify
+
+  Each expression must be terminated by a semmicolon (;), but
+a single expression can be multi lined, and there can be many spaces
+between attribute KEY VALUE pairs. This flexibility can be used to
+format expressions by using new lines and spaces.
+
+  An expression can have this single line format:
+
+    TRANSACTION DEBIT 161 CREDIT 38 AMOUNT 1_000;
+
+  Or the same expression can have a multi line format:
+
+    TRANSACTION
+      DEBIT   161
+      CREDIT  38
+      AMOUNR  1_000;
+
+  For a transaction amount value we have a special format condition;
+we can use underscore for thousand separation. We can place an underscore
+anywhere inside a number, but thousand separation is the main reason.
+
+  The following amount values are the same:
+
+    1000    or  1_000       (pretty)
+    1000000 or  1_000_000   (pretty)
+    1700    or  170_0       (meaningless)
+
 Comment
 
   In bit lang there are two kind of comments, block and line
@@ -49,11 +77,11 @@ Mode
 Reference
 
 | REFERENCE
-|   ID    reference id (STRING)
-|   NAME  reference name (STRING) *OPTIONAL*
-|   IDATE issue date (DATE)       *OPTIONAL*
-|   CDATE completion date (DATE)  *OPTIONAL*
-|   DDATE due date (DATE)         *OPTIONAL*;
+|   ID      reference id (STRING)
+|   NAME    reference name (STRING) *OPTIONAL*
+|   IDATE   issue date (DATE)       *OPTIONAL*
+|   CDATE   completion date (DATE)  *OPTIONAL*
+|   DDATE   due date (DATE)         *OPTIONAL*;
 
 Event
 
