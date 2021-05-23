@@ -1,0 +1,74 @@
+Expression
+
+  In bit language we use expressions and comments to write
+down simple accounting events. Each expression have a strict
+schema starting with a COMMAND keyword, followed by parameters
+in KEY + VALUE pairs, and closed with a semmicolon (;).
+
+  A command must be a predefined command as one of the following:
+MODE, ACCOUNT, REFERENCE, EVENT, TRANSACTION.
+
+  Each parameter must be a complete KEY VALUE pair.
+
+| COMMAND ARG VALUE ARG2 VALUE2 ... ;
+| |      --------- -----------     |
+| |        arg 1      arg 2        |
+| *--- command keyword    |        *--- closing semicolon
+|                         |
+|                         *--- arguments in KEY VALUE pairs
+
+Comment
+
+  In bit lang there are two kind of comments, block and line
+comments. Block comments starts with # character. Line comment
+starts with // characters. Currently comments are skipped by
+the language parser.
+
+| # Comment first line
+| # comment second line
+| # ..
+| # comment last line
+
+| COMMAND      // Line comment
+|   KEY VALUE; // Line comment
+
+Account
+
+  Account definition expression. Mode must be set to account,
+and account definitions must be located in the accounts.bit file
+specified in config.toml.
+
+| ACCOUNT
+|   ID    account id name (STRING)
+|   NAME  account name (STRING);
+
+Mode
+
+| MODE set account | balance | profit | transaction;
+
+Reference
+
+| REFERENCE
+|   ID    reference id (STRING)
+|   NAME  reference name (STRING) *OPTIONAL*
+|   IDATE issue date (DATE)       *OPTIONAL*
+|   CDATE completion date (DATE)  *OPTIONAL*
+|   DDATE due date (DATE)         *OPTIONAL*;
+
+Event
+
+| EVENT
+|   REFERENCE_ID  reference id (STRING)
+|   NAME          event name (STRING)    *OPTIONAL*
+|   IDATE         issue date (DATE)      *OPTIONAL*
+|   CDATE         completion date (DATE) *OPTIONAL*
+|   DDATE         due date (DATE)        *OPTIONAL*;
+
+Transaction
+
+| TRANSACTION
+|   DEBIT     debit id (STRING)
+|   CREDIT    credit id (STRING)
+|   EVENT_ID  event id (STRING)      *OPTIONAL*
+|   CDATE     completion date (DATE) *OPTIONAL*
+|   AMOUNT    amount value (INT);
