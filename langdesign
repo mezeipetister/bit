@@ -78,25 +78,25 @@ Reference
 
 | REFERENCE
 |   ID      reference id (STRING)
-|   NAME    reference name (STRING) *OPTIONAL*
-|   IDATE   issue date (DATE)       *OPTIONAL*
-|   CDATE   completion date (DATE)  *OPTIONAL*
-|   DDATE   due date (DATE)         *OPTIONAL*;
+|   NAME    reference name (STRING) // *OPTIONAL*
+|   IDATE   issue date (DATE)       // *OPTIONAL*
+|   CDATE   completion date (DATE)  // *OPTIONAL*
+|   DDATE   due date (DATE);        // *OPTIONAL*
 
 Event
 
 | EVENT
 |   REFERENCE_ID  reference id (STRING)
-|   NAME          event name (STRING)    *OPTIONAL*
-|   IDATE         issue date (DATE)      *OPTIONAL*
-|   CDATE         completion date (DATE) *OPTIONAL*
-|   DDATE         due date (DATE)        *OPTIONAL*;
+|   NAME          event name (STRING)    // *OPTIONAL*
+|   IDATE         issue date (DATE)      // *OPTIONAL*
+|   CDATE         completion date (DATE) // *OPTIONAL*
+|   DDATE         due date (DATE);       // *OPTIONAL*
 
 Transaction
 
 | TRANSACTION
 |   DEBIT     debit id (STRING)
 |   CREDIT    credit id (STRING)
-|   EVENT_ID  event id (STRING)      *OPTIONAL*
-|   CDATE     completion date (DATE) *OPTIONAL*
+|   EVENT_ID  event id (STRING)      // *OPTIONAL*
+|   CDATE     completion date (DATE) // *OPTIONAL*
 |   AMOUNT    amount value (INT);

@@ -1,0 +1,17 @@
+accounts: Accounts[]
+logs: Path[]
+ledger: Ledger
+
+Processing steps:
+
+  1. check project workspace
+  2. load config file
+  3. load accounts file; parse it; store accounts
+  4. recursively collect logs file path, and store them
+  5. iterate over log files:
+
+     a. get file (i)
+     b. load its content
+     c. try to parse it and returns back the grammar
+     d. collect references, events and transactions and returns them
+     e. put references, events and transactions to the Ledger
