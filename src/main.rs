@@ -1,4 +1,5 @@
-use bit::*;
+use bit::ledger::Ledger;
+use chrono::{Datelike, NaiveDate, Utc};
 use std::{
   env,
   error::Error,
@@ -49,9 +50,11 @@ struct TransactionAdd {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+  let today = Utc::today().naive_local();
+  println!("Today year day is {}", today.ordinal());
+  let last_day = NaiveDate::from_ymd(Utc::today().year(), 12, 31);
+  println!("This year has {} days", last_day.ordinal());
+  println!("{:?}", Ledger::new());
   let opt = Command::from_args();
-  let project = project::Project::new().unwrap();
-  // println!("Project file is: {:?}", &project);
-  println!("Project files: {:?}", project.read_files_recurs());
   Ok(())
 }
