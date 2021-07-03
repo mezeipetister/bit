@@ -1,6 +1,7 @@
 use bit::ledger::Ledger;
 use chrono::{Datelike, NaiveDate, Utc};
 use std::{
+  collections::HashMap,
   env,
   error::Error,
   fs,
@@ -56,5 +57,6 @@ fn main() -> Result<(), Box<dyn Error>> {
   println!("This year has {} days", last_day.ordinal());
   println!("{:?}", Ledger::new());
   let opt = Command::from_args();
+
   Ok(())
 }
