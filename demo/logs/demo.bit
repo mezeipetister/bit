@@ -8,3 +8,5 @@ transaction debit 161 credit 384 amount 1000; // Comment
 
 tr d 384 c 161 a 1_000; // Comment
 tr d 384 c 384 a 700; // Comment
+
+tr d 384 c 161 cdate 2021-07-09 a 14_000;

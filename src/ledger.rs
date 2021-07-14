@@ -1,8 +1,7 @@
-use std::{collections::HashMap, hash::Hash, ops::Deref, usize};
-
-use chrono::{Datelike, NaiveDate, Utc};
-
 use crate::parser::Expression;
+use chrono::{Datelike, NaiveDate, Utc};
+use std::{collections::HashMap, hash::Hash, ops::Deref, usize};
+use thousands::Separable;
 
 // Trimmed string representation
 #[derive(Debug, Clone)]
@@ -243,9 +242,24 @@ impl Ledger {
       });
     Ok(())
   }
+  pub fn get_ledger_by_date(
+    &self,
+    day_index: usize,
+  ) -> Result<Vec<(String, LedgerIndexItem)>, String> {
+    let day = self
+      .ledger_index
+      .get(day_index)
+      .ok_or("Out of range date")?;
+    let mut res = (*day)
+      .clone()
+      .into_iter()
+      .collect::<Vec<(String, LedgerIndexItem)>>();
+    res.sort_by(|x, y| x.0.cmp(&y.0));
+    Ok(res)
+  }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct LedgerIndexItem {
   /// Balance opening debit
   bod: i64,
@@ -259,4 +273,16 @@ pub struct LedgerIndexItem {
   bcd: i64,
   /// Balance closing credit
   bcc: i64,
+}
+
+impl LedgerIndexItem {
+  pub fn print_full(&self) -> String {
+    format!(
+      "{0: <10} | {1: <10} | {2: <10} | {3: <10}",
+      self.td.separate_with_spaces(),
+      self.tc.separate_with_spaces(),
+      self.bcd.separate_with_spaces(),
+      self.bcc.separate_with_spaces()
+    )
+  }
 }

@@ -1,0 +1,5 @@
+ref id szla2021799 cdate 2021-05-19;
+
+event id e2 refid szla2021799;
+
+tr d 384 c 9 a 249_000;
