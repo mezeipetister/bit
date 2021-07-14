@@ -56,17 +56,17 @@ fn main() -> Result<(), Box<dyn Error>> {
       let ledger = project.inspect()?.get_ledger_by_date(day_index)?;
       println!("\nLedger for date: {}\n", day);
       println!(
-        "{0: <10} - {1: <10} | {2: <10} | {3: <10} | {4: <10}",
+        "{0: <10} {1: <10} | {2: <10} | {3: <10} | {4: <10}",
         "Accounts", "T. Debit", "T. Credit", "B. Debit", "B. Credit"
       );
       println!(
-        "{0: <10} {1: <10} {2: <10} {3: <10} {4: <10}",
-        "---", "---", "---", "---", "---"
+        "{}",
+        "-----------------------------------------------------------"
       );
       // Print result
       ledger
         .iter()
-        .for_each(|day| println!("{0: <10} - {1: <10}", day.0, day.1.print_full()));
+        .for_each(|day| println!("{0: <10} {1: <10}", day.0, day.1.print_full()));
     }
   }
 
