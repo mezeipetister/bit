@@ -75,7 +75,7 @@ impl Project {
 
     // Write example content to accounts file
     accounts_file
-      .write_all("# Project accounts file\n".as_bytes())
+      .write_all("# Project accounts file\n\nMODE set account;".as_bytes())
       .unwrap();
 
     Ok(())
