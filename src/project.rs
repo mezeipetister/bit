@@ -1,21 +1,23 @@
 use crate::{file, file_index::FileIndex, inspector::Inspector, ledger::Ledger};
-use serde::Deserialize;
+use chrono::{Datelike, Utc};
+use serde::{Deserialize, Serialize};
 use std::{
   env,
+  io::Write,
   path::{Path, PathBuf},
 };
 
 /// BIT Config
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Config {
   pub name: String,
   pub description: Option<String>,
-  pub year: String,
+  pub year: i32,
   pub currency: String,
   pub dependencies: Dependencies,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Dependencies {
   pub accounts: String,
   pub logs: String,
@@ -32,6 +34,52 @@ pub struct Project {
 }
 
 impl Project {
+  // Create new project
+  pub fn new_project(
+    project_name: &str,
+    name: String,
+    desc: String,
+    currency: String,
+  ) -> Result<(), String> {
+    // Try to get current working dir
+    let current_dir =
+      env::current_dir().map_err(|_| "Current working dir does not exist".to_string())?;
+    // Create project dir
+    std::fs::create_dir(&current_dir.join(&project_name))
+      .map_err(|_| "Error while creating project folder. Maybe already exist?".to_string())?;
+    // Create hidden bit folder
+    std::fs::create_dir(&current_dir.join(&project_name).join(".bit"))
+      .map_err(|_| "Error while working on new project folder layout".to_string())?;
+    // Create config file object
+    let mut config = Config::default();
+    config.name = name;
+    config.description = Some(desc);
+    config.year = Utc::today().year();
+    config.currency = currency;
+    config.dependencies.accounts = "accounts.bit".to_string();
+    config.dependencies.logs = "logs".to_string();
+    // Create config file
+    let mut config_file =
+      std::fs::File::create(current_dir.join(&project_name).join("config.toml")).unwrap();
+    // Write config file
+    config_file
+      .write_all(toml::to_string(&config).unwrap().as_bytes())
+      .unwrap();
+
+    // Create logs folder
+    std::fs::create_dir(current_dir.join(&project_name).join("logs")).unwrap();
+
+    // Create accounts file
+    let mut accounts_file =
+      std::fs::File::create(current_dir.join(&project_name).join("accounts.bit")).unwrap();
+
+    // Write example content to accounts file
+    accounts_file
+      .write_all("# Project accounts file\n".as_bytes())
+      .unwrap();
+
+    Ok(())
+  }
   pub fn new() -> Result<Self, String> {
     // Try to get current working dir
     let current_dir =

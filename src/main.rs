@@ -8,6 +8,7 @@ use std::{
   env,
   error::Error,
   fs,
+  io::{self, BufRead, Write},
   path::{Path, PathBuf},
   time::SystemTime,
   usize,
@@ -21,10 +22,15 @@ use structopt::StructOpt;
 )]
 enum Command {
   #[structopt(about = "Create new BIT project")]
-  New,
+  New(NewOpt),
   #[structopt(about = "Generate report about project")]
   Report,
   Ledger(LedgerOpt),
+}
+
+#[derive(Debug, StructOpt)]
+pub struct NewOpt {
+  pub project_folder_name: String,
 }
 
 #[derive(Debug, StructOpt)]
@@ -34,15 +40,45 @@ pub struct LedgerOpt {
 
 fn main() -> Result<(), Box<dyn Error>> {
   let opt: Command = Command::from_args();
-  let project = Project::new()?;
 
   match opt {
-    Command::New => todo!(),
+    Command::New(nopt) => {
+      let mut line = String::new();
+      let stdin = io::stdin();
+
+      // Read project name
+      print!("Project name: ");
+      io::stdout().flush().unwrap();
+      stdin.lock().read_line(&mut line).unwrap();
+      let name = line.trim_end().to_owned();
+      line.clear();
+
+      // Read project desc
+      print!("Project desc: ");
+      io::stdout().flush().unwrap();
+      stdin.lock().read_line(&mut line).unwrap();
+      let desc = line.trim_end().to_owned();
+      line.clear();
+
+      // Read project currency
+      print!("Project currency: ");
+      io::stdout().flush().unwrap();
+      stdin.lock().read_line(&mut line).unwrap();
+      let currency = line.trim_end().to_owned();
+      line.clear();
+
+      Project::new_project(&nopt.project_folder_name, name, desc, currency)?;
+      println!("Project created");
+    }
     Command::Report => {
+      // Init project
+      let project = Project::new()?;
       let ledger = project.inspect()?;
       println!("{:?}", ledger);
     }
     Command::Ledger(lopt) => {
+      // Init project
+      let project = Project::new()?;
       // Define day
       let day = match lopt.date {
         Some(d) => d
