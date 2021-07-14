@@ -6,6 +6,6 @@ pub mod config;
 pub mod file;
 pub mod file_index;
 pub mod ledger;
-pub mod model;
+pub mod inspector;
 pub mod parser;
 pub mod project;

@@ -1,5 +1,6 @@
+use std::{fs::File, io::Read, path::Path};
+
 use chrono::NaiveDate;
-use uuid::Uuid;
 
 trait Parser
 where
@@ -221,8 +222,8 @@ pub struct CommentExp(String);
 
 #[derive(Debug)]
 pub struct AccountExp {
-  id: String,
-  name: String,
+  pub id: String,
+  pub name: String,
 }
 
 impl Parser for AccountExp {
@@ -245,20 +246,20 @@ impl Parser for AccountExp {
 
 #[derive(Debug)]
 pub struct TransactionExp {
-  debit: String,
-  credit: String,
-  event_id: Option<u32>,
-  cdate: Option<NaiveDate>,
-  amount: i32,
+  pub debit: String,
+  pub credit: String,
+  pub event_id: Option<String>,
+  pub cdate: Option<NaiveDate>,
+  pub amount: i64,
 }
 
 impl Parser for TransactionExp {
   fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
     let mut debit: Option<String> = None;
     let mut credit: Option<String> = None;
-    let mut event_id: Option<u32> = None;
+    let mut event_id: Option<String> = None;
     let mut cdate: Option<NaiveDate> = None;
-    let mut amount: Option<i32> = None;
+    let mut amount: Option<i64> = None;
     for row in from {
       match row.0.as_str() {
         "debit" | "DEBIT" => debit = Some(row.1.to_string()),
@@ -267,8 +268,8 @@ impl Parser for TransactionExp {
           event_id = Some(
             row
               .1
-              .parse::<u32>()
-              .map_err(|_| "Event ID must be positive integer")?,
+              .parse::<String>()
+              .map_err(|_| "Event ID must be a string")?,
           )
         }
         "cdate" | "CDATE" => {
@@ -284,7 +285,7 @@ impl Parser for TransactionExp {
             row
               .1
               .replace("_", "")
-              .parse::<i32>()
+              .parse::<i64>()
               .map_err(|_| "Amount must be integer number")?,
           )
         }
@@ -303,11 +304,11 @@ impl Parser for TransactionExp {
 
 #[derive(Debug)]
 pub struct ReferenceExp {
-  id: String,
-  name: Option<String>,
-  idate: Option<NaiveDate>,
-  cdate: NaiveDate,
-  ddate: Option<NaiveDate>,
+  pub id: String,
+  pub name: Option<String>,
+  pub idate: Option<NaiveDate>,
+  pub cdate: NaiveDate,
+  pub ddate: Option<NaiveDate>,
 }
 
 impl Parser for ReferenceExp {
@@ -360,15 +361,17 @@ impl Parser for ReferenceExp {
 
 #[derive(Debug)]
 pub struct EventExp {
-  reference_id: String,
-  name: Option<String>,
-  idate: Option<NaiveDate>,
-  cdate: Option<NaiveDate>,
-  ddate: Option<NaiveDate>,
+  pub id: String,
+  pub reference_id: String,
+  pub name: Option<String>,
+  pub idate: Option<NaiveDate>,
+  pub cdate: Option<NaiveDate>,
+  pub ddate: Option<NaiveDate>,
 }
 
 impl Parser for EventExp {
   fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
+    let mut id = None;
     let mut reference_id: Option<String> = None;
     let mut name: Option<String> = None;
     let mut idate: Option<NaiveDate> = None;
@@ -376,6 +379,7 @@ impl Parser for EventExp {
     let mut ddate: Option<NaiveDate> = None;
     for row in from {
       match row.0.as_str() {
+        "id" | "ID" => id = Some(row.1.to_string()),
         "reference_id" | "REFERENCE_ID" => reference_id = Some(row.1.to_string()),
         "name" | "NAME" => name = Some(row.1.to_string()),
         "idate" | "IDATE" => {
@@ -406,6 +410,7 @@ impl Parser for EventExp {
       }
     }
     Ok(Self {
+      id: id.ok_or("Missing event ID")?,
       reference_id: reference_id.ok_or("Missing reference ID")?,
       name,
       idate,
@@ -469,6 +474,13 @@ fn parse_expr(pre_tokens: Vec<PreProcessToken>) -> Result<Vec<Expression>, Strin
 pub fn parse(input: &str) -> Result<Vec<Expression>, String> {
   let pre_tokens = pre_process(input);
   parse_expr(pre_tokens)
+}
+pub fn parse_file(file: &Path) -> Result<Vec<Expression>, String> {
+  let mut f = File::open(&file).map_err(|_| "Error while opening file".to_string())?;
+  let mut content = String::new();
+  f.read_to_string(&mut content)
+    .map_err(|_| "Error while reading file".to_string())?;
+  parse(&content)
 }
 
 #[cfg(test)]
@@ -575,6 +587,7 @@ mod tests {
   #[test]
   fn test_exp_event() {
     let params = vec![
+      ("id".to_string(), "e1".to_string()),
       (
         "reference_id".to_string(),
         "lorem ipsum dolorem".to_string(),
@@ -710,7 +723,7 @@ mod tests {
         NAME "Demo reference"
         CDATE 2021-01-01;
 
-      EVENT reference_id demo_event_id name demo_event;
+      EVENT id e1 reference_id demo_event_id name demo_event;
 
       # Demo transaction
       transaction

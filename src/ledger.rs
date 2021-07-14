@@ -1,15 +1,43 @@
-use std::{collections::HashMap, usize};
+use std::{collections::HashMap, ops::Deref, usize};
 
 use chrono::{Datelike, NaiveDate, Utc};
 
+use crate::parser::Expression;
+
+// Trimmed string representation
 #[derive(Debug, Clone)]
-struct Account {
+struct TString(String);
+
+// Only way to construct a TString
+// is to convert a string slice to it
+impl From<&str> for TString {
+  fn from(f: &str) -> Self {
+    Self(f.trim().to_string())
+  }
+}
+
+impl Deref for TString {
+  type Target = String;
+
+  fn deref(&self) -> &Self::Target {
+    &self.0
+  }
+}
+
+#[derive(Debug, Clone)]
+pub struct Account {
   id: String,
   name: String,
 }
 
+impl Account {
+  pub fn new(id: String, name: String) -> Self {
+    Self { id, name }
+  }
+}
+
 #[derive(Debug, Clone)]
-struct Reference {
+pub struct Reference {
   id: String,
   name: Option<String>,
   idate: Option<NaiveDate>,
@@ -17,8 +45,27 @@ struct Reference {
   ddate: Option<NaiveDate>,
 }
 
+impl Reference {
+  pub fn new(
+    id: String,
+    name: Option<String>,
+    idate: Option<NaiveDate>,
+    cdate: NaiveDate,
+    ddate: Option<NaiveDate>,
+  ) -> Self {
+    Self {
+      id,
+      name,
+      idate,
+      cdate,
+      ddate,
+    }
+  }
+}
+
 #[derive(Debug, Clone)]
-struct Event {
+pub struct Event {
+  id: String,
   reference_id: String,
   name: Option<String>,
   idate: Option<NaiveDate>,
@@ -26,13 +73,51 @@ struct Event {
   ddate: Option<NaiveDate>,
 }
 
+impl Event {
+  pub fn new(
+    id: String,
+    reference_id: String,
+    name: Option<String>,
+    idate: Option<NaiveDate>,
+    cdate: NaiveDate,
+    ddate: Option<NaiveDate>,
+  ) -> Self {
+    Self {
+      id,
+      reference_id,
+      name,
+      idate,
+      cdate,
+      ddate,
+    }
+  }
+}
+
 #[derive(Debug, Clone)]
-struct Transaction {
+pub struct Transaction {
   debit: String,
   credit: String,
-  // event_id: u32,
+  event_id: String,
   cdate: NaiveDate,
   amount: i64,
+}
+
+impl Transaction {
+  pub fn new(
+    debit: String,
+    credit: String,
+    event_id: String,
+    cdate: NaiveDate,
+    amount: i64,
+  ) -> Self {
+    Self {
+      debit,
+      credit,
+      event_id,
+      cdate,
+      amount,
+    }
+  }
 }
 
 #[derive(Debug)]
@@ -63,7 +148,7 @@ impl Ledger {
       None => false,
     }
   }
-  fn add_account(&mut self, account: Account) -> Result<(), String> {
+  pub fn add_account(&mut self, account: Account) -> Result<(), String> {
     match self.has_account(&account.id) {
       true => Err(format!("Account already exist: {}", &account.id)),
       false => {
@@ -78,21 +163,21 @@ impl Ledger {
   fn has_reference(&self, reference_id: &str) -> bool {
     self.references.contains_key(reference_id)
   }
-  fn add_reference(&mut self, reference: Reference) -> Result<(), String> {
+  pub fn add_reference(&mut self, reference: Reference) -> Result<(), String> {
     if self.has_reference(&reference.id) {
       return Err(format!("Reference ID already exist {}", &reference.id));
     }
     self.references.insert(reference.id.clone(), reference);
     Ok(())
   }
-  fn add_event(&mut self, event: Event) -> Result<(), String> {
+  pub fn add_event(&mut self, event: Event) -> Result<(), String> {
     if self.has_reference(&event.reference_id) {
       return Err(format!("Unknown event id {}", &event.reference_id));
     }
     self.events.push(event);
     Ok(())
   }
-  fn add_transaction(&mut self, transaction: Transaction) -> Result<(), String> {
+  pub fn add_transaction(&mut self, transaction: Transaction) -> Result<(), String> {
     // Check tr debit account
     if !self.has_account(&transaction.debit) {
       return Err(format!(
