@@ -1,19 +1,32 @@
+use crate::{file, file_index::FileIndex, inspector::Inspector, ledger::Ledger};
+use serde::Deserialize;
 use std::{
   env,
   path::{Path, PathBuf},
 };
 
-use crate::{
-  config::{self, Config},
-  file_index::FileIndex,
-};
+/// BIT Config
+#[derive(Deserialize, Debug)]
+pub struct Config {
+  pub name: String,
+  pub description: Option<String>,
+  pub year: String,
+  pub currency: String,
+  pub dependencies: Dependencies,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Dependencies {
+  pub accounts: String,
+  pub logs: String,
+}
 
 pub struct Project {
   project_root_path: PathBuf,
-  config: config::Config,
+  config: Config,
   accounts_path: PathBuf,
-  balance_path: PathBuf,
-  profit_path: PathBuf,
+  // balance_path: PathBuf,
+  // profit_path: PathBuf,
   logs_path: PathBuf,
   file_index: FileIndex,
 }
@@ -49,16 +62,6 @@ impl Project {
       return Err("Accounts def file does not exist!".to_string());
     }
 
-    let balance_path = project_root_path.join(&config.dependencies.balance_sheet);
-    if !balance_path.exists() && !balance_path.is_file() {
-      return Err("Balance def file does not exist!".to_string());
-    }
-
-    let profit_path = project_root_path.join(&config.dependencies.profit_loss);
-    if !profit_path.exists() && !profit_path.is_file() {
-      return Err("Profit and loss file does not exist!".to_string());
-    }
-
     let logs_path = project_root_path.join(&config.dependencies.logs);
     if !logs_path.exists() && !logs_path.is_dir() {
       return Err("Logs path not exist or not a folder!".to_string());
@@ -71,8 +74,6 @@ impl Project {
       project_root_path,
       config,
       accounts_path,
-      balance_path,
-      profit_path,
       logs_path,
       file_index,
     })
@@ -83,6 +84,21 @@ impl Project {
   // Get project files
   pub fn read_files_recurs(&self) -> Vec<crate::file::File> {
     crate::file::read_files_recurs(&self.project_root_path)
+  }
+
+  // Inspect files
+  pub fn inspect(&self) -> Result<Ledger, String> {
+    let mut ledger = Ledger::new();
+
+    // Inspect accounts
+    Inspector::init_from_file(&self.accounts_path)?.process_to_ledger(&mut ledger)?;
+
+    // Inspect logs
+    for f in file::read_files_recurs(&self.logs_path) {
+      Inspector::init_from_file(&f.path)?.process_to_ledger(&mut ledger)?;
+    }
+
+    Ok(ledger)
   }
 }
 

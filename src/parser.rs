@@ -262,8 +262,8 @@ impl Parser for TransactionExp {
     let mut amount: Option<i64> = None;
     for row in from {
       match row.0.as_str() {
-        "debit" | "DEBIT" => debit = Some(row.1.to_string()),
-        "credit" | "CREDIT" => credit = Some(row.1.to_string()),
+        "debit" | "DEBIT" | "d" | "D" => debit = Some(row.1.to_string()),
+        "credit" | "CREDIT" | "c" | "C" => credit = Some(row.1.to_string()),
         "event_id" | "EVENT_ID" => {
           event_id = Some(
             row
@@ -280,7 +280,7 @@ impl Parser for TransactionExp {
               .map_err(|_| "Wrong date format")?,
           )
         }
-        "amount" | "AMOUNT" => {
+        "amount" | "AMOUNT" | "a" | "A" => {
           amount = Some(
             row
               .1
@@ -380,7 +380,7 @@ impl Parser for EventExp {
     for row in from {
       match row.0.as_str() {
         "id" | "ID" => id = Some(row.1.to_string()),
-        "reference_id" | "REFERENCE_ID" => reference_id = Some(row.1.to_string()),
+        "reference_id" | "REFERENCE_ID" | "refid" => reference_id = Some(row.1.to_string()),
         "name" | "NAME" => name = Some(row.1.to_string()),
         "idate" | "IDATE" => {
           idate = Some(
@@ -426,15 +426,15 @@ fn parse_exp_candidate(candidate: &str) -> Result<Expression, String> {
     "mode" | "MODE" => Ok(Expression::Mode(ModeExp::parse_params(
       &candidate.parameters,
     )?)),
-    "reference" | "REFERENCE" => Ok(Expression::Reference(ReferenceExp::parse_params(
+    "reference" | "REFERENCE" | "ref" => Ok(Expression::Reference(ReferenceExp::parse_params(
       &candidate.parameters,
     )?)),
     "event" | "EVENT" => Ok(Expression::Event(EventExp::parse_params(
       &candidate.parameters,
     )?)),
-    "transaction" | "TRANSACTION" => Ok(Expression::Transaction(TransactionExp::parse_params(
-      &candidate.parameters,
-    )?)),
+    "transaction" | "TRANSACTION" | "tr" => Ok(Expression::Transaction(
+      TransactionExp::parse_params(&candidate.parameters)?,
+    )),
     "account" | "ACCOUNT" => Ok(Expression::Account(AccountExp::parse_params(
       &candidate.parameters,
     )?)),

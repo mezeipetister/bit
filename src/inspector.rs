@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, path::Path};
+use std::path::Path;
 
 use chrono::NaiveDate;
 
@@ -70,18 +70,32 @@ impl Inspector {
             transaction_exp.amount,
           ))?;
         }
-        Expression::Reference(reference_exp) => ledger.add_reference(ledger::Reference::new(
-          reference_exp.id,
-          reference_exp.name,
-          reference_exp.idate,
-          reference_exp.cdate,
-          reference_exp.ddate,
-        ))?,
+        Expression::Reference(reference_exp) => {
+          // Set current ref id for scope
+          self.reference_id = Some(reference_exp.id.clone());
+          // Set cdate for scope
+          self.cdate = Some(reference_exp.cdate);
+
+          // Add reference
+          ledger.add_reference(ledger::Reference::new(
+            reference_exp.id,
+            reference_exp.name,
+            reference_exp.idate,
+            reference_exp.cdate,
+            reference_exp.ddate,
+          ))?
+        }
         Expression::Event(event_exp) => {
           let cdate = match event_exp.cdate {
             Some(cdate) => cdate,
             None => self.cdate.ok_or("No cdate set before".to_string())?,
           };
+
+          // Set event id for scope
+          self.event_id = Some(event_exp.id.clone());
+          // Set cdate for scope
+          self.cdate = Some(cdate);
+
           ledger.add_event(ledger::Event::new(
             event_exp.id,
             event_exp.reference_id,

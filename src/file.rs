@@ -8,9 +8,9 @@ use std::{
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct File {
-  path: PathBuf,
-  name: Option<OsString>,
-  modified: SystemTime,
+  pub path: PathBuf,
+  pub name: Option<OsString>,
+  pub modified: SystemTime,
 }
 
 pub fn read_files_recurs(folder: &Path) -> Vec<File> {

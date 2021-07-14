@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Deref, usize};
+use std::{collections::HashMap, hash::Hash, ops::Deref, usize};
 
 use chrono::{Datelike, NaiveDate, Utc};
 
@@ -124,7 +124,7 @@ impl Transaction {
 pub struct Ledger {
   accounts: Vec<Account>,
   references: HashMap<String, Reference>,
-  events: Vec<Event>,
+  events: HashMap<String, Event>,
   transactions: Vec<Transaction>,
   ledger_index: Vec<HashMap<String, LedgerIndexItem>>,
 }
@@ -134,7 +134,7 @@ impl Ledger {
     Self {
       accounts: Vec::new(),
       references: HashMap::new(),
-      events: Vec::new(),
+      events: HashMap::new(),
       transactions: Vec::new(),
       ledger_index: (0..NaiveDate::from_ymd(Utc::today().year(), 12, 31).ordinal0())
         .into_iter()
@@ -163,6 +163,9 @@ impl Ledger {
   fn has_reference(&self, reference_id: &str) -> bool {
     self.references.contains_key(reference_id)
   }
+  fn has_event(&self, event_id: &str) -> bool {
+    self.events.contains_key(event_id)
+  }
   pub fn add_reference(&mut self, reference: Reference) -> Result<(), String> {
     if self.has_reference(&reference.id) {
       return Err(format!("Reference ID already exist {}", &reference.id));
@@ -171,10 +174,10 @@ impl Ledger {
     Ok(())
   }
   pub fn add_event(&mut self, event: Event) -> Result<(), String> {
-    if self.has_reference(&event.reference_id) {
-      return Err(format!("Unknown event id {}", &event.reference_id));
+    if self.has_event(&event.id) {
+      return Err(format!("Unknown event id {}", &event.id));
     }
-    self.events.push(event);
+    self.events.insert(event.id.clone(), event);
     Ok(())
   }
   pub fn add_transaction(&mut self, transaction: Transaction) -> Result<(), String> {

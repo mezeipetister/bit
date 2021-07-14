@@ -1,0 +1,10 @@
+# Example bit file
+# example row 2
+reference id r1 cdate 2021-06-01 name "Example reference;
+
+event id e1 reference_id r1;
+
+transaction debit 161 credit 384 amount 1000; // Comment
+
+tr d 384 c 161 a 1_000; // Comment
+tr d 384 c 384 a 700; // Comment
