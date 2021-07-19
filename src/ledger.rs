@@ -1,6 +1,11 @@
 use crate::parser::Expression;
-use chrono::{Datelike, NaiveDate, Utc};
-use std::{collections::HashMap, hash::Hash, ops::Deref, usize};
+use chrono::{Datelike, Duration, NaiveDate, Utc};
+use std::{
+  collections::HashMap,
+  hash::Hash,
+  ops::{Add, Deref},
+  usize,
+};
 use thousands::Separable;
 
 // Trimmed string representation
@@ -25,8 +30,8 @@ impl Deref for TString {
 
 #[derive(Debug, Clone)]
 pub struct Account {
-  id: String,
-  name: String,
+  pub id: String,
+  pub name: String,
 }
 
 impl Account {
@@ -121,7 +126,7 @@ impl Transaction {
 
 #[derive(Debug)]
 pub struct Ledger {
-  accounts: Vec<Account>,
+  pub accounts: Vec<Account>,
   references: HashMap<String, Reference>,
   events: HashMap<String, Event>,
   transactions: Vec<Transaction>,
@@ -202,20 +207,24 @@ impl Ledger {
 
     // Process completion day debit
     let index = &mut self.ledger_index[completion_day];
-    match index.get_mut(&transaction.debit) {
+    // cbd => closing balance debit
+    let cbd = match index.get_mut(&transaction.debit) {
       Some(index_item) => {
         index_item.td += transaction.amount;
-        index_item.bcd += transaction.amount;
+        index_item.bc = index_item.bo + (index_item.td - index_item.tc);
+        index_item.bc
       }
-      None => (),
-    }
-    match index.get_mut(&transaction.credit) {
+      None => panic!("Cannot get mutable account"),
+    };
+    // cbc => closing balance credit
+    let cbc = match index.get_mut(&transaction.credit) {
       Some(index_item) => {
         index_item.tc += transaction.amount;
-        index_item.bcc += transaction.amount;
+        index_item.bc = index_item.bo + (index_item.td - index_item.tc);
+        index_item.bc
       }
-      None => (),
-    }
+      None => panic!("Cannot get mutable account"),
+    };
 
     (completion_day + 1..last_day)
       .into_iter()
@@ -225,8 +234,8 @@ impl Ledger {
         // Process debit
         match item.get_mut(&transaction.debit) {
           Some(index_item) => {
-            index_item.bod += transaction.amount;
-            index_item.bcd += transaction.amount;
+            index_item.bo += cbd;
+            index_item.bc += index_item.bo + index_item.td - index_item.tc;
           }
           None => (),
         }
@@ -234,8 +243,8 @@ impl Ledger {
         // Process credit
         match item.get_mut(&transaction.credit) {
           Some(index_item) => {
-            index_item.boc += transaction.amount;
-            index_item.bcc += transaction.amount;
+            index_item.bo += cbc;
+            index_item.bc += index_item.bo + index_item.td - index_item.tc;
           }
           None => (),
         }
@@ -245,44 +254,89 @@ impl Ledger {
   pub fn get_ledger_by_date(
     &self,
     day_index: usize,
-  ) -> Result<Vec<(String, LedgerIndexItem)>, String> {
+  ) -> Result<HashMap<String, LedgerIndexItem>, String> {
     let day = self
       .ledger_index
       .get(day_index)
       .ok_or("Out of range date")?;
-    let mut res = (*day)
-      .clone()
-      .into_iter()
-      .collect::<Vec<(String, LedgerIndexItem)>>();
-    res.sort_by(|x, y| x.0.cmp(&y.0));
-    Ok(res)
+    Ok((*day).clone())
   }
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct LedgerIndexItem {
-  /// Balance opening debit
-  bod: i64,
-  /// Balance opening credit
-  boc: i64,
+  /// Balance opening
+  bo: i64,
   /// Turnover debit
   td: i64,
   /// Turnover credit
   tc: i64,
-  /// Balance closing debit
-  bcd: i64,
-  /// Balance closing credit
-  bcc: i64,
+  /// Balance closing
+  bc: i64,
+}
+
+impl Add for LedgerIndexItem {
+  type Output = LedgerIndexItem;
+
+  fn add(self, rhs: Self) -> Self::Output {
+    let new_td = self.td + rhs.td;
+    let new_tc = self.tc + rhs.tc;
+    LedgerIndexItem {
+      bo: self.bo,
+      td: new_td,
+      tc: new_tc,
+      bc: self.bo + new_td - new_tc,
+    }
+  }
 }
 
 impl LedgerIndexItem {
   pub fn print_full(&self) -> String {
     format!(
-      "{0: <10} | {1: <10} | {2: <10} | {3: <10}",
+      "{0: <13} | {1: <13} | {2: <13} | {3: <13}",
       self.td.separate_with_spaces(),
       self.tc.separate_with_spaces(),
-      self.bcd.separate_with_spaces(),
-      self.bcc.separate_with_spaces()
+      match self.bc {
+        x if x >= 0 => x.abs(),
+        _ => 0,
+      }
+      .separate_with_spaces(),
+      match self.bc {
+        x if x < 0 => x.abs(),
+        _ => 0,
+      }
+      .separate_with_spaces()
     )
+  }
+}
+
+// None => yearly YYYY-01-01 - Current month
+// mm => full month of current year
+pub fn unzip_dates(date_str: Option<String>) -> Result<(NaiveDate, NaiveDate), String> {
+  match date_str {
+    Some(month) => {
+      // Try to map month str to i32
+      let month = month
+        .parse::<u32>()
+        .map_err(|_| "Wrong month number. 1-12".to_string())?;
+
+      // Check date range
+      if month < 1 || month > 12 {
+        return Err("Month date should be a valid 1-12 integer".to_string());
+      }
+
+      // Define month first day
+      let sdate = NaiveDate::from_ymd(Utc::today().year(), month, 1);
+
+      // Define month last day
+      let ldate = NaiveDate::from_ymd(Utc::today().year(), month + 1, 1) - Duration::days(1);
+
+      // Return month date range
+      Ok((sdate, ldate))
+    }
+    None => Ok((
+      NaiveDate::from_ymd(Utc::today().year(), 1, 1),
+      Utc::today().naive_local(),
+    )),
   }
 }

@@ -1,18 +1,15 @@
 use bit::{
-  ledger::{self, Ledger},
+  ledger::{unzip_dates, LedgerIndexItem},
   project::Project,
 };
 use chrono::{Datelike, NaiveDate, Utc};
 use std::{
   collections::HashMap,
-  env,
   error::Error,
-  fs,
   io::{self, BufRead, Write},
-  path::{Path, PathBuf},
-  time::SystemTime,
   usize,
 };
+use structopt::clap::Shell;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -25,6 +22,9 @@ enum Command {
   New(NewOpt),
   #[structopt(about = "Generate report about project")]
   Report,
+  #[structopt(about = "Check project health")]
+  Check,
+  #[structopt(about = "Get ledger details by date")]
   Ledger(LedgerOpt),
 }
 
@@ -39,6 +39,9 @@ pub struct LedgerOpt {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+  // generate `bash` completions in "target" directory
+  // Command::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");
+
   let opt: Command = Command::from_args();
 
   match opt {
@@ -76,33 +79,74 @@ fn main() -> Result<(), Box<dyn Error>> {
       let ledger = project.inspect()?;
       println!("{:?}", ledger);
     }
+    Command::Check => {
+      let project = Project::new()?;
+      let _ = project.inspect()?;
+      println!("Project is healthy");
+    }
     Command::Ledger(lopt) => {
       // Init project
       let project = Project::new()?;
       // Define day
-      let day = match lopt.date {
-        Some(d) => d
-          .parse::<NaiveDate>()
-          .map_err(|_| "Could not parse ledger date".to_string())?,
-        None => Utc::today().naive_local(),
-      };
-      // Define day index
-      let day_index = day.ordinal0() as usize;
+      let dates = unzip_dates(lopt.date)?;
+
+      // Define first day index
+      let fday_index = dates.0.ordinal0() as usize;
+
+      // Define last day index
+      let lday_index = dates.1.ordinal0() as usize;
+
       // Try inspect and get the given day
-      let ledger = project.inspect()?.get_ledger_by_date(day_index)?;
-      println!("\nLedger for date: {}\n", day);
+      let ledger = project.inspect()?;
+      let res = (fday_index..lday_index)
+        .map(|day_index| {
+          ledger
+            .get_ledger_by_date(day_index)
+            .expect("Cannot get ledger by day index")
+        })
+        .collect::<Vec<HashMap<String, LedgerIndexItem>>>();
+
+      println!("\nLedger for date: {} - {}\n", dates.0, dates.1);
+
       println!(
-        "{0: <10} {1: <10} | {2: <10} | {3: <10} | {4: <10}",
-        "Accounts", "T. Debit", "T. Credit", "B. Debit", "B. Credit"
+        "{0: <25}  {1: <13} | {2: <13} | {3: <13} | {4: <13}",
+        "Account ID", "T. Debit", "T. Credit", "B. Debit", "B. Credit"
       );
       println!(
         "{}",
-        "-----------------------------------------------------------"
+        "-------------------------------------------------------------------------------------"
       );
       // Print result
-      ledger
-        .iter()
-        .for_each(|day| println!("{0: <10} {1: <10}", day.0, day.1.print_full()));
+      ledger.accounts.iter().for_each(|account| {
+        let mut r = res[0]
+          .get(&account.id)
+          .expect("Cannot get first item")
+          .to_owned();
+
+        for day_index in &res[1..] {
+          r = r
+            + day_index
+              .get(&account.id)
+              .expect("No data for account")
+              .to_owned();
+        }
+
+        println!(
+          "{0: <5} {1: <20} {2: <13}",
+          &account.id,
+          account
+            .name
+            .chars()
+            .into_iter()
+            .take(15)
+            .collect::<String>(),
+          r.print_full()
+        );
+        println!(
+          "{}",
+          "------------------------------------------------------------------------------------*"
+        );
+      });
     }
   }
 
