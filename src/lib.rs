@@ -1,10 +1,10 @@
 #![feature(test)]
 extern crate test;
 
-// pub mod transaction;
-pub mod file;
-pub mod file_index;
-pub mod inspector;
+pub mod fs;
 pub mod ledger;
+pub mod note;
 pub mod parser;
 pub mod project;
+pub mod settings;
+pub mod signature;

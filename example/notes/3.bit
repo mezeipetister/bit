@@ -1,0 +1,14 @@
+---
+Telefon vásárlása
+---
+
+!TODO
+
+SOURCE        3
+ID            
+PAYMENT_KIND  transfer
+NET           100.000
+GROSS         127.000
+VAT           27.000
+DATE          
+DUEDATE       

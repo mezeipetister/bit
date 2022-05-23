@@ -1,932 +1,328 @@
-use std::{fs::File, io::Read, path::Path};
+use std::{
+    default,
+    ops::Not,
+    path::{Path, PathBuf},
+    str::Bytes,
+};
 
-use chrono::NaiveDate;
-
-trait Parser
-where
-  Self: Sized,
-{
-  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String>;
+#[derive(Default, Debug)]
+pub struct NoteRaw {
+    file_path: PathBuf,
+    lines: Vec<Line>,
+    is_valid: bool,
+    is_signed: bool,
 }
 
-#[derive(Debug, Clone)]
-enum PreProcessToken {
-  Comment(String),
-  TextBlock(String),
-}
-
-impl PartialEq for PreProcessToken {
-  fn eq(&self, other: &Self) -> bool {
-    match self {
-      PreProcessToken::Comment(i) => match other {
-        PreProcessToken::Comment(_i) => i == _i,
-        PreProcessToken::TextBlock(_) => false,
-      },
-      PreProcessToken::TextBlock(i) => match other {
-        PreProcessToken::Comment(_) => false,
-        PreProcessToken::TextBlock(_i) => i == _i,
-      },
+impl NoteRaw {
+    fn add_line(&mut self, new_line: Line) {
+        self.lines.push(new_line);
     }
-  }
+    pub fn from_file(file_path: &Path) -> Result<Self, String> {
+        let contents =
+            std::fs::read_to_string(&file_path).expect("Something went wrong reading the file");
+
+        let mut note_raw: NoteRaw = NoteRaw::default();
+        note_raw.file_path = file_path.to_owned();
+        for line in contents.lines().enumerate() {
+            let new_line = Line::from_raw_line(LineRaw::new(line.0, line.1.to_string()));
+            note_raw.add_line(new_line);
+        }
+        Ok(note_raw)
+    }
+    pub fn is_signed(&self) -> bool {
+        self.is_signed
+    }
+    pub fn raw_bytes(&self) -> Vec<u8> {
+        let a = self.lines.iter().map(|i| i.raw()).collect::<Vec<&str>>();
+        a.join("\n").into_bytes()
+    }
+    pub fn file_path(&self) -> &Path {
+        &self.file_path
+    }
+    pub fn lines_ref(&self) -> &Vec<Line> {
+        &self.lines
+    }
+    pub fn lines(self) -> Vec<Line> {
+        self.lines
+    }
 }
 
-fn pre_process(input: &str) -> Vec<PreProcessToken> {
-  let mut res = Vec::new();
-  let mut token: Option<PreProcessToken> = None;
-  for line in input.lines() {
-    // Skip empty lines
-    if line.trim().is_empty() {
-      continue;
+#[derive(Debug)]
+struct LineRaw {
+    line_number: usize,
+    raw: String,
+}
+
+impl LineRaw {
+    fn new(line_number: usize, raw: String) -> Self {
+        LineRaw { line_number, raw }
     }
-    // If there is at least one char
-    if let Some(fc) = line.trim_start().chars().nth(0) {
-      let token_line = match fc {
-        // Doc comment
-        '#' => PreProcessToken::Comment(line.trim().trim_matches('#').trim().to_string()),
-        // Else
-        _ => PreProcessToken::TextBlock(
-          line
-            .trim()
-            .split("//")
-            .collect::<Vec<_>>()
-            .first()
-            .unwrap()
-            .trim()
-            .to_string(),
-        ),
-      };
-      match &mut token {
-        Some(tkn) => match tkn {
-          PreProcessToken::Comment(i) => match &token_line {
-            // Add rolling
-            PreProcessToken::Comment(inner) => {
-              i.push_str("\n");
-              i.push_str(inner);
+}
+
+#[derive(Debug)]
+pub struct Line {
+    raw: String,
+    tokens: Vec<Token>,
+}
+
+impl Line {
+    fn from_raw_line(raw_line: LineRaw) -> Self {
+        Self {
+            raw: raw_line.raw.clone(),
+            tokens: tokenize_line(raw_line),
+        }
+    }
+    pub fn raw(&self) -> &str {
+        &self.raw
+    }
+    pub fn tokens_ref(&self) -> &Vec<Token> {
+        &self.tokens
+    }
+    pub fn tokens(self) -> Vec<Token> {
+        self.tokens
+    }
+}
+
+fn tokenize_line(raw_line: LineRaw) -> Vec<Token> {
+    let mut tokens: Vec<Token> = vec![];
+    let mut temp_token: Option<Token> = None;
+    let mut token_is_inner = false;
+
+    for (char_pos, ch) in raw_line.raw.chars().enumerate() {
+        match ch {
+            ' ' => match token_is_inner {
+                true => temp_token.as_mut().unwrap().append_char(ch),
+                false => {
+                    let t = temp_token.take();
+                    if let Some(t) = t {
+                        tokens.push(t);
+                    }
+                }
+            },
+            '"' => match token_is_inner {
+                false => {
+                    token_is_inner = true;
+                    temp_token = Some(Token::new(
+                        (raw_line.line_number + 1, char_pos + 1),
+                        TokenKind::Text(String::new()),
+                    ));
+                    continue;
+                }
+                true => {
+                    token_is_inner = false;
+                    continue;
+                }
+            },
+            x => match token_is_inner {
+                false => match &mut temp_token {
+                    Some(t) => {
+                        t.append_char(x);
+                    }
+                    None => {
+                        let mut s = String::new();
+                        s.push(x);
+                        temp_token = Some(Token::new(
+                            (raw_line.line_number + 1, char_pos + 1),
+                            TokenKind::Text(s),
+                        ));
+                    }
+                },
+                true => temp_token.as_mut().unwrap().append_char(x),
+            },
+        }
+    }
+
+    let t = temp_token.take();
+    if let Some(t) = t {
+        tokens.push(t);
+    }
+
+    if let Some(first_token) = tokens.get_mut(0) {
+        match &mut first_token.token_kind {
+            TokenKind::Command(_) => (),
+            TokenKind::Text(t) => {
+                let c = Command::parse(&t);
+                match c {
+                    Command::Unknown => (),
+                    x => first_token.token_kind = TokenKind::Command(x),
+                }
             }
-            // Change opened token stream
-            PreProcessToken::TextBlock(_inner) => {
-              res.push(token.take().unwrap());
-              token.get_or_insert(token_line);
-            }
-          },
-          PreProcessToken::TextBlock(i) => match &token_line {
-            // Change opened token stream
-            PreProcessToken::Comment(_inner) => {
-              res.push(token.take().unwrap());
-              token.get_or_insert(token_line);
-            }
-            // Add rolling
-            PreProcessToken::TextBlock(inner) => {
-              i.push_str("\n");
-              i.push_str(inner);
-            }
-          },
-        },
-        None => token = Some(token_line),
-      }
+        }
     }
-  }
-  res.push(token.take().unwrap());
-  res
+
+    tokens
 }
 
 #[derive(Debug)]
-struct ExpressionCandidate {
-  command: String,
-  parameters: Vec<(String, String)>,
+pub struct Token {
+    position: (usize, usize),
+    token_kind: TokenKind,
 }
 
-impl ExpressionCandidate {
-  fn from_str(single_expression: &str) -> Result<ExpressionCandidate, String> {
-    // Preprocess token stream
-    let mut token_stream = single_expression
-      .replace(";", "")
-      .trim()
-      .split_whitespace()
-      .collect::<Vec<_>>()
-      .into_iter()
-      .map(|i| i.trim().to_string())
-      .collect::<Vec<_>>();
-
-    if token_stream.len() < 1 {
-      return Err("Empty expression. Impossible error!".to_string());
-    }
-
-    let command = token_stream.remove(0);
-
-    // Restore " string literals
-    let mut _token_stream: Vec<String> = Vec::new();
-
-    let mut append_mode = false;
-
-    for token in token_stream {
-      let is_opening = if let Some(first_char) = token.chars().collect::<Vec<_>>().first() {
-        if *first_char == '"' {
-          true
-        } else {
-          false
+impl Token {
+    fn new(position: (usize, usize), token_kind: TokenKind) -> Self {
+        Self {
+            position,
+            token_kind,
         }
-      } else {
-        false
-      };
-
-      let is_closing = if let Some(last_char) = token.chars().collect::<Vec<_>>().last() {
-        if *last_char == '"' {
-          true
-        } else {
-          false
-        }
-      } else {
-        false
-      };
-
-      match append_mode {
-        true => match _token_stream.len() {
-          // Concat token to the last one
-          x if x > 0 => {
-            if let Some(last) = _token_stream.last_mut() {
-              last.push_str(" ");
-              last.push_str(&token);
-            }
-          }
-          // First item
-          _ => _token_stream.push(token),
-        },
-        false => _token_stream.push(token),
-      }
-
-      if is_opening {
-        match append_mode {
-          true => return Err("Syntax error! Quotation in quotation".to_string()),
-          false => append_mode = true,
-        }
-      }
-
-      if is_closing {
-        append_mode = false;
-      }
     }
-
-    let mut parameters: Vec<(String, String)> = Vec::new();
-
-    for p in _token_stream.chunks(2) {
-      if p.len() != 2 {
-        return Err(format!("No value for parameter {}", p[0]));
-      }
-      parameters.push((p[0].to_string(), p[1].to_string()));
+    fn append_char(&mut self, ch: char) {
+        match &mut self.token_kind {
+            TokenKind::Command(_) => (),
+            TokenKind::Text(t) => t.push(ch),
+        }
     }
-
-    Ok(ExpressionCandidate {
-      command,
-      parameters,
-    })
-  }
+    pub fn position(&self) -> (usize, usize) {
+        self.position
+    }
+    pub fn token_kind_ref(&self) -> &TokenKind {
+        &self.token_kind
+    }
+    pub fn token_kind(self) -> TokenKind {
+        self.token_kind
+    }
 }
 
 #[derive(Debug)]
-pub enum Expression {
-  DocComment(CommentExp),
-  Mode(ModeExp),
-  Account(AccountExp),
-  Transaction(TransactionExp),
-  Reference(ReferenceExp),
-  Event(EventExp),
+pub enum TokenKind {
+    Command(Command),
+    Text(String),
 }
 
-#[derive(Debug)]
-pub enum ModeExp {
-  Account,
-  Balance,
-  Profit,
-  Transaction,
-}
-
-impl Parser for ModeExp {
-  fn parse_params(params: &Vec<(String, String)>) -> Result<Self, String> {
-    let first = &params[0];
-    match first.0.as_str() {
-      "set" | "SET" => match first.1.as_str() {
-        "account" => Ok(ModeExp::Account),
-        "balance" => Ok(ModeExp::Balance),
-        "profit" => Ok(ModeExp::Profit),
-        "transaction" => Ok(ModeExp::Transaction),
-        _ => Err("Unknown mode".to_string()),
-      },
-      _ => Err("Unknown parameter for MODE".to_string()),
+impl TokenKind {
+    pub fn take_text_string(self) -> Option<String> {
+        match self {
+            TokenKind::Command(_) => None,
+            TokenKind::Text(text) => Some(text),
+        }
     }
-  }
-}
-
-#[derive(Debug)]
-pub struct CommentExp(String);
-
-#[derive(Debug)]
-pub struct AccountExp {
-  pub id: String,
-  pub name: String,
-}
-
-impl Parser for AccountExp {
-  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
-    let mut id: Option<String> = None;
-    let mut name: Option<String> = None;
-    for row in from {
-      match row.0.as_str() {
-        "id" | "ID" => id = Some(row.1.to_string()),
-        "name" | "NAME" => name = Some(row.1.to_string()),
-        _ => return Err("Unknown parameter".to_string()),
-      }
+    pub fn take_text_string_ref(&self) -> Option<&String> {
+        match self {
+            TokenKind::Command(_) => None,
+            TokenKind::Text(text) => Some(text),
+        }
     }
-    Ok(Self {
-      id: id.ok_or("No ID given".to_string())?,
-      name: name.ok_or("No NAME given".to_string())?,
-    })
-  }
 }
 
-#[derive(Debug)]
-pub struct TransactionExp {
-  pub debit: String,
-  pub credit: String,
-  pub event_id: Option<String>,
-  pub cdate: Option<NaiveDate>,
-  pub amount: i64,
+#[derive(Debug, PartialEq)]
+pub enum Command {
+    Alias,
+    Id,
+    Docid,
+    Author,
+    PaymentKind,
+    Net,
+    Gross,
+    Vat,
+    IssueDate,
+    CompletionDate,
+    DueDate,
+    Transaction,
+    Signature,
+    Account,
+    Unknown,
 }
 
-impl Parser for TransactionExp {
-  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
-    let mut debit: Option<String> = None;
-    let mut credit: Option<String> = None;
-    let mut event_id: Option<String> = None;
-    let mut cdate: Option<NaiveDate> = None;
-    let mut amount: Option<i64> = None;
-    for row in from {
-      match row.0.as_str() {
-        "debit" | "DEBIT" | "d" | "D" => debit = Some(row.1.to_string()),
-        "credit" | "CREDIT" | "c" | "C" => credit = Some(row.1.to_string()),
-        "event_id" | "EVENT_ID" => {
-          event_id = Some(
-            row
-              .1
-              .parse::<String>()
-              .map_err(|_| "Event ID must be a string")?,
-          )
+impl Command {
+    fn parse(f: &str) -> Self {
+        match f {
+            "ALIAS" => Self::Alias,
+            "ID" => Self::Id,
+            "DOCID" => Self::Docid,
+            "AUTHOR" => Self::Author,
+            "PAYMENT_KIND" => Self::PaymentKind,
+            "NET" => Self::Net,
+            "GROSS" => Self::Gross,
+            "VAT" => Self::Vat,
+            "ISSUE_DATE" => Self::IssueDate,
+            "COMPLETION_DATE" => Self::CompletionDate,
+            "DUEDATE" => Self::DueDate,
+            "TRANSACTION" | ">" => Self::Transaction,
+            "SIGNATURE" | "!" => Self::Signature,
+            "ACCOUNT" | "%" => Self::Account,
+            _ => Self::Unknown,
         }
-        "cdate" | "CDATE" => {
-          cdate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong date format")?,
-          )
-        }
-        "amount" | "AMOUNT" | "a" | "A" => {
-          amount = Some(
-            row
-              .1
-              .replace("_", "")
-              .parse::<i64>()
-              .map_err(|_| "Amount must be integer number")?,
-          )
-        }
-        _ => return Err("Unknown parameter".to_string()),
-      }
     }
-    Ok(Self {
-      debit: debit.ok_or("No debit given")?,
-      credit: credit.ok_or("No credit given")?,
-      event_id,
-      cdate,
-      amount: amount.ok_or("No amount given")?,
-    })
-  }
 }
 
-#[derive(Debug)]
-pub struct ReferenceExp {
-  pub id: String,
-  pub name: Option<String>,
-  pub idate: Option<NaiveDate>,
-  pub cdate: NaiveDate,
-  pub ddate: Option<NaiveDate>,
-}
-
-impl Parser for ReferenceExp {
-  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
-    let mut id: Option<String> = None;
-    let mut name: Option<String> = None;
-    let mut idate: Option<NaiveDate> = None;
-    let mut cdate: Option<NaiveDate> = None;
-    let mut ddate: Option<NaiveDate> = None;
-    for row in from {
-      match row.0.as_str() {
-        "id" | "ID" => id = Some(row.1.to_string()),
-        "name" | "NAME" => name = Some(row.1.to_string()),
-        "idate" | "IDATE" => {
-          idate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong IDATE date format")?,
-          )
-        }
-        "cdate" | "CDATE" => {
-          cdate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong CDATE date format")?,
-          )
-        }
-        "ddate" | "DDATE" => {
-          ddate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong DDATE date format")?,
-          )
-        }
-        _ => return Err("Unknown parameter".to_string()),
-      }
+fn parse(note_string: &str) -> NoteRaw {
+    let mut note_raw: NoteRaw = NoteRaw::default();
+    for line in note_string.lines().enumerate() {
+        let new_line = Line::from_raw_line(LineRaw::new(line.0, line.1.to_string()));
+        note_raw.add_line(new_line);
     }
-    Ok(Self {
-      id: id.ok_or("Missing reference ID")?,
-      name,
-      idate,
-      cdate: cdate.ok_or("Missing CDATE")?,
-      ddate,
-    })
-  }
-}
-
-#[derive(Debug)]
-pub struct EventExp {
-  pub id: String,
-  pub reference_id: String,
-  pub name: Option<String>,
-  pub idate: Option<NaiveDate>,
-  pub cdate: Option<NaiveDate>,
-  pub ddate: Option<NaiveDate>,
-}
-
-impl Parser for EventExp {
-  fn parse_params(from: &Vec<(String, String)>) -> Result<Self, String> {
-    let mut id = None;
-    let mut reference_id: Option<String> = None;
-    let mut name: Option<String> = None;
-    let mut idate: Option<NaiveDate> = None;
-    let mut cdate: Option<NaiveDate> = None;
-    let mut ddate: Option<NaiveDate> = None;
-    for row in from {
-      match row.0.as_str() {
-        "id" | "ID" => id = Some(row.1.to_string()),
-        "reference_id" | "REFERENCE_ID" | "refid" => reference_id = Some(row.1.to_string()),
-        "name" | "NAME" => name = Some(row.1.to_string()),
-        "idate" | "IDATE" => {
-          idate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong IDATE date format")?,
-          )
-        }
-        "cdate" | "CDATE" => {
-          cdate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong CDATE date format")?,
-          )
-        }
-        "ddate" | "DDATE" => {
-          ddate = Some(
-            row
-              .1
-              .parse::<NaiveDate>()
-              .map_err(|_| "Wrong DDATE date format")?,
-          )
-        }
-        _ => return Err("Unknown parameter".to_string()),
-      }
-    }
-    Ok(Self {
-      id: id.ok_or("Missing event ID")?,
-      reference_id: reference_id.ok_or("Missing reference ID")?,
-      name,
-      idate,
-      cdate,
-      ddate,
-    })
-  }
-}
-
-fn parse_exp_candidate(candidate: &str) -> Result<Expression, String> {
-  let candidate = ExpressionCandidate::from_str(candidate)?;
-  match candidate.command.as_str() {
-    "mode" | "MODE" => Ok(Expression::Mode(ModeExp::parse_params(
-      &candidate.parameters,
-    )?)),
-    "reference" | "REFERENCE" | "ref" => Ok(Expression::Reference(ReferenceExp::parse_params(
-      &candidate.parameters,
-    )?)),
-    "event" | "EVENT" => Ok(Expression::Event(EventExp::parse_params(
-      &candidate.parameters,
-    )?)),
-    "transaction" | "TRANSACTION" | "tr" => Ok(Expression::Transaction(
-      TransactionExp::parse_params(&candidate.parameters)?,
-    )),
-    "account" | "ACCOUNT" => Ok(Expression::Account(AccountExp::parse_params(
-      &candidate.parameters,
-    )?)),
-    _ => Err(format!("Unknown command: {}", candidate.command)),
-  }
-}
-
-fn parse_text_block(text_block: &str) -> Result<Vec<Expression>, String> {
-  let mut res = Vec::new();
-  let exp_candidates = text_block
-    .split(";")
-    .filter(|i| !i.is_empty())
-    .collect::<Vec<_>>();
-  for ec in exp_candidates {
-    res.push(parse_exp_candidate(ec)?);
-  }
-  Ok(res)
-}
-
-fn parse_expr(pre_tokens: Vec<PreProcessToken>) -> Result<Vec<Expression>, String> {
-  let mut res = Vec::new();
-  for token in pre_tokens {
-    let mut expressions = match token {
-      PreProcessToken::Comment(comment_string) => {
-        vec![Expression::DocComment(CommentExp(comment_string))]
-      }
-      PreProcessToken::TextBlock(text_block) => parse_text_block(&text_block)?,
-    };
-    res.append(&mut expressions);
-  }
-  Ok(res)
-}
-
-/// Public parse interface
-/// to generate expression list from
-/// a given str
-pub fn parse(input: &str) -> Result<Vec<Expression>, String> {
-  let pre_tokens = pre_process(input);
-  parse_expr(pre_tokens)
-}
-pub fn parse_file(file: &Path) -> Result<Vec<Expression>, String> {
-  let mut f = File::open(&file).map_err(|_| "Error while opening file".to_string())?;
-  let mut content = String::new();
-  f.read_to_string(&mut content)
-    .map_err(|_| "Error while reading file".to_string())?;
-  parse(&content)
+    note_raw
 }
 
 #[cfg(test)]
 mod tests {
-  use super::*;
-  use test::Bencher;
+    use super::*;
+    use test::Bencher;
 
-  #[test]
-  fn test_preprocess() {
-    let source = r#"
-    
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
+    #[test]
+    fn test_preprocess() {
+        let source = r#"---
+a "a b c" c d "a b c d e"
+Nyomdai kellékek
+vásárlása
+---
 
-      lorem ipsum dolorem    // line comment B
+ALIAS         SZG-2022-10079
+ID            12a3ef
+DOCID         447af
+DATE          2022-05-08
+AUTHOR        Peter Mezei
+PAYMENT_KIND  transfer
+NET           11.811
+GROSS         15.000
+VAT           3.189
+ISSUEDATE     2022-04-01
+COMPDATE      2022-04-01
+DUEDATE       2022-04-31
 
-      #     ab
+Nettó szállítóra könyvelve
+egyből költségként
+> T5    K454/agroker 11_811
 
-            line A // line comment A "Hello"
+Áfa elszámolása
+Ahogy, hogy rendben legyen úgy számolunk, hogy ...
+Az alábbi képlettel:
+  x = 2 * x
+> T466  K454/agroker 3_189
 
-          #ab
+! 3bc9cccd8fb90b9e836b9b6a7ef1c62ds
 
-      line B // line comment C
+PAYMENT_KIND  cash
 
+! 18db35eccfa2d4e3448c523985518c0b
+    "#;
 
+        let parsed = parse(&source);
+        assert_eq!(true, true);
+        println!("{:?}", parsed);
+    }
 
-      #ab
+    #[test]
+    fn test2() {
+        let source = r#"
+ALIAS 2022/01/000009
+ID 1
+DOCID 2
+NET 10000
+VAT 2700
+GROSS 12700
+COMPLETION_DATE 2022-01-01
+DUEDATE 2022-01-31
+
+% 161 Beruházás
+% 3841 "Peti bank"
+
+> 161 3841 12000
 
     "#;
 
-    let result = pre_process(&source);
-    let expected = vec![
-      PreProcessToken::Comment(
-        "Hello bello\n===========\nlorem ipsum dolorem;\nset ami".to_string(),
-      ),
-      PreProcessToken::TextBlock("lorem ipsum dolorem".to_string()),
-      PreProcessToken::Comment("ab".to_string()),
-      PreProcessToken::TextBlock("line A".to_string()),
-      PreProcessToken::Comment("ab".to_string()),
-      PreProcessToken::TextBlock("line B".to_string()),
-      PreProcessToken::Comment("ab".to_string()),
-    ];
-    assert_eq!(result, expected);
-  }
-
-  #[test]
-  fn test_expression_candidate() {
-    let expr = r#"TRANSACTION name Lorem debit 161 credit 3841 amount 4500;"#;
-    let res = ExpressionCandidate::from_str(&expr);
-    println!("{:?}", &res);
-    assert_eq!(res.is_ok(), true);
-
-    let expr_quoted =
-      r#"TRANSACTION name "Lorem ipsum dolorem set ami" debit 161 credit 3841 amount 4500; "#;
-    let res = ExpressionCandidate::from_str(&expr_quoted);
-    println!("{:?}", &res);
-    assert_eq!(res.is_ok(), true);
-  }
-
-  #[test]
-  fn test_param_parse() {
-    let token_stream = "NAME lorem AGE 32 IMPORTANT";
-  }
-
-  #[test]
-  fn test_exp_mode() {
-    let params = vec![("SET".to_string(), "account".to_string())];
-    assert_eq!(ModeExp::parse_params(&params).is_ok(), true);
-  }
-
-  #[test]
-  fn test_exp_account() {
-    let params = vec![
-      ("ID".to_string(), "161".to_string()),
-      ("NAME".to_string(), "lorem ipsum".to_string()),
-    ];
-    assert_eq!(AccountExp::parse_params(&params).is_ok(), true);
-  }
-
-  #[test]
-  fn test_exp_transaction() {
-    let params = vec![
-      ("debit".to_string(), "161".to_string()),
-      ("credit".to_string(), "38".to_string()),
-      ("amount".to_string(), "40000".to_string()),
-      ("amount".to_string(), "40_000".to_string()),
-    ];
-    let res = TransactionExp::parse_params(&params);
-    assert_eq!(res.is_ok(), true);
-  }
-
-  #[test]
-  fn test_exp_reference() {
-    let params = vec![
-      ("id".to_string(), "lorem ipsum dolorem".to_string()),
-      ("cdate".to_string(), "2021-04-04".to_string()),
-    ];
-    let res = ReferenceExp::parse_params(&params);
-    assert_eq!(res.is_ok(), true);
-  }
-
-  #[test]
-  fn test_exp_event() {
-    let params = vec![
-      ("id".to_string(), "e1".to_string()),
-      (
-        "reference_id".to_string(),
-        "lorem ipsum dolorem".to_string(),
-      ),
-      ("cdate".to_string(), "2021-04-04".to_string()),
-    ];
-    let res = EventExp::parse_params(&params);
-    assert_eq!(res.is_ok(), true);
-  }
-
-  #[test]
-  fn test_parse_complete() {
-    let source = r#"
-    
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-
-    "#;
-    let res = parse(source);
-    println!("{:?}", &res);
-  }
-
-  #[bench]
-  fn bench_add_two(b: &mut Bencher) {
-    let source = r#"
-    
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT id e1 reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000   // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-      # Hello bello
-      # ===========
-      # lorem ipsum dolorem;
-      # set ami
-
-      # set mode
-      MODE set account;
-
-      reference
-        id demo_ref_id
-        name "Demo reference"
-        cdate 2021-01-01;
-
-      REFERENCE
-        ID demo_ref_id
-        NAME "Demo reference"
-        CDATE 2021-01-01;
-
-      EVENT reference_id demo_event_id name demo_event;
-
-      # Demo transaction
-      transaction
-        debit 161       // Beruházás számla
-        credit 3811     // Pénztár
-        amount 34_000;  // Könyvelt nettó összeg
-
-      # Demo account
-      ACCOUNT
-        ID 161
-        NAME "Beruházás számla";
-
-
-    "#;
-    b.iter(|| {
-      let a = parse(&source);
-      a.is_ok();
-    });
-  }
+        let parsed = parse(&source);
+        assert_eq!(true, true);
+        println!("{:?}", parsed);
+    }
 }

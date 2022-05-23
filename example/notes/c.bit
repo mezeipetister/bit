@@ -1,0 +1,35 @@
+---
+Nyomdai kellékek
+vásárlása
+---
+
+ALIAS             SZG-2022-10079
+ID                12a3ef
+DOCID             447af
+DATE              2022-05-08
+AUTHOR            Peter Mezei
+PAYMENT_KIND      transfer
+NET               11_811
+GROSS             15_000
+VAT               3_189
+ISSUE_DATE        2022-04-01
+COMPLETION_DATE   2022-04-01
+DUEDATE           2022-04-30
+
+Nettó szállítóra könyvelve
+egyből költségként
+> T5    K454/agroker 11_300
+> T5    K454/agroker 11_300
+
+Áfa elszámolása
+Ahogy, hogy rendben legyen úgy számolunk, hogy ...
+Az alábbi képlettel:
+  x = 2 * x
+
+! 3bc9cccd8fb90b9e836b9b6a7ef1c62ds
+
+PAYMENT_KIND  cash
+
+SIGNATURE 2022-05-20T06:11:34+02:00 21a22c2f625a2d49b9593941f2476943
+
+ID newID

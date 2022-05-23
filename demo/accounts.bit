@@ -1,6 +1,0 @@
-mode set account;
-
-account id 161 name "Beruházás";
-account id 2 name "Eszközök";
-account id 384 name "Bank";
-account id 9 name "Bevétel";

@@ -1,0 +1,142 @@
+Folder layout
+
+  /
+  .bit
+                        hidden bit database folder
+                        contains all the bit project index and
+                        other related data
+  /notes
+  accounts
+  config.toml
+                        project config file
+  readme
+                        project readme
+
+BIT lang
+
+  Bit definition language to define book keeping related business
+events. BIT reads these definition files to builds its database index.
+
+Digital signature
+
+  All bit files must contain a digital signature to validate its
+content. Bit files must be created by any software who has valid access
+to the given BIT project.
+
+Plan / Project file
+
+  
+Language
+
+Note expressions
+
+  TITLE
+    String - Note title
+
+  ID
+    String - Note internal ID
+
+  DOCID
+    String - Referenced PDF document internal ID
+
+  DATE
+    Date - Note creation date
+
+  AUTHOR
+    String - Created by this author name
+
+  ALIAS
+    String - Referenced document public ID e.g.: invoice ID
+
+  PAYMENT_KIND
+    Enum (cash, transfer, card) - Referenced document payment kind
+
+  NET
+    Number - Invoice net value
+
+  GROSS
+    Number - Invoice gross value
+
+  VAT
+    Number - Invoice VAT value
+
+  DUEDATE
+    Date - Invoice duedate
+
+  ISSUEDATE
+    Date - Document issue date
+
+  COMPDATE
+    Date - Completion date
+
+  TRANSACTION
+    String - Debit account
+    String - Credit account
+    Number - Amount
+
+  SIGNATURE
+    String - MD4 hash as signature
+
+  ACCOUNT
+    String - ID
+    String - Name
+
+Synonyms
+
+  > | TRANSACTION
+  # | TITLE
+  ! | SIGNATURE
+
+Parsing
+
+1. Read line by line
+2. Check if line is text or command
+  2/1. Check first word if all uppercase
+    2/1/A. If no, its text
+    2/1/A. If yes, check if its keyword
+
+struct NoteRaw {
+  lines: Vec<Line>
+}
+
+struct Line {
+  raw: String,
+  tokens: Token
+}
+
+struct Token {
+  position: (i32, i32),
+  token_kind: TokenKind
+}
+
+enum TokenKind {
+  Command(Command),
+  Text(String),
+  Number(i64)
+}
+
+enum Command {
+  Alias,
+  Id,
+  Docid,
+  Date,
+  Author,
+  PaymentKind,
+  Net,
+  Gross,
+  Vat,
+  IssueDate,
+  CompletionDate,
+  DueDate,
+  Transaction,
+  Signature
+  Account
+}
+
+NoteRaw
+  Line[]
+    
+    token[]
+      |
+      |
+      *- line number | start position
