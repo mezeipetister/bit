@@ -10,3 +10,25 @@
     Currently Hungarian is hardcoded in both the API error messages and the
     client. We should use internalisation to set the proper - and avaialable -
     language whenever we need.
+
+2. Virtual accounts / Subaccounts
+
+    Virtual accounts, e.g.: suppliers/exampleA
+
+3. Signature
+
+4. Better CLI
+
+5. Auto format unsigned data
+
+6. List docs + note info
+
+7. List docs without notes
+
+8. List note 
+
+9. DOC ID as String
+
+10. Note ID as String
+
+11. ID as domain e.g.: custom/1
