@@ -1,0 +1,54 @@
+Accounts
+  :al
+    List all accounts
+  :an
+    Add new account
+  :am
+    Modify account
+  :ar
+    Remove account
+
+Ledger
+  :ledger 2022-08-11
+    Get ledger at date
+  :ledger 2022-05-01 2022-05-17
+    GEt ledger at date range
+
+Other
+  :refresh
+    refresh database, display new data
+
+Notes
+  :nl
+    List all notes
+    - list
+    - scroll
+    - search / filter
+  :ne
+    Edit note
+  :nn
+    Add new note
+  :nad
+    Note add document
+
+Cli area
+  - Buffer area
+  - Status line
+  - Command line / Info line
+
+Buffer
+  - Display content
+  - Handle input stream
+  - Editable / Read only
+  - Normal, Insert mode
+
+Buffer:
+  - CursorController
+
+Protocol
+  Server/Client protocol. Communicatation and data sync.
+  Push / Pull
+
+
+uuid rfc3339 COMMAND userid
+ef7991ab1749 2022-07-18T00:12:00149 CREATE ACCOUNT/161 @mezeipetister

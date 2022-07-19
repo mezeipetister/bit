@@ -1,0 +1,84 @@
+!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+Account	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Account,$/;"	e	language:Rust	enum:Command
+accounts	/home/petermezei/projects/bit3/core/src/refact.rs	/^  accounts: Vec<Account>,$/;"	m	language:Rust	struct:Project
+add_line	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn add_line(&mut self, new_line: Line) {$/;"	P	language:Rust	implementation:NoteRaw
+Alias	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Alias,$/;"	e	language:Rust	enum:Command
+append_char	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn append_char(&mut self, ch: char) {$/;"	P	language:Rust	implementation:Token
+Author	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Author,$/;"	e	language:Rust	enum:Command
+Check	/home/petermezei/projects/bit2/src/main.rs	/^    Check,$/;"	e	language:Rust	enum:Command
+Command	/home/petermezei/projects/bit2/src/main.rs	/^enum Command {$/;"	g	language:Rust
+Command	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Command(Command),$/;"	e	language:Rust	enum:TokenKind
+Command	/home/petermezei/projects/bit3/core/src/parser.rs	/^impl Command {$/;"	c	language:Rust
+Command	/home/petermezei/projects/bit3/core/src/parser.rs	/^pub enum Command {$/;"	g	language:Rust
+CompletionDate	/home/petermezei/projects/bit3/core/src/parser.rs	/^  CompletionDate,$/;"	e	language:Rust	enum:Command
+date	/home/petermezei/projects/bit2/src/main.rs	/^    pub date: Option<String>,$/;"	m	language:Rust	struct:LedgerOpt
+Docid	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Docid,$/;"	e	language:Rust	enum:Command
+DueDate	/home/petermezei/projects/bit3/core/src/parser.rs	/^  DueDate,$/;"	e	language:Rust	enum:Command
+file_path	/home/petermezei/projects/bit3/core/src/parser.rs	/^  file_path: PathBuf,$/;"	m	language:Rust	struct:NoteRaw
+file_path	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn file_path(&self) -> &Path {$/;"	P	language:Rust	implementation:NoteRaw
+from_file	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn from_file(file_path: &Path) -> Result<Self, String> {$/;"	P	language:Rust	implementation:NoteRaw
+from_raw_line	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn from_raw_line(raw_line: LineRaw) -> Self {$/;"	P	language:Rust	implementation:Line
+Gross	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Gross,$/;"	e	language:Rust	enum:Command
+has_pdf	/home/petermezei/projects/bit3/core/src/refact.rs	/^  has_pdf: bool,$/;"	m	language:Rust	struct:Note
+Id	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Id,$/;"	e	language:Rust	enum:Command
+IssueDate	/home/petermezei/projects/bit3/core/src/parser.rs	/^  IssueDate,$/;"	e	language:Rust	enum:Command
+is_signed	/home/petermezei/projects/bit3/core/src/parser.rs	/^  is_signed: bool,$/;"	m	language:Rust	struct:NoteRaw
+is_signed	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn is_signed(&self) -> bool {$/;"	P	language:Rust	implementation:NoteRaw
+is_valid	/home/petermezei/projects/bit3/core/src/parser.rs	/^  is_valid: bool,$/;"	m	language:Rust	struct:NoteRaw
+Ledger	/home/petermezei/projects/bit2/src/main.rs	/^    Ledger(LedgerOpt),$/;"	e	language:Rust	enum:Command
+ledger	/home/petermezei/projects/bit3/core/src/refact.rs	/^  pub ledger: Ledger,$/;"	m	language:Rust	struct:Project
+LedgerOpt	/home/petermezei/projects/bit2/src/main.rs	/^pub struct LedgerOpt {$/;"	s	language:Rust
+Line	/home/petermezei/projects/bit3/core/src/parser.rs	/^impl Line {$/;"	c	language:Rust
+Line	/home/petermezei/projects/bit3/core/src/parser.rs	/^pub struct Line {$/;"	s	language:Rust
+LineRaw	/home/petermezei/projects/bit3/core/src/parser.rs	/^impl LineRaw {$/;"	c	language:Rust
+LineRaw	/home/petermezei/projects/bit3/core/src/parser.rs	/^struct LineRaw {$/;"	s	language:Rust
+lines	/home/petermezei/projects/bit3/core/src/parser.rs	/^  lines: Vec<Line>,$/;"	m	language:Rust	struct:NoteRaw
+lines	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn lines(self) -> Vec<Line> {$/;"	P	language:Rust	implementation:NoteRaw
+lines_ref	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn lines_ref(&self) -> &Vec<Line> {$/;"	P	language:Rust	implementation:NoteRaw
+line_number	/home/petermezei/projects/bit3/core/src/parser.rs	/^  line_number: usize,$/;"	m	language:Rust	struct:LineRaw
+main	/home/petermezei/projects/bit2/src/main.rs	/^fn main() -> Result<(), Box<dyn Error>> {$/;"	f	language:Rust
+Net	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Net,$/;"	e	language:Rust	enum:Command
+New	/home/petermezei/projects/bit2/src/main.rs	/^    New(NewOpt),$/;"	e	language:Rust	enum:Command
+new	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn new(line_number: usize, raw: String) -> Self {$/;"	P	language:Rust	implementation:LineRaw
+new	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn new(position: (usize, usize), token_kind: TokenKind) -> Self {$/;"	P	language:Rust	implementation:Token
+NewOpt	/home/petermezei/projects/bit2/src/main.rs	/^pub struct NewOpt {$/;"	s	language:Rust
+note	/home/petermezei/projects/bit3/core/src/refact.rs	/^  note: (),$/;"	m	language:Rust	struct:Note
+Note	/home/petermezei/projects/bit3/core/src/refact.rs	/^struct Note {$/;"	s	language:Rust
+NoteRaw	/home/petermezei/projects/bit3/core/src/parser.rs	/^impl NoteRaw {$/;"	c	language:Rust
+NoteRaw	/home/petermezei/projects/bit3/core/src/parser.rs	/^pub struct NoteRaw {$/;"	s	language:Rust
+notes	/home/petermezei/projects/bit3/core/src/refact.rs	/^  notes: Vec<Note>,$/;"	m	language:Rust	struct:Project
+parse	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn parse(f: &str) -> Self {$/;"	P	language:Rust	implementation:Command
+parse	/home/petermezei/projects/bit3/core/src/parser.rs	/^fn parse(note_string: &str) -> NoteRaw {$/;"	f	language:Rust
+PaymentKind	/home/petermezei/projects/bit3/core/src/parser.rs	/^  PaymentKind,$/;"	e	language:Rust	enum:Command
+position	/home/petermezei/projects/bit3/core/src/parser.rs	/^  position: (usize, usize),$/;"	m	language:Rust	struct:Token
+position	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn position(&self) -> (usize, usize) {$/;"	P	language:Rust	implementation:Token
+Project	/home/petermezei/projects/bit3/core/src/refact.rs	/^pub struct Project {$/;"	s	language:Rust
+project_folder_name	/home/petermezei/projects/bit2/src/main.rs	/^    pub project_folder_name: String,$/;"	m	language:Rust	struct:NewOpt
+project_root_path	/home/petermezei/projects/bit3/core/src/refact.rs	/^  project_root_path: PathBuf,$/;"	m	language:Rust	struct:Project
+raw	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn raw(&self) -> &str {$/;"	P	language:Rust	implementation:Line
+raw	/home/petermezei/projects/bit3/core/src/parser.rs	/^  raw: String,$/;"	m	language:Rust	struct:Line
+raw	/home/petermezei/projects/bit3/core/src/parser.rs	/^  raw: String,$/;"	m	language:Rust	struct:LineRaw
+raw_bytes	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn raw_bytes(&self) -> Vec<u8> {$/;"	P	language:Rust	implementation:NoteRaw
+Report	/home/petermezei/projects/bit2/src/main.rs	/^    Report,$/;"	e	language:Rust	enum:Command
+settings	/home/petermezei/projects/bit3/core/src/refact.rs	/^  settings: Settings,$/;"	m	language:Rust	struct:Project
+Signature	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Signature,$/;"	e	language:Rust	enum:Command
+take_text_string	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn take_text_string(self) -> Option<String> {$/;"	P	language:Rust	implementation:TokenKind
+take_text_string_ref	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn take_text_string_ref(&self) -> Option<&String> {$/;"	P	language:Rust	implementation:TokenKind
+test2	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn test2() {$/;"	f	language:Rust	module:tests
+tests	/home/petermezei/projects/bit3/core/src/parser.rs	/^mod tests {$/;"	n	language:Rust
+test_preprocess	/home/petermezei/projects/bit3/core/src/parser.rs	/^  fn test_preprocess() {$/;"	f	language:Rust	module:tests
+Text	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Text(String),$/;"	e	language:Rust	enum:TokenKind
+Token	/home/petermezei/projects/bit3/core/src/parser.rs	/^impl Token {$/;"	c	language:Rust
+Token	/home/petermezei/projects/bit3/core/src/parser.rs	/^pub struct Token {$/;"	s	language:Rust
+tokenize_line	/home/petermezei/projects/bit3/core/src/parser.rs	/^fn tokenize_line(raw_line: LineRaw) -> Vec<Token> {$/;"	f	language:Rust
+TokenKind	/home/petermezei/projects/bit3/core/src/parser.rs	/^impl TokenKind {$/;"	c	language:Rust
+TokenKind	/home/petermezei/projects/bit3/core/src/parser.rs	/^pub enum TokenKind {$/;"	g	language:Rust
+tokens	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn tokens(self) -> Vec<Token> {$/;"	P	language:Rust	implementation:Line
+tokens	/home/petermezei/projects/bit3/core/src/parser.rs	/^  tokens: Vec<Token>,$/;"	m	language:Rust	struct:Line
+tokens_ref	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn tokens_ref(&self) -> &Vec<Token> {$/;"	P	language:Rust	implementation:Line
+token_kind	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn token_kind(self) -> TokenKind {$/;"	P	language:Rust	implementation:Token
+token_kind	/home/petermezei/projects/bit3/core/src/parser.rs	/^  token_kind: TokenKind,$/;"	m	language:Rust	struct:Token
+token_kind_ref	/home/petermezei/projects/bit3/core/src/parser.rs	/^  pub fn token_kind_ref(&self) -> &TokenKind {$/;"	P	language:Rust	implementation:Token
+Transaction	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Transaction,$/;"	e	language:Rust	enum:Command
+Unknown	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Unknown,$/;"	e	language:Rust	enum:Command
+Vat	/home/petermezei/projects/bit3/core/src/parser.rs	/^  Vat,$/;"	e	language:Rust	enum:Command

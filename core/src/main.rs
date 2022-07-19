@@ -26,8 +26,6 @@ enum Command {
     Check,
     #[structopt(about = "Get ledger details by date")]
     Ledger(LedgerOpt),
-    #[structopt(about = "Create new note")]
-    Nn,
 }
 
 #[derive(Debug, StructOpt)]
@@ -47,9 +45,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let opt: Command = Command::from_args();
 
     match opt {
-        Command::Nn => {
-            let project = Project::try_init()?;
-        }
         Command::New(nopt) => {
             let mut line = String::new();
             let stdin = io::stdin();

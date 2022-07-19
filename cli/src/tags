@@ -1,0 +1,32 @@
+!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+buffer	/home/petermezei/projects/bit/cli/src/editor.rs	/^  buffer: Box<dyn ExtBuffer>,$/;"	m	language:Rust	struct:Cli
+Buffer	/home/petermezei/projects/bit/cli/src/editor.rs	/^struct Buffer {}$/;"	s	language:Rust
+buffer	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  buffer: Box<dyn ExtBuffer>,$/;"	m	language:Rust	struct:Cli
+Buffer	/home/petermezei/projects/bit3/cli/src/editor.rs	/^struct Buffer {}$/;"	s	language:Rust
+CleanUp	/home/petermezei/projects/bit3/cli/src/main.rs	/^impl Drop for CleanUp {$/;"	c	language:Rust
+CleanUp	/home/petermezei/projects/bit3/cli/src/main.rs	/^struct CleanUp;$/;"	s	language:Rust
+Cli	/home/petermezei/projects/bit/cli/src/editor.rs	/^struct Cli {$/;"	s	language:Rust
+Cli	/home/petermezei/projects/bit3/cli/src/editor.rs	/^struct Cli {$/;"	s	language:Rust
+CliMode	/home/petermezei/projects/bit/cli/src/editor.rs	/^enum CliMode {$/;"	g	language:Rust
+CliMode	/home/petermezei/projects/bit3/cli/src/editor.rs	/^enum CliMode {$/;"	g	language:Rust
+cli_mode	/home/petermezei/projects/bit/cli/src/editor.rs	/^  cli_mode: CliMode,$/;"	m	language:Rust	struct:Cli
+cli_mode	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  cli_mode: CliMode,$/;"	m	language:Rust	struct:Cli
+content	/home/petermezei/projects/bit/cli/src/editor.rs	/^  content: Vec<u8>,$/;"	m	language:Rust	struct:Editor
+content	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  content: Vec<u8>,$/;"	m	language:Rust	struct:Editor
+display	/home/petermezei/projects/bit/cli/src/editor.rs	/^  fn display(&self);$/;"	P	language:Rust	interface:ExtBuffer
+display	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  fn display(&self);$/;"	P	language:Rust	interface:ExtBuffer
+drop	/home/petermezei/projects/bit3/cli/src/main.rs	/^  fn drop(&mut self) {$/;"	P	language:Rust	implementation:CleanUp
+Edit	/home/petermezei/projects/bit/cli/src/editor.rs	/^  Edit,$/;"	e	language:Rust	enum:CliMode
+Edit	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  Edit,$/;"	e	language:Rust	enum:CliMode
+Editor	/home/petermezei/projects/bit/cli/src/editor.rs	/^struct Editor {$/;"	s	language:Rust
+Editor	/home/petermezei/projects/bit3/cli/src/editor.rs	/^struct Editor {$/;"	s	language:Rust
+editor	/home/petermezei/projects/bit3/cli/src/main.rs	/^mod editor;$/;"	n	language:Rust
+ExtBuffer	/home/petermezei/projects/bit/cli/src/editor.rs	/^trait ExtBuffer {$/;"	i	language:Rust
+ExtBuffer	/home/petermezei/projects/bit3/cli/src/editor.rs	/^trait ExtBuffer {$/;"	i	language:Rust
+main	/home/petermezei/projects/bit3/cli/src/main.rs	/^fn main() -> crossterm::Result<()> {$/;"	f	language:Rust
+set_key_event	/home/petermezei/projects/bit/cli/src/editor.rs	/^  fn set_key_event(&mut self, key_event: ());$/;"	P	language:Rust	interface:ExtBuffer
+set_key_event	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  fn set_key_event(&mut self, key_event: ());$/;"	P	language:Rust	interface:ExtBuffer
+View	/home/petermezei/projects/bit/cli/src/editor.rs	/^  View,$/;"	e	language:Rust	enum:CliMode
+View	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  View,$/;"	e	language:Rust	enum:CliMode
+window_size	/home/petermezei/projects/bit/cli/src/editor.rs	/^  window_size: (usize, usize),$/;"	m	language:Rust	struct:Cli
+window_size	/home/petermezei/projects/bit3/cli/src/editor.rs	/^  window_size: (usize, usize),$/;"	m	language:Rust	struct:Cli

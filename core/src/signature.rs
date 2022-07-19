@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn test_accounts_note_file() {
         let note_raw = NoteRaw::from_file(&PathBuf::from("./example/notes/accounts.bit")).unwrap();
-        let note: crate::note::Note = crate::note::Note::from_raw_note(note_raw, true).unwrap();
+        let note: crate::note::Note = crate::note::Note::from_raw_note(note_raw, false).unwrap();
         println!("{:?}", note);
         assert_eq!(1, 1);
     }

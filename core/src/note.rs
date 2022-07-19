@@ -1,16 +1,13 @@
-use std::{
-    fmt::Display,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
+
+use chrono::{Local, NaiveDate};
+use serde::Deserialize;
+use serde_cbor::error;
 
 use crate::{
     ledger::Account,
     parser::{Command, NoteRaw, Token, TokenKind},
 };
-use chrono::{Local, NaiveDate};
-use serde::Deserialize;
-use serde_cbor::error;
-use std::io::Write;
 
 #[derive(Default, Debug)]
 pub struct Note {
@@ -20,9 +17,9 @@ pub struct Note {
     pub docid: Option<String>,
     pub author: Option<String>,
     pub payment_kind: Option<PaymentKind>,
-    pub net: Option<i64>,
-    pub vat: Option<i64>,
-    pub gross: Option<i64>,
+    pub net: i64,
+    pub vat: i64,
+    pub gross: i64,
     pub issue_date: Option<NaiveDate>,
     pub completion_date: Option<NaiveDate>,
     pub duedate: Option<NaiveDate>,
@@ -31,11 +28,6 @@ pub struct Note {
 }
 
 impl Note {
-    pub fn new_template(path: PathBuf) -> Self {
-        let mut res = Self::default();
-        res.path = path;
-        res
-    }
     pub fn from_file(path: &Path, is_account_file: bool) -> Result<Self, String> {
         let raw = NoteRaw::from_file(path)?;
         Self::from_raw_note(raw, is_account_file)
@@ -124,7 +116,7 @@ impl Note {
         }
         self.net = match params.remove(0).token_kind().take_text_string() {
             Some(text) => match text.replace("_", "").parse::<i64>() {
-                Ok(res) => Some(res),
+                Ok(res) => res,
                 Err(_) => return Err(error_msg(&first_token, "NET must be integer number")),
             },
             None => return Err(error_msg(&first_token, "NET must have one parameter")),
@@ -137,7 +129,7 @@ impl Note {
         }
         self.gross = match params.remove(0).token_kind().take_text_string() {
             Some(text) => match text.replace("_", "").parse::<i64>() {
-                Ok(res) => Some(res),
+                Ok(res) => res,
                 Err(_) => return Err(error_msg(&first_token, "GROSS must be integer number")),
             },
             None => return Err(error_msg(&first_token, "GROSS must have one parameter")),
@@ -150,7 +142,7 @@ impl Note {
         }
         self.vat = match params.remove(0).token_kind().take_text_string() {
             Some(text) => match text.replace("_", "").parse::<i64>() {
-                Ok(res) => Some(res),
+                Ok(res) => res,
                 Err(_) => return Err(error_msg(&first_token, "VAT must be integer number")),
             },
             None => return Err(error_msg(&first_token, "VAT must have one parameter")),
@@ -314,56 +306,6 @@ impl Note {
         }
         Ok(())
     }
-    pub fn write_to_file(&self) -> Result<(), String> {
-        if self.path.exists() {
-            return Err(format!("Note has already exist. {:?}", &self.path));
-        }
-        let mut new_file = std::fs::File::create(&self.path)
-            .map_err(|_| format!("Error while creating note template file: {:?}", &self.path))?;
-        writeln!(
-            &mut new_file,
-            "ID {}",
-            &self.id.as_ref().unwrap_or(&String::new())
-        )
-        .unwrap();
-        writeln!(
-            &mut new_file,
-            "DOCID {}",
-            &self.docid.as_ref().unwrap_or(&String::new())
-        )
-        .unwrap();
-        writeln!(
-            &mut new_file,
-            "ALIAS {}",
-            &self.alias.as_ref().unwrap_or(&String::new())
-        )
-        .unwrap();
-        writeln!(
-            &mut new_file,
-            "PAYMENT_KIND {}",
-            &self.payment_kind.as_ref().unwrap_or(&PaymentKind::Cash)
-        )
-        .unwrap();
-        writeln!(
-            &mut new_file,
-            "COMPLETION_DATE {}",
-            &self
-                .completion_date
-                .as_ref()
-                .unwrap_or(&Local::today().naive_local())
-        )
-        .unwrap();
-        writeln!(&mut new_file, "NET {}", &self.net.as_ref().unwrap_or(&0)).unwrap();
-        writeln!(&mut new_file, "VAT {}", &self.vat.as_ref().unwrap_or(&0)).unwrap();
-        writeln!(
-            &mut new_file,
-            "GROSS {}",
-            &self.gross.as_ref().unwrap_or(&0)
-        )
-        .unwrap();
-        writeln!(&mut new_file, "\n\nTransactions:\n",).unwrap();
-        Ok(())
-    }
 }
 
 fn parse_single_string(tokens: &Vec<Token>) -> Result<String, String> {
@@ -404,36 +346,10 @@ pub enum PaymentKind {
     Transfer,
 }
 
-impl Display for PaymentKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            PaymentKind::Cash => write!(f, "cash"),
-            PaymentKind::Card => write!(f, "card"),
-            PaymentKind::Transfer => write!(f, "transfer"),
-        }
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct Transaction {
     pub id: i32,
     pub debit: String,
     pub credit: String,
     pub amount: i64,
-}
-
-#[cfg(test)]
-mod tests {
-    use std::path::PathBuf;
-
-    use super::*;
-
-    #[test]
-    fn test_write_template() {
-        let mut template = Note::new_template(PathBuf::from("example/new_note.bit"));
-        template.id = Some("1".to_string());
-        template.alias = Some("abcd".to_string());
-        template.write_to_file().unwrap();
-        assert_eq!(1, 1)
-    }
 }

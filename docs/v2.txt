@@ -1,0 +1,113 @@
+BIT2
+
+* LOGFILE
+
+  Tartalom:
+    ID EVENT DATE CHECKSUM
+  
+    A teljes könyvelés idősoros naplója. Ebből a teljes index adatbázis
+  bármikor előállítható. A napló bejegyzések egyedi ID-t, időbélyeget
+  és checksum értéket tartalmaznak, amelyekből bloklánc szerűen
+  támaszkodnak egymásra a bejegyzett elemek. 
+
+  - mi lesz a csatolt fileokkal? A tartalmukkal?
+
+* INDEX
+
+    Fájlrendszer mintájára kialakított index file, amely tartalmaz
+  minden könyvelési adatot, és a felhasználáshoz szükséges előre
+  letárolt állapotot. Gyors, teljes, pontos. A fájl használatához
+  részleges olvasási és írási műveleteket hajtunk végre, egy
+  fájlrendszer mintájára.
+
+  - tartalmazza a fileokat is? Kezelünk verziókat?
+
+* Egyedülálló / Decentralizált
+
+    GIT szerűen lenne egy központi szerver, amely összehangolná a kliensek
+  munkáját. Jóváhagyná a változtatásokat és ahonnan bármikor le lehet
+  kérni a teljes könyvelést.
+
+Rugalmas ID
+
+    Szabadszavas, szóköz nélküli azonosítók. Perjel használata lehetséges,
+  így akár domain neveket is kezelhetünk.
+  
+  Pl.:
+    invoice/INVOICE_ID
+    contract/CONTRACT_ID
+
+Hibrid valóság
+
+    Láthatunk fájlokat fájlrendszer szinten, amiket böngészhetünk, valamint
+  ténylegesen dolgozunk egy saját fájlrendszerrel, amelyből az előbbit elő-
+  állítjuk.
+
+CLI
+
+    Parancssoros interface, amely platform függetlenül (Windows, Mac, Linux)
+  képes kezelni a BIT állományokat, és támogatni a hatékony munkavégzést.
+
+
+- Főkönyv / Számlatükör
+- Bizonylat
+  - Törzsadat
+    - ID (internal/external)
+    - Kelte
+    - Teljesítés ideje
+    - Fizetés módja
+    - Fizetési határidő
+  - Tranzakció
+    - Tartozik
+    - Követel
+    - Összeg
+    - Megjegyzés
+
+
+===
+
+CLI Design
+
+  :nd     New document
+  :nn     New note
+  \EXP    Search expression
+
+BIT language
+
+  Language design can be found in langdesign file
+
+  Example BIT syntax:
+
+: ALIAS       22/SA100795
+: PARTNER     farmmix
+: DEV         HUF
+: TOTAL_NET   1_000
+: TOTAL_VAT   270
+: TOTAL_GROSS 1_270
+: CDATE       2022-05-11
+: DDATE       2022-05-21
+: IDATE       2022-05-11
+
+Example transaction. Description of an example transaction
+as a multiline text
+
+> 161 454 4500
+
+> 4500
+  Beruházás -> Szállító
+
+@normal_sale
+
+Project members
+
+  Core
+    BIT core library, manages locale BIT repository
+  FS
+    BIT filesystem; stores all the project data & index
+    databases
+  Parser
+    Parse input stream, returns token vector
+  CLI
+    Command line interface
+  WebUI
+    BIT web user interface
