@@ -1,0 +1,149 @@
+                                      Bit server <> ----* <> -------*
+                                                        |           |
+                                                        |           |
+                                                        |           |
+Dynamic DB < ---- generated from log ------ < ------ Log DB 1       |
+                                                                    |
+                                                                  Log DB 2
+
+Entities:
+  - Account
+  - Note (Event, Must have a related Document)
+  - Document (PDF)
+
+Account
+  - create
+  - set
+      name
+      description
+Note
+  - create
+  - set
+      IDATE
+      CDATE
+      DDATE
+      ID
+      Pdf
+      TOTAL_NET
+      TOTAL_VAT
+      TOTAL_GROSS
+      Transactions
+Document
+  - add
+  - set
+      name
+      description
+      file?
+      
+Point?
+
+
+CLI
+
+bit new account
+  : id 161; name beruházás
+
+bit set account id 171
+  : name hello bello; description wohoo
+
+bit new document
+  : id ID119; cdate 2022-09-01; ddate 2022-09-01; idate 2022-09-01;
+
+bit set document id fx2022-079 ..
+  : transactions
+  
+bit find 079
+
+--
+
+bit new note alias 2022-11723/22 ..
+  ; cdate ..; ddate ..; idate ..; net 1000; gross 1270; vat 270
+
+bit new note ..
+  : alias 2022-11723/22; cdate ..; ddate ..; idate ..; net 1000; gross 1270; vat 270
+
+bit edit .
+
+bit add document demo.pdf
+
+bit find note partner farmmix
+
+bit find note ddate 2022-09-12<>2022-09-20 payment transfer
+
+bit find note document none
+
+bit find account id 1*
+
+bit find account name *beru*
+
+bit new document 
+
+UUID                                  Entry datetime RFC3339    Entry userid   Place    Command  ID                                     Parameter list
+------------------------------------  -----------------------   -------------  ------   -------  -------------------------------------  ------------------------------------
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  ACCOUNT  CREATE   1
+7a0454ce-9c8b-46dd-ba49-27867e46d6d5  2022-09-02T11:50:25.22Z   mezeipetister  ACCOUNT  SET      1                                      name hello bello;
+d38d3666-192a-4751-8a0a-855e3defdff8  2022-09-02T11:51:00.03Z   mezeipetister  NOTE     CREATE   56f311dd-9fdb-4141-b6fd-42ef0270bd27
+d38d3666-192a-4751-8a0a-855e3defdff8  2022-09-02T11:51:00.03Z   mezeipetister  NOTE     SET      56f311dd-9fdb-4141-b6fd-42ef0270bd27   net 100; gross 128; vat 27
+d38d3666-192a-4751-8a0a-855e3defdff8  2022-09-02T11:51:00.03Z   mezeipetister  NOTE     SET      56f311dd-9fdb-4141-b6fd-42ef0270bd27   transactions // Nettó érték a beruházás számlára\n161 454 10_000\n// Áfa elszámolás\n466 454 2_700
+d38d3666-192a-4751-8a0a-855e3defdff8  2022-09-02T11:51:00.03Z   mezeipetister  DOCUMENT CREATE   56f311dd-9fdb-4141-b6fd-42ef0270bd27
+d38d3666-192a-4751-8a0a-855e3defdff8  2022-09-02T11:51:00.03Z   mezeipetister  NOTE     SET      56f311dd-9fdb-4141-b6fd-42ef0270bd27   document 56f311dd-9fdb-4141-b6fd-42ef0270bd27
+
+---
+
+Transaction examples
+
+// Nettó érték a beruházás számlára
+161 454 10_000
+// Áfa elszámolás
+466 454 2_700
+
+---
+
+CLI examples
+
+bit account create id 1 16 161 3 38 384 3841 3842
+bit account set 161 name Beruházás
+bit account set 3841 name Peti bank
+bit account set 3842 name Kriszti bank
+
+bit note create @farmmix/2022/000149..
+  : net 10_000; vat 2_700; gross 12700;
+
+bit edit @farmmix/2022/000149
+  Edit transactions (Quit ctrl+c)
+  // Nettó érték a beruházás számlára
+  161 454 10_000
+  // Áfa elszámolás
+  466 454 2_700
+
+bit account list
+bit notes
+
+bit create account
+bit create account..
+  : id 161; name Beruházások;
+bit set account
+bit create note
+bit create note..
+  : id 
+bit set note 
+
+---
+
+P2P
+
+T454 K91  125 @farmmix #farrmix
+T384 K454 125
+
+        454
+----------------------
+A) 125   | E) 125
+B) 97    |
+C) 44    |
+         |
+         |
+         |
+         |
+         |
+         |
+         |  
