@@ -101,6 +101,7 @@ Transaction examples
 
 CLI examples
 
+
 bit account create id 1 16 161 3 38 384 3841 3842
 bit account set 161 name Beruházás
 bit account set 3841 name Peti bank
