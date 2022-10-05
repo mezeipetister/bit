@@ -78,7 +78,7 @@ bit find account name *beru*
 
 bit new document 
 
-UUID                                  Entry datetime RFC3339    Entry userid   Place    Command  ID                                     Parameter list
+UUID                                  Entry datetime RFC3339    Entry userid   Target   Command  Object ID                              Parameter list
 ------------------------------------  -----------------------   -------------  ------   -------  -------------------------------------  ------------------------------------
 56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  ACCOUNT  CREATE   1
 7a0454ce-9c8b-46dd-ba49-27867e46d6d5  2022-09-02T11:50:25.22Z   mezeipetister  ACCOUNT  SET      1                                      name hello bello;
@@ -91,6 +91,17 @@ d38d3666-192a-4751-8a0a-855e3defdff8  2022-09-02T11:51:00.03Z   mezeipetister  N
 ---
 
 Transaction examples
+
+// Nettó érték a beruházás számlára
+161 454 10_000
+// Áfa elszámolás
+466 454 2_700
+
+PARTNER farmmix
+ID 22/0000149-22
+NET 10_000
+VAT 2_700
+GROSS 12_700
 
 // Nettó érték a beruházás számlára
 161 454 10_000
@@ -148,3 +159,15 @@ C) 44    |
          |
          |
          |  
+
+---
+
+Log
+  Account
+  Note
+
+DB
+  Vec<Account>
+  Vec<Note>
+
+Index DB
