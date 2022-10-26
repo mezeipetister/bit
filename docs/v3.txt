@@ -1,3 +1,4 @@
+Documentation
                                       Bit server <> ----* <> -------*
                                                         |           |
                                                         |           |
@@ -142,6 +143,7 @@ bit set note
 
 ---
 
+
 P2P
 
 T454 K91  125 @farmmix #farrmix
@@ -163,11 +165,95 @@ C) 44    |
 ---
 
 Log
-  Account
-  Note
 
-DB
-  Vec<Account>
-  Vec<Note>
 
-Index DB
+               bit create !22df-4400009
+
+            B) Use UUID for note ID, and alias as a secondary identification string. In this case multiple notes could
+               have the same alias; but completely different ID (as ID is UUID)
+
+NOTE Parameter separation
+  We use continuos typing, placing all the needed text after the PARAMETER_NAME. With this solution we should have
+  an ergonomic typing experience without the need to use special separator characters. (but the need of using UPPERCASE).
+
+    e.g.: .. KEY1 value text KEY2 value text here KEY3 value text here again KEY4 text
+          bit create GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE @today CDATE @today DDATE 2022-11-04
+          bit set GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami
+
+          bit create ID GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE 2022-10-25 CDATE 2022-10-25 DDATE 2022-11-04
+          bit set GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami
+
+UUID DATE_RFC3339 UID MODULE COMMAND PARAMS
+
+
+Commands
+  - CREATE ID
+      create new object
+  - SET ID
+      set the provided params to an existing object
+  - LEDGER
+
+Modules
+  - ACCOUNT
+  - NOTE
+  - PARTNER
+
+Parameters
+  - ACCOUNT
+      - ID
+      - NAME
+  - NOTE
+      - ID
+      - PARTNER
+      - NET
+      - VAT
+      - GROSS
+      - IDATE
+      - CDATE
+      - DDATE
+      - COMMENT **
+      - TRANSACTION **
+  - PARTNER
+      - NAME
+
+bit create note
+bit create partner
+bit create account
+bit create ..
+bit set note
+bit set partner
+bit set account
+bit set ..
+bit ledger ..
+
+Example bit commands and a note view
+--
+bit create ID GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE 2022-10-25 CDATE 2022-10-25 DDATE 2022-11-04
+bit set GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami COMMENT First comment TRANSACTION 1 2 100 COMMENT Second comment 0TRANSACTION 3 4 27
+bit set GD22-000149 TRANSACTION 2 1 100 TRANSACTION 5 6 100
+
+NOTE
+----
+ ID       GD22-000149
+ PARTNER  democo
+ NET      100
+ VAT      27
+ GROSS    127
+ IDATE    2022-10-25
+ CDATE    2022-10-25
+ DDATE    2022-11-04
+ 
+ COMMENT First comment
+ TRANSACTION  1 2 100
+ COMMENT Second comment
+ TRANSACTION  3 4 27
+ TRANSACTION  2 1 100
+ TRANSACTION  5 6 100
+
+ In bit log
+ --
+ UUID                                  Entry datetime RFC3339    Entry userid   Target   Command  Object ID                              Parameter list
+------------------------------------  -----------------------   -------------  ------   -------  -------------------------------------  ------------------------------------
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE     CREATE   ID GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE 2022-10-25 CDATE 2022-10-25 DDATE 2022-11-04
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE     SET      GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami COMMENT First comment TRANSACTION 1 2 100 COMMENT Second comment 0TRANSACTION 3 4 27
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE     SET      GD22-000149 TRANSACTION 2 1 100 TRANSACTION 5 6 100

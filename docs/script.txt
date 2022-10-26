@@ -1,0 +1,17 @@
+Example script
+--------------
+
+def Input:
+  net: number
+  vat: number
+  gross: number
+  pkind: enum(cash|card|transfer)
+  duedate: date
+  partner: partner_id
+
+Checks:
+  "VAT error" @ net + vat == gross
+  
+
+// Számla nettó összege
+(1) 161 3841 1
