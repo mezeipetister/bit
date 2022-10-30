@@ -1,0 +1,42 @@
+COMMIT
+
+  COMMIT:
+    - ID
+    - Message
+    - UserId
+    - DateTime RFC3339
+    - Log
+
+Commit ID
+  679f453166975c17cdecb117d3bc28e6dfd9d90e
+
+Changes
+  679f453166975c17cdecb117d3bc28e6dfd9d90e
+    -    
+
+
+
+Locale/CommitLog
+-------------------
+8f4e3e3c24bac71b4ffdf2bc0f73246d601766d4 A
+.
+.
+.
+679f453166975c17cdecb117d3bc28e6dfd9d90e A
+947fdcc9f4651c268e83c99d3c6e9f7b8a97920d C
+9df9b0bb82bda0abcabafb3d02b3982d49f221e9 B
+7b7e280c9e29e2bb3562c67ed894df1275da3da9 A
+45daab4e7b41a5a926afb0973dbf600c76956a6a A
+
+
+Remote/CommitLog
+-------------------
+8f4e3e3c24bac71b4ffdf2bc0f73246d601766d4 A
+.
+.
+.
+679f453166975c17cdecb117d3bc28e6dfd9d90e A
+947fdcc9f4651c268e83c99d3c6e9f7b8a97920d C
+9df9b0bb82bda0abcabafb3d02b3982d49f221e9 B
+7b7e280c9e29e2bb3562c67ed894df1275da3da9 A
+45daab4e7b41a5a926afb0973dbf600c76956a6a A

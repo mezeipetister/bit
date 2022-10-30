@@ -229,8 +229,8 @@ bit ledger ..
 Example bit commands and a note view
 --
 bit create ID GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE 2022-10-25 CDATE 2022-10-25 DDATE 2022-11-04
-bit set GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami COMMENT First comment TRANSACTION 1 2 100 COMMENT Second comment 0TRANSACTION 3 4 27
-bit set GD22-000149 TRANSACTION 2 1 100 TRANSACTION 5 6 100
+bit set ID GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami COMMENT First comment TRANSACTION 1 2 100 COMMENT Second comment 0TRANSACTION 3 4 27
+bit set ID GD22-000149 TRANSACTION 2 1 100 TRANSACTION 5 6 100
 
 NOTE
 ----
@@ -250,10 +250,27 @@ NOTE
  TRANSACTION  2 1 100
  TRANSACTION  5 6 100
 
- In bit log
- --
- UUID                                  Entry datetime RFC3339    Entry userid   Target   Command  Object ID                              Parameter list
-------------------------------------  -----------------------   -------------  ------   -------  -------------------------------------  ------------------------------------
-56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE     CREATE   ID GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE 2022-10-25 CDATE 2022-10-25 DDATE 2022-11-04
-56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE     SET      GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami COMMENT First comment TRANSACTION 1 2 100 COMMENT Second comment 0TRANSACTION 3 4 27
-56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE     SET      GD22-000149 TRANSACTION 2 1 100 TRANSACTION 5 6 100
+Folder structure
+(Working DIR)
+
+../
+  .bit/
+  bit.log
+  bit.yaml | bit.toml
+
+
+In bit log
+--
+UUID                                  Entry datetime RFC3339    Entry userid   Target  Command  Parameter list
+------------------------------------  -----------------------   -------------  ------  -------  ------------------------------------
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE    CREATE   ID GD22-000149 PARTNER democo NET 100 VAT 27 GROSS 127 IDATE 2022-10-25 CDATE 2022-10-25 DDATE 2022-11-04
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE    SET      GD22-000149 DDATE 2022-11-05 DESC Lorem ipsum dolorem set ami COMMENT First comment TRANSACTION 1 2 100 COMMENT Second comment 0TRANSACTION 3 4 27
+56f311dd-9fdb-4141-b6fd-42ef0270bd27  2022-09-02T11:49:25.22Z   mezeipetister  NOTE    SET      GD22-000149 TRANSACTION 2 1 100 TRANSACTION 5 6 100
+679f453166975c17cdecb117d3bc28e6dfd9d90e
+
+bit.toml
+
+  Project
+    Name
+    BitVersion
+    Year

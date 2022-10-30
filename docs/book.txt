@@ -1,0 +1,118 @@
+BIT BOOK
+Balance IT - Double entry book keeping
+
+Created by Peter Mezei (2022)
+
+--
+
+1) Definitions
+
+  In BIT we have the following definitions:
+
+  Repository
+  
+    Working directory that contains all the BIT data related to a business
+  entity. Bit mainly contains double entry book keeping records, and repository
+  related settings and documents.
+
+  Entry
+  
+    User input entry that contains some small size change of the current
+  repository. Entry can be note, account, setting, blob or any other BIT
+  specific data (change).
+
+  Commit
+
+    Group of entries in the current repository. A commit is Local commit until
+  its pushed to the repository. Commit has a unique SHA1 ID, that is calculated
+  by the related entries. SHA1 ID also a verification possibility.
+
+  Uncommited
+
+    Series of entries that are not part of any commit. Typically new entries
+  before doing a commit.
+
+  Remote (Log)
+
+    BIT remote log. This contains all the valid and pushed BIT commits in time
+  order.
+  
+  Locale (Log)
+
+    Bit log located locally. BIT sync its log with remote with pull and push
+  requests.
+
+  Ahead of remote
+
+    When the local log contains unpushed commits.
+
+  Behind of remote
+
+    When we have unpulled commits from remote. Local log is behind the remote
+  log.
+
+  Clone
+
+    Command. Clone repository from a remote address.
+
+  Pull
+
+    Command. Pull repository changes from remote.
+
+  Push
+
+    Command. Push local commits to remote.
+
+Commit
+
+  - ID: SHA1 (e.g. 45daab4e7b41a5a926afb0973dbf600c76956a6a)
+  - CreatedAt: DateTime (RFC3339)
+  - CreatedBy: UserId
+
+2) Version Control
+
+3) CLI
+
+  bit create account    - Create account
+  bit create note       - Create note
+  bit set account       - Set account data
+  bit set note          - Set note data
+  bit add               - Add blob
+  bit ledger            - Display Ledger
+  bit init              - Init bit repository
+  bit clone             - Clone repository from remote
+  bit pull              - Pull repository changes from remote
+  bit push              - Push local changes to remote
+  bit commit            - Create a new commit from unstaged changes
+  bit server start      - Start bit server to host repository
+  bit server stop       - Stop running bit server
+  bit info              - print repository info
+  bit version           - print cwd bit version details
+  bit config set 
+
+4) BIT Versions
+
+  Repository based BIT version management. Multiple BIT versions can be
+installed in the same time. The current BIT working directory specify its
+BIT version. That version should be installed automatically - if not installed -
+and used to manage that specific BIT repository.
+
+  ./.bitdir           - bit install directory
+    /bin              - bit version directory
+      /0.0.1          - bit version binary
+      /0.0.2          - ..
+      /..             - ..
+      /..             - ..
+      /VERSION-N      - ..
+    /data
+      repositories    - local repositories db; contains repo paths
+    /bitup            - bitup binary
+
+  bitup
+    update (-y)                   - update bit default version
+    install VERSION               - install specific bit version
+    set default VERSION (-y)      - set specific bit version as default
+
+  bit open gz
+  bit --repo=gz info
+  bit set 2022D24-000019 CDATE 
