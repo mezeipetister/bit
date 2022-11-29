@@ -6,18 +6,36 @@ use std::{
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug)]
+pub enum Mode {
+    Local,
+    Server,
+}
+
+impl PartialEq for Mode {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Mode::Local, Mode::Local) => true,
+            (Mode::Local, Mode::Server) => false,
+            (Mode::Server, Mode::Local) => false,
+            (Mode::Server, Mode::Server) => true,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Context {
     bit_version: String,
     username: String,
     current_dir: PathBuf,
     is_project_path: bool,
     current_project_path: Option<PathBuf>,
+    mode: Mode,
     args_raw: Vec<String>,
     args: String,
 }
 
 impl Context {
-    pub fn new() -> Self {
+    pub fn new(mode: Mode) -> Self {
         let current_dir = std::env::current_dir().unwrap();
         let current_project_path = get_project_dir(&current_dir);
         let args_raw = std::env::args().collect::<Vec<String>>();
@@ -31,9 +49,19 @@ impl Context {
             current_dir: current_dir,
             is_project_path: current_project_path.is_ok(),
             current_project_path: current_project_path.map(|p| Some(p)).unwrap_or(None),
+            mode,
             args_raw,
             args,
         }
+    }
+    pub fn mode(&self) -> &Mode {
+        &self.mode
+    }
+    pub fn mode_is_server(&self) -> bool {
+        self.mode == Mode::Server
+    }
+    pub fn mode_is_local(&self) -> bool {
+        self.mode == Mode::Local
     }
     pub fn username(&self) -> &str {
         &self.username

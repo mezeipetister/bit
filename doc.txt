@@ -1,0 +1,158 @@
+Commands:
+
+  /note
+    create
+    set
+      ID
+      PARTNER
+      CDATE
+      DDATE
+      IDATE
+      transaction
+      ID
+      DEBIT
+      CREDIT
+      AMOUNT
+
+  /account
+    create
+    set
+      ID
+      NAME
+      WORKING
+
+  /partner
+    create
+    set
+      ID
+      NAME
+      DESCRIPTION
+      EMAIL
+
+  /blob
+    create
+    set
+      ID
+
+  /user
+    create
+    set
+      NAME
+      USERNAME
+      EMAIL
+      PASSWORD
+      ROLE
+
+  /config
+    set
+      PASSWORD
+
+  /project
+    set
+      NAME
+      YEAR
+      CURRENCY
+      BIT_VERSION
+
+Examples
+
+bit info
+bit --version
+
+bit partner create ID farmmix NAME Farmmix Kft.
+bit partner set ID farmmix EMAIL info@farmmix.hu
+
+bit user create USERNAME mezeipetister EMAIL mezeipetister@gmail.com PASSWORD firstpasswd
+bit user set USERNAME mezeipetister NAME Mezei Péter
+
+bit account create ID 161 NAME Beruházások
+bit account create ID 38 NAME Bank
+bit account create ID 3841 NAME Peti bank
+bit account set ID 161 NAME Beruházás
+
+bit note create ID 2022-01-0000AF/22 PARTNER farmmix CDATE 2022-01-01 DDATE 2022-01-30
+bit note set ID 2022-01-0000AF622 IDATE 2022-01-30
+
+bit note get ID 2022-01-0000AF622
+bit note find ID af622
+bit note filter AMOUNT >3_000_000
+
+bit tr ID 2022-01-0000AF622 COMMENT lorem ipsum dolorem DEBIT 1 CREDIT 2 AMOUNT 1400
+
+bit
+
+bit account get ID 38
+bit /161
+
+Főkönyvi kivonat
+Főkönyvi napló
+
+bit init
+bit pull
+bit commit -m Hello Bello
+
+bit --create_account ID 161 NAME Beruházás
+
+bit config set PASSWORD demopasswd
+
+bit project set NAME Gardenzilla könyvelés YEAR 2022 CURRENCY huf
+
+bit create_partner ..
+bit set_partner ..
+bit create_user ..
+bit set_user ..
+bit create_account ..
+bit set_account ..
+
+bit get account/161 ..
+
+
+// V2
+
+bit TARGET command ARGS -flag
+
+bit note/2022-0000-AF19/22
+bit note/2022-0000-AF19/22 get
+bit note/2022-0000-AF19/22 set ..
+bit ledger
+bit ledger
+
+Főkönyv
+Partner
+törzsadat
+lezárt tételek
+nyitott tételek
+Számlatükör
+bit accounts
+Account
+törzsadat
+
+Entries
+
+  Account
+    CREATE_ACCOUNT
+    SET_ACCOUNT
+
+  Note
+    CREATE_NOTE
+    SET_NOTE
+    ADD_TRANSACTION
+
+  PARTNER
+    CREATE_PARTNER
+    SET_PARTNER
+
+  USER
+    CREATE_USER
+    SET_USER
+    RESET_PASSWORD
+
+  PROJECT
+    SET_PROJECT
+    UPGRADE_PROJECT
+
+  BLOB
+    CREATE_BLOB
+    SET_BLOB
+
+  ABOUT --version
