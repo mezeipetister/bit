@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Seek, SeekFrom, Write},
+    ops::Rem,
     path::PathBuf,
 };
 use tokio::{
@@ -45,7 +46,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn init(ctx: &Context) -> BitResult<Self> {
+    pub async fn load(ctx: &Context) -> BitResult<Self> {
         Ok(Database {
             inner_lock: Mutex::new(LockedDb::default()),
         })
@@ -84,15 +85,18 @@ impl DataRead for IndexData {
 
 #[async_trait]
 impl DataUpdate for IndexData {
-    type UpdateObj = Vec<Index>;
+    type UpdateObj = Index;
     async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
         let mut file = OpenOptions::new()
             .read(true)
             .write(true)
+            .truncate(true)
             .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
             .await
             .map_err(|_| BitError::new("No INDEX db file found"))?;
+        println!("{:?}", data);
         file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        file.flush().await?;
         Ok(())
     }
 }
@@ -123,10 +127,12 @@ impl DataUpdate for LocalData {
         let mut file = OpenOptions::new()
             .read(true)
             .write(true)
+            .truncate(true)
             .open(ctx.bit_data_path().unwrap().join(PATH_LOCAL))
             .await
             .map_err(|_| BitError::new("No LOCAL db file found"))?;
         file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        file.flush().await?;
         Ok(())
     }
 }
@@ -158,21 +164,40 @@ impl DataRead for RemoteData {
 }
 
 #[async_trait]
+impl DataUpdate for RemoteData {
+    type UpdateObj = Vec<Commit>;
+    async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .truncate(true)
+            .open(ctx.bit_data_path().unwrap().join(PATH_LOCAL))
+            .await
+            .map_err(|_| BitError::new("No REMOTE db file found"))?;
+        file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        file.flush().await?;
+        Ok(())
+    }
+}
+
+#[async_trait]
 impl DataAppend for RemoteData {
     type AppendObj = Commit;
     async fn append(ctx: &Context, data: Self::AppendObj) -> BitResult<()> {
         let ctx = ctx.to_owned();
-        let _ = tokio::task::spawn_blocking(move || {
+        let res: BitResult<()> = tokio::task::spawn_blocking(move || {
             let mut file = std::fs::OpenOptions::new()
                 .read(true)
                 .write(true)
                 .open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
-                .unwrap();
+                .map_err(|_| BitError::new("No REMOTE db file found"))?;
             file.seek(SeekFrom::End(0)).unwrap();
             bincode::serialize_into(&file, &data).unwrap();
             file.flush().unwrap();
+            Ok(())
         })
         .await?;
+        res?;
         Ok(())
     }
 }
@@ -181,7 +206,7 @@ impl DataAppend for RemoteData {
 pub struct StagingData;
 
 #[async_trait]
-impl DataRead for Staging {
+impl DataRead for StagingData {
     type ReadResult = Staging;
     async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
         // Try open staging
@@ -197,58 +222,81 @@ impl DataRead for Staging {
 }
 
 #[async_trait]
-impl DataUpdate for Staging {
+impl DataUpdate for StagingData {
     type UpdateObj = Staging;
     async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
         let mut file = OpenOptions::new()
             .read(true)
             .write(true)
+            .truncate(true)
             .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
             .await
             .map_err(|_| BitError::new("No staging db file found"))?;
         file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        file.flush().await?;
         Ok(())
     }
 }
 
 impl LockedDb {
-    pub fn last_commit_id_remote(&self) -> Uuid {
-        unimplemented!()
+    pub async fn last_commit_id_remote(&self, ctx: &Context) -> BitResult<Option<Uuid>> {
+        let res = RemoteData::read(ctx).await?.last().map(|l| l.data().id());
+        Ok(res)
     }
-    pub fn last_commit_id_local(&self) -> Uuid {
-        unimplemented!()
+    pub async fn last_commit_id_local(&self, ctx: &Context) -> BitResult<Option<Uuid>> {
+        let res = LocalData::read(ctx).await?.last().map(|l| l.id());
+        Ok(res)
+    }
+    pub async fn last_commit_id(&self, ctx: &Context) -> BitResult<Uuid> {
+        match self.last_commit_id_local(ctx).await? {
+            // Send back last local if we have one
+            Some(lcil) => Ok(lcil),
+            None => match self.last_commit_id_remote(ctx).await? {
+                // Or send back last remote if we have one
+                Some(lcir) => Ok(lcir),
+                // Or create a phantom UUID and fix it later
+                None => Ok(Uuid::new_v4()),
+            },
+        }
     }
     async fn init(&self, ctx: &Context) -> BitResult<()> {
         if ctx.is_bit_project_path() {
             return Err(BitError::new("Already a bit project. Cannot init it again"));
         }
         let data_dir = &ctx.current_dir().join(".bit");
+        tokio::fs::create_dir_all(data_dir).await?;
+        // Init context again
+        let ctx = Context::new(ctx.mode().to_owned());
         // Init empty STAGING db file
-        let _ = File::create(data_dir.join(".bit").join(PATH_STAGING)).await;
+        let _ = File::create(data_dir.join(PATH_STAGING)).await;
+        self.reset_staging(&ctx).await?;
         // Init empty LOCAL db file
-        let _ = File::create(data_dir.join(".bit").join(PATH_LOCAL)).await;
+        let _ = File::create(data_dir.join(PATH_LOCAL)).await;
+        self.reset_local(&ctx).await?;
         // Init empty REMOTE db file
-        let _ = File::create(data_dir.join(".bit").join(PATH_REMOTE)).await;
+        let _ = File::create(data_dir.join(PATH_REMOTE)).await;
+        self.reset_remote(&ctx).await?;
         // Init empty INDEX db file
-        let _ = File::create(data_dir.join(".bit").join(PATH_INDEX)).await;
+        let _ = File::create(data_dir.join(PATH_INDEX)).await;
+        self.reset_index(&ctx).await?;
         Ok(())
     }
-    async fn reset(&self, ctx: &Context) -> BitResult<()> {
-        // First remove .bit directory
-        if !ctx.is_bit_project_path() {
-            return Err(BitError::new("Not a BIT project; cannot reset it"));
-        }
-        // Remove bit data directory
-        let _ = tokio::fs::remove_dir_all(ctx.bit_data_path().unwrap())
-            .await
-            .unwrap();
-        // Then init it
-        self.init(ctx).await?;
-        // Then Ok nothing
-        Ok(())
-    }
+    // async fn reset(&self, ctx: &Context) -> BitResult<()> {
+    //     // First remove .bit directory
+    //     if !ctx.is_bit_project_path() {
+    //         return Err(BitError::new("Not a BIT project; cannot reset it"));
+    //     }
+    //     // Remove bit data directory
+    //     let _ = tokio::fs::remove_dir_all(ctx.bit_data_path().unwrap())
+    //         .await
+    //         .unwrap();
+    //     // Then init it
+    //     self.init(ctx).await?;
+    //     // Then Ok nothing
+    //     Ok(())
+    // }
     async fn get_staging(&self, ctx: &Context) -> BitResult<Staging> {
-        Staging::read(ctx).await
+        StagingData::read(ctx).await
     }
     async fn add_to_staging(&self, ctx: &Context, entry: Entry) -> BitResult<()> {
         // Get all
@@ -256,13 +304,114 @@ impl LockedDb {
         // Add entry
         now.add_entry(entry);
         // Store entries
-        Staging::update(ctx, now).await?;
+        StagingData::update(ctx, now).await?;
         Ok(())
     }
-    async fn get_local(ctx: &Context) -> BitResult<Vec<CommitCandidate>> {
+    async fn reset_staging(&self, ctx: &Context) -> BitResult<()> {
+        let s = Staging::default();
+        StagingData::update(ctx, s).await?;
+        Ok(())
+    }
+    async fn get_local(&self, ctx: &Context) -> BitResult<Vec<CommitCandidate>> {
         LocalData::read(ctx).await
     }
-    async fn get_remote(ctx: &Context) -> BitResult<Vec<Commit>> {
+    async fn reset_local(&self, ctx: &Context) -> BitResult<()> {
+        LocalData::update(ctx, vec![]).await
+    }
+    async fn get_remote(&self, ctx: &Context) -> BitResult<Vec<Commit>> {
         RemoteData::read(ctx).await
+    }
+    async fn reset_remote(&self, ctx: &Context) -> BitResult<()> {
+        RemoteData::update(ctx, vec![]).await
+    }
+    async fn reset_index(&self, ctx: &Context) -> BitResult<()> {
+        IndexData::update(ctx, Index::default()).await
+    }
+    async fn re_index(&self, ctx: &Context) -> BitResult<()> {
+        IndexData::update(
+            ctx,
+            Index::default().build(
+                self.get_remote(ctx).await?,
+                self.get_local(ctx).await?,
+                self.get_staging(ctx).await?,
+            )?,
+        )
+        .await?;
+        Ok(())
+    }
+    async fn commit(&self, ctx: &Context, message: String) -> BitResult<()> {
+        let mut local_commits = self.get_local(ctx).await?;
+        let staging = self.get_staging(ctx).await?;
+        local_commits.push(CommitCandidate::from_staging(
+            ctx,
+            &staging,
+            message,
+            self.last_commit_id(ctx).await?,
+        ));
+        LocalData::update(ctx, local_commits).await?;
+        self.reset_staging(ctx).await?;
+        self.re_index(ctx).await?;
+        Ok(())
+    }
+    // Pull
+    // Push
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::context::Mode;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_db_init() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .init(&ctx)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_db_add_entry() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .add_to_staging(&ctx, Entry::default())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_db_commit() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .commit(&ctx, "demo".to_string())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_staging_reset() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .reset_staging(&ctx)
+            .await
+            .unwrap();
     }
 }
