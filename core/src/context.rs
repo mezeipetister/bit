@@ -3,9 +3,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::prelude::BitResult;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Mode {
     Local,
     Server,
@@ -22,13 +24,14 @@ impl PartialEq for Mode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Context {
     bit_version: String,
     username: String,
     current_dir: PathBuf,
-    is_project_path: bool,
-    current_project_path: Option<PathBuf>,
+    is_bit_project_path: bool,
+    project_path: Option<PathBuf>,
+    bit_data_path: Option<PathBuf>,
     mode: Mode,
     args_raw: Vec<String>,
     args: String,
@@ -47,8 +50,12 @@ impl Context {
             bit_version: VERSION.to_string(),
             username: "mezeipetister".to_string(),
             current_dir: current_dir,
-            is_project_path: current_project_path.is_ok(),
-            current_project_path: current_project_path.map(|p| Some(p)).unwrap_or(None),
+            is_bit_project_path: current_project_path.is_ok(),
+            bit_data_path: current_project_path
+                .as_ref()
+                .map(|p| Some(p.join(".bit")))
+                .unwrap_or(None),
+            project_path: current_project_path.map(|p| Some(p)).unwrap_or(None),
             mode,
             args_raw,
             args,
@@ -70,10 +77,10 @@ impl Context {
         &self.current_dir
     }
     pub fn current_project_path(&self) -> Option<&PathBuf> {
-        self.current_project_path.as_ref()
+        self.project_path.as_ref()
     }
-    pub fn is_project_path(&self) -> bool {
-        self.is_project_path
+    pub fn is_bit_project_path(&self) -> bool {
+        self.is_bit_project_path
     }
     pub fn bit_version(&self) -> &str {
         &self.bit_version
@@ -83,6 +90,9 @@ impl Context {
     }
     pub fn args(&self) -> &str {
         &self.args
+    }
+    pub fn bit_data_path(&self) -> Option<&PathBuf> {
+        self.bit_data_path.as_ref()
     }
 }
 

@@ -40,17 +40,40 @@ pub struct CommitCandidate {
 }
 
 impl CommitCandidate {
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+    pub fn uid(&self) -> &str {
+        &self.uid
+    }
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+    pub fn dtime(&self) -> DateTime<Utc> {
+        self.dtime
+    }
+    pub fn previous_commit_id(&self) -> Uuid {
+        self.previous_commit_id
+    }
+    pub fn etries(&self) -> &Vec<Entry> {
+        &self.entries
+    }
     fn sign(&self) -> BitResult<Signature> {
         sha1_sign(&self)
     }
-    fn from_staging(db: &Database, ctx: &Context, staging: &Staging, message: String) -> Self {
+    async fn from_staging(
+        db: &Database,
+        ctx: &Context,
+        staging: &Staging,
+        message: String,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
             uid: ctx.username().into(),
             dtime: Utc::now(),
             message,
             entries: staging.entries.clone(),
-            previous_commit_id: db.last_commit_id_local(),
+            previous_commit_id: db.lock().await.last_commit_id_local(),
         }
     }
     pub fn set_previous_commit_id(&mut self, pci: Uuid) {
@@ -66,6 +89,7 @@ pub struct Commit {
 
 impl Commit {
     pub fn from_candidate(db: &Database, ctx: &Context, data: CommitCandidate) -> BitResult<Self> {
+        // SERVER ONLY
         if !ctx.mode_is_server() {
             panic!("Signing is not allowed in local mode");
         }
@@ -74,6 +98,12 @@ impl Commit {
     }
     pub fn has_valid_signature(&self) -> bool {
         self.signature == self.data.sign().unwrap().to_string()
+    }
+    pub fn data(&self) -> &CommitCandidate {
+        &self.data
+    }
+    pub fn signature_str(&self) -> &str {
+        &self.signature
     }
 }
 
@@ -85,6 +115,9 @@ pub struct Staging {
 impl Staging {
     pub fn reset(&mut self) {
         self.entries = Vec::new();
+    }
+    pub fn add_entry(&mut self, entry: Entry) {
+        self.entries.push(entry);
     }
 }
 
