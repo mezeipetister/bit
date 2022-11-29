@@ -1,11 +1,15 @@
 use crate::{
     context::Context,
+    index::Index,
     prelude::{BitError, BitResult},
     sync::{Commit, CommitCandidate, Entry, Staging},
 };
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{
+    io::{Seek, SeekFrom, Write},
+    path::PathBuf,
+};
 use tokio::{
     fs::{File, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
@@ -64,17 +68,32 @@ pub struct IndexData;
 
 #[async_trait]
 impl DataRead for IndexData {
-    type ReadResult = Vec<()>;
+    type ReadResult = Vec<Index>;
     async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
-        unimplemented!()
+        // Try open staging
+        let mut file = OpenOptions::new()
+            .read(true)
+            .open(ctx.bit_data_path().unwrap().join(PATH_INDEX))
+            .await
+            .map_err(|_| BitError::new("No INDEX db file found"))?;
+        let mut contents = vec![];
+        file.read_to_end(&mut contents).await?;
+        Ok(bincode::deserialize(&contents)?)
     }
 }
 
 #[async_trait]
 impl DataUpdate for IndexData {
-    type UpdateObj = Vec<()>;
+    type UpdateObj = Vec<Index>;
     async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
-        unimplemented!()
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
+            .await
+            .map_err(|_| BitError::new("No INDEX db file found"))?;
+        file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        Ok(())
     }
 }
 
@@ -101,7 +120,14 @@ impl DataRead for LocalData {
 impl DataUpdate for LocalData {
     type UpdateObj = Vec<CommitCandidate>;
     async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
-        unimplemented!()
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(ctx.bit_data_path().unwrap().join(PATH_LOCAL))
+            .await
+            .map_err(|_| BitError::new("No LOCAL db file found"))?;
+        file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        Ok(())
     }
 }
 
@@ -135,7 +161,19 @@ impl DataRead for RemoteData {
 impl DataAppend for RemoteData {
     type AppendObj = Commit;
     async fn append(ctx: &Context, data: Self::AppendObj) -> BitResult<()> {
-        unimplemented!()
+        let ctx = ctx.to_owned();
+        let _ = tokio::task::spawn_blocking(move || {
+            let mut file = std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
+                .unwrap();
+            file.seek(SeekFrom::End(0)).unwrap();
+            bincode::serialize_into(&file, &data).unwrap();
+            file.flush().unwrap();
+        })
+        .await?;
+        Ok(())
     }
 }
 

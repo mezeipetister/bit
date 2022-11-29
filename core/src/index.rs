@@ -1,13 +1,12 @@
 use std::path::PathBuf;
 
+use serde::{Deserialize, Serialize};
+
 use crate::context::Context;
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Index {
-    index_root_path: PathBuf,
+    ledger: (),
 }
 
-impl Index {
-    pub fn new(ctx: &Context) -> Self {
-        unimplemented!()
-    }
-}
+impl Index {}
