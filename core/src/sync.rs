@@ -1,43 +1,61 @@
-use std::io::Read;
-
-use crate::{
-    context::Context,
-    prelude::{BitError, BitResult},
-};
+use crate::{context::Context, db::Database, prelude::BitResult};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sha1::{
-    digest::{generic_array::GenericArray, typenum::TypeArray},
-    Digest, Sha1,
-};
+use sha1::{Digest, Sha1};
 use uuid::Uuid;
 
-fn sha1_bytes_to_string(b: [u8; 20]) -> String {
-    hex::encode(b)
+struct Signature([u8; 20]);
+
+impl Signature {
+    fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+    fn to_string(&self) -> String {
+        hex::encode(&self.0)
+    }
 }
 
-fn sha1_sign<T>(i: T) -> BitResult<[u8; 20]>
+fn sha1_sign<T>(i: T) -> BitResult<Signature>
 where
     T: Serialize,
 {
     let mut hasher = Sha1::new();
     hasher.update(&bincode::serialize(&i)?);
-    let res = hasher
+    let signature = hasher
         .finalize()
         .as_slice()
         .try_into()
         .expect("Error during converting sha1 to 20 bytes array");
-    Ok(res)
+    Ok(Signature(signature))
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct CommitCandidate {
     id: Uuid,
     uid: String,
-    dtime: String,
+    dtime: DateTime<Utc>,
     message: String,
     entries: Vec<Entry>,
-    previous_commit_id: Option<Uuid>,
+    previous_commit_id: Uuid,
+}
+
+impl CommitCandidate {
+    fn sign(&self) -> BitResult<Signature> {
+        sha1_sign(&self)
+    }
+    fn from_staging(db: &Database, ctx: &Context, staging: &Staging, message: String) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            uid: ctx.username().into(),
+            dtime: Utc::now(),
+            message,
+            entries: staging.entries.clone(),
+            previous_commit_id: db.last_commit_id_local(),
+        }
+    }
+    pub fn set_previous_commit_id(&mut self, pci: Uuid) {
+        self.previous_commit_id = pci;
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -47,17 +65,15 @@ pub struct Commit {
 }
 
 impl Commit {
-    // TODO! DB access, to check prev commit id
-    pub fn new(ctx: &Context, data: CommitCandidate) -> BitResult<Self> {
+    pub fn from_candidate(db: &Database, ctx: &Context, data: CommitCandidate) -> BitResult<Self> {
         if !ctx.mode_is_server() {
             panic!("Signing is not allowed in local mode");
         }
-        // TODO! Check commit prev id here
-        let signature = sha1_bytes_to_string(sha1_sign(bincode::serialize(&data)?)?);
+        let signature = data.sign()?.to_string();
         Ok(Self { data, signature })
     }
     pub fn has_valid_signature(&self) -> bool {
-        sha1_bytes_to_string(sha1_sign(&self.data).unwrap()) == self.signature
+        self.signature == self.data.sign().unwrap().to_string()
     }
 }
 
@@ -66,7 +82,13 @@ pub struct Staging {
     entries: Vec<Entry>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+impl Staging {
+    pub fn reset(&mut self) {
+        self.entries = Vec::new();
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Entry {
     id: Uuid,             // Entry id
     dtime: DateTime<Utc>, //
@@ -80,10 +102,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_sha1() {
+    fn test_candidate_signature() {
         assert_eq!(
-            "77d8d459c5fab783862eecb74ad4a53afd04c45d",
-            &sha1_bytes_to_string(sha1_sign("hello").unwrap())
+            "ef38fd3c89d9b6cf432d391705084b4d79b31d39",
+            CommitCandidate::default().sign().unwrap().to_string()
         );
     }
 }

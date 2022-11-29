@@ -1,3 +1,43 @@
+SYNC
+
+  Entry
+    |
+    | ++elementary item, contains atomic updates
+    |   collection of entries stored in staging++
+    |
+    *-> Staging
+          |
+          | /commit/
+          | ++during commit, we create CommitCandidate
+          |   containing all the related entries++
+          |
+          *--> CommitCandidate
+                    |
+                    | /store in locals/
+                    | ++CommitCandidates are stored inside
+                    |   the locals storage++
+                    |
+                    *---> Local[]
+                            |
+                            | /push/
+                            | ++during a push action we try to send
+                            |   all the local CommitCandidates to the
+                            |   remote server. If success, locals empties
+                            |   out, and new commits are being pulled++
+                            |
+                            *---> Commit
+                                    |
+                                    | ++Signed and verified CommitCandidate
+                                    |   that is signed by the remote server++
+                                    |
+                                    *---> Remote[]
+                                      |
+                                      | ++all the remote @@signed@@ commits
+                                      |   are store here. Updates during each
+                                      |   pull and push++
+                                      |
+                                     ***
+
 Commands:
 
   /note
