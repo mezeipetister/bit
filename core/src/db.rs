@@ -23,59 +23,85 @@ const PATH_LOCAL: &'static str = "local";
 const PATH_REMOTE: &'static str = "remote";
 const PATH_INDEX: &'static str = "index";
 
-#[async_trait]
-pub trait DataRead {
-    type ReadResult: for<'de> Deserialize<'de> + Send;
+pub trait Db {
+    type DataType: for<'de> Deserialize<'de> + Serialize + Send + Sync;
     const DB_PATH: &'static str;
-    const ITERABLE: bool;
-    async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
-        let ctx = ctx.clone();
-        match Self::ITERABLE {
-            true => {
-                let res = tokio::task::spawn_blocking(move || {
-                    let mut res: Vec<Self::ReadResult> = Vec::new();
-                    let f = std::fs::File::open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
-                        .unwrap();
-                    loop {
-                        match bincode::deserialize_from(&f) {
-                            Ok(r) => res.push(r),
-                            Err(_) => {
-                                break;
-                            }
-                        }
-                    }
-                    res
-                })
-                .await?;
-                Ok(res)
-            }
-            false => {
-                // Try open staging
-                let mut file = OpenOptions::new()
-                    .read(true)
-                    .open(ctx.bit_data_path().unwrap().join(Self::DB_PATH))
-                    .await
-                    .map_err(|_| BitError::new("No db file found"))?;
-                let mut contents = vec![];
-                file.read_to_end(&mut contents).await?;
-                Ok(bincode::deserialize(&contents)?)
-            }
-        }
+}
+
+#[async_trait]
+pub trait DataRead: Db {
+    async fn read(ctx: &Context) -> BitResult<Self::DataType> {
+        // Try open staging
+        let mut file = OpenOptions::new()
+            .read(true)
+            .open(ctx.bit_data_path().unwrap().join(Self::DB_PATH))
+            .await
+            .map_err(|_| BitError::new("No db file found"))?;
+        let mut contents = vec![];
+        file.read_to_end(&mut contents).await?;
+        Ok(bincode::deserialize(&contents)?)
     }
 }
 
 #[async_trait]
-pub trait DataUpdate {
-    type UpdateObj: Serialize;
-    const DB_PATH: &'static str;
-    async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()>;
+pub trait DataIter: Db {
+    type IterOutputType: for<'de> Deserialize<'de> + Serialize + Send + Sync + 'static;
+    async fn read(ctx: &Context) -> BitResult<Vec<Self::IterOutputType>> {
+        let ctx = ctx.to_owned();
+        let res = tokio::task::spawn_blocking(move || {
+            let mut res: Vec<Self::IterOutputType> = Vec::new();
+            let f = std::fs::File::open(ctx.bit_data_path().unwrap().join(PATH_REMOTE)).unwrap();
+            loop {
+                match bincode::deserialize_from(&f) {
+                    Ok(r) => res.push(r),
+                    Err(_) => {
+                        break;
+                    }
+                }
+            }
+            res
+        })
+        .await?;
+        Ok(res)
+    }
 }
 
 #[async_trait]
-pub trait DataAppend {
-    type AppendObj: Serialize;
-    const DB_PATH: &'static str;
-    async fn append(ctx: &Context, data: Self::AppendObj) -> BitResult<()>;
+pub trait DataUpdate: Db {
+    async fn update(ctx: &Context, data: Self::DataType) -> BitResult<()> {
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .truncate(true)
+            .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
+            .await
+            .map_err(|_| BitError::new("No staging db file found"))?;
+        file.write_all(&bincode::serialize(&data).unwrap()).await?;
+        file.flush().await?;
+        Ok(())
+    }
+}
+
+#[async_trait]
+pub trait DataAppend: Db {
+    type AppendDataType: Serialize + Send + Sync + 'static;
+    async fn append(ctx: &Context, data: Self::AppendDataType) -> BitResult<()> {
+        let ctx = ctx.to_owned();
+        let res: BitResult<()> = tokio::task::spawn_blocking(move || {
+            let mut file = std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
+                .map_err(|_| BitError::new("No REMOTE db file found"))?;
+            file.seek(SeekFrom::End(0)).unwrap();
+            bincode::serialize_into(&file, &data).unwrap();
+            file.flush().unwrap();
+            Ok(())
+        })
+        .await?;
+        res?;
+        Ok(())
+    }
 }
 
 pub struct Database {
@@ -104,142 +130,51 @@ pub struct LockedDb {
 #[derive(Default)]
 pub struct IndexData;
 
-#[async_trait]
-impl DataRead for IndexData {
-    type ReadResult = Index;
+impl Db for IndexData {
+    type DataType = Index;
     const DB_PATH: &'static str = PATH_INDEX;
-    const ITERABLE: bool = false;
 }
 
-#[async_trait]
-impl DataUpdate for IndexData {
-    type UpdateObj = Index;
-    async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
-        let mut file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .truncate(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
-            .await
-            .map_err(|_| BitError::new("No INDEX db file found"))?;
-        println!("{:?}", data);
-        file.write_all(&bincode::serialize(&data).unwrap()).await?;
-        file.flush().await?;
-        Ok(())
-    }
-}
+impl DataRead for IndexData {}
+impl DataUpdate for IndexData {}
 
 #[derive(Default)]
 pub struct LocalData;
 
-#[async_trait]
-impl DataRead for LocalData {
-    type ReadResult = Vec<CommitCandidate>;
+impl Db for LocalData {
+    type DataType = Vec<CommitCandidate>;
     const DB_PATH: &'static str = PATH_LOCAL;
-    const ITERABLE: bool = false;
 }
 
-#[async_trait]
-impl DataUpdate for LocalData {
-    type UpdateObj = Vec<CommitCandidate>;
-    async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
-        let mut file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .truncate(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_LOCAL))
-            .await
-            .map_err(|_| BitError::new("No LOCAL db file found"))?;
-        file.write_all(&bincode::serialize(&data).unwrap()).await?;
-        file.flush().await?;
-        Ok(())
-    }
-}
+impl DataRead for LocalData {}
+impl DataUpdate for LocalData {}
 
 #[derive(Default)]
 pub struct RemoteData;
 
-#[async_trait]
-impl DataRead for RemoteData {
-    type ReadResult = Vec<Commit>;
+impl Db for RemoteData {
+    type DataType = Vec<Commit>;
     const DB_PATH: &'static str = PATH_REMOTE;
-    const ITERABLE: bool = true;
 }
 
-#[async_trait]
-impl DataUpdate for RemoteData {
-    type UpdateObj = Vec<Commit>;
-    async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
-        let mut file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .truncate(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_LOCAL))
-            .await
-            .map_err(|_| BitError::new("No REMOTE db file found"))?;
-        file.write_all(&bincode::serialize(&data).unwrap()).await?;
-        file.flush().await?;
-        Ok(())
-    }
+impl DataIter for RemoteData {
+    type IterOutputType = Commit;
 }
-
-#[async_trait]
+impl DataUpdate for RemoteData {}
 impl DataAppend for RemoteData {
-    type AppendObj = Commit;
-    async fn append(ctx: &Context, data: Self::AppendObj) -> BitResult<()> {
-        let ctx = ctx.to_owned();
-        let res: BitResult<()> = tokio::task::spawn_blocking(move || {
-            let mut file = std::fs::OpenOptions::new()
-                .read(true)
-                .write(true)
-                .open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
-                .map_err(|_| BitError::new("No REMOTE db file found"))?;
-            file.seek(SeekFrom::End(0)).unwrap();
-            bincode::serialize_into(&file, &data).unwrap();
-            file.flush().unwrap();
-            Ok(())
-        })
-        .await?;
-        res?;
-        Ok(())
-    }
+    type AppendDataType = Commit;
 }
 
 #[derive(Default)]
 pub struct StagingData;
 
-#[async_trait]
-impl DataRead for StagingData {
-    type ReadResult = Staging;
-    async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
-        // Try open staging
-        let mut file = OpenOptions::new()
-            .read(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
-            .await
-            .map_err(|_| BitError::new("No staging db file found"))?;
-        let mut contents = vec![];
-        file.read_to_end(&mut contents).await?;
-        Ok(bincode::deserialize(&contents)?)
-    }
+impl Db for StagingData {
+    type DataType = Staging;
+    const DB_PATH: &'static str = PATH_STAGING;
 }
 
-#[async_trait]
-impl DataUpdate for StagingData {
-    type UpdateObj = Staging;
-    async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()> {
-        let mut file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .truncate(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
-            .await
-            .map_err(|_| BitError::new("No staging db file found"))?;
-        file.write_all(&bincode::serialize(&data).unwrap()).await?;
-        file.flush().await?;
-        Ok(())
-    }
-}
+impl DataRead for StagingData {}
+impl DataUpdate for StagingData {}
 
 impl LockedDb {
     pub async fn last_commit_id_remote(&self, ctx: &Context) -> BitResult<Option<Uuid>> {
