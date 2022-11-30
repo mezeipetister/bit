@@ -25,19 +25,56 @@ const PATH_INDEX: &'static str = "index";
 
 #[async_trait]
 pub trait DataRead {
-    type ReadResult;
-    async fn read(ctx: &Context) -> BitResult<Self::ReadResult>;
+    type ReadResult: for<'de> Deserialize<'de> + Send;
+    const DB_PATH: &'static str;
+    const ITERABLE: bool;
+    async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
+        let ctx = ctx.clone();
+        match Self::ITERABLE {
+            true => {
+                let res = tokio::task::spawn_blocking(move || {
+                    let mut res: Vec<Self::ReadResult> = Vec::new();
+                    let f = std::fs::File::open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
+                        .unwrap();
+                    loop {
+                        match bincode::deserialize_from(&f) {
+                            Ok(r) => res.push(r),
+                            Err(_) => {
+                                break;
+                            }
+                        }
+                    }
+                    res
+                })
+                .await?;
+                Ok(res)
+            }
+            false => {
+                // Try open staging
+                let mut file = OpenOptions::new()
+                    .read(true)
+                    .open(ctx.bit_data_path().unwrap().join(Self::DB_PATH))
+                    .await
+                    .map_err(|_| BitError::new("No db file found"))?;
+                let mut contents = vec![];
+                file.read_to_end(&mut contents).await?;
+                Ok(bincode::deserialize(&contents)?)
+            }
+        }
+    }
 }
 
 #[async_trait]
 pub trait DataUpdate {
     type UpdateObj: Serialize;
+    const DB_PATH: &'static str;
     async fn update(ctx: &Context, data: Self::UpdateObj) -> BitResult<()>;
 }
 
 #[async_trait]
 pub trait DataAppend {
     type AppendObj: Serialize;
+    const DB_PATH: &'static str;
     async fn append(ctx: &Context, data: Self::AppendObj) -> BitResult<()>;
 }
 
@@ -69,18 +106,9 @@ pub struct IndexData;
 
 #[async_trait]
 impl DataRead for IndexData {
-    type ReadResult = Vec<Index>;
-    async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
-        // Try open staging
-        let mut file = OpenOptions::new()
-            .read(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_INDEX))
-            .await
-            .map_err(|_| BitError::new("No INDEX db file found"))?;
-        let mut contents = vec![];
-        file.read_to_end(&mut contents).await?;
-        Ok(bincode::deserialize(&contents)?)
-    }
+    type ReadResult = Index;
+    const DB_PATH: &'static str = PATH_INDEX;
+    const ITERABLE: bool = false;
 }
 
 #[async_trait]
@@ -107,17 +135,8 @@ pub struct LocalData;
 #[async_trait]
 impl DataRead for LocalData {
     type ReadResult = Vec<CommitCandidate>;
-    async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
-        // Try open staging
-        let mut file = OpenOptions::new()
-            .read(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_LOCAL))
-            .await
-            .map_err(|_| BitError::new("No local db file found"))?;
-        let mut contents = vec![];
-        file.read_to_end(&mut contents).await?;
-        Ok(bincode::deserialize(&contents)?)
-    }
+    const DB_PATH: &'static str = PATH_LOCAL;
+    const ITERABLE: bool = false;
 }
 
 #[async_trait]
@@ -143,24 +162,8 @@ pub struct RemoteData;
 #[async_trait]
 impl DataRead for RemoteData {
     type ReadResult = Vec<Commit>;
-    async fn read(ctx: &Context) -> BitResult<Self::ReadResult> {
-        let ctx = ctx.to_owned();
-        let res = tokio::task::spawn_blocking(move || {
-            let mut res: Vec<Commit> = Vec::new();
-            let f = std::fs::File::open(ctx.bit_data_path().unwrap().join(PATH_REMOTE)).unwrap();
-            loop {
-                match bincode::deserialize_from(&f) {
-                    Ok(r) => res.push(r),
-                    Err(_) => {
-                        break;
-                    }
-                }
-            }
-            res
-        })
-        .await?;
-        Ok(res)
-    }
+    const DB_PATH: &'static str = PATH_REMOTE;
+    const ITERABLE: bool = true;
 }
 
 #[async_trait]
@@ -321,11 +324,16 @@ impl LockedDb {
     async fn get_remote(&self, ctx: &Context) -> BitResult<Vec<Commit>> {
         RemoteData::read(ctx).await
     }
+    async fn get_index(&self, ctx: &Context) -> BitResult<Index> {
+        IndexData::read(ctx).await
+    }
     async fn reset_remote(&self, ctx: &Context) -> BitResult<()> {
         RemoteData::update(ctx, vec![]).await
     }
     async fn reset_index(&self, ctx: &Context) -> BitResult<()> {
-        IndexData::update(ctx, Index::default()).await
+        let mut data = Index::default();
+        data.commit_count = 4;
+        IndexData::update(ctx, data).await
     }
     async fn re_index(&self, ctx: &Context) -> BitResult<()> {
         IndexData::update(
@@ -411,6 +419,58 @@ mod tests {
             .lock()
             .await
             .reset_staging(&ctx)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_reset_index() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .reset_index(&ctx)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_re_index() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .re_index(&ctx)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_get_index() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .get_index(&ctx)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_get_remote() {
+        let ctx = Context::new(Mode::Local);
+        Database::load(&ctx)
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .get_remote(&ctx)
             .await
             .unwrap();
     }

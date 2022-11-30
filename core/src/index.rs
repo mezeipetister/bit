@@ -11,7 +11,7 @@ use crate::{
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Index {
     ledger: (),
-    commit_count: i32,
+    pub commit_count: i32,
 }
 
 impl Index {
