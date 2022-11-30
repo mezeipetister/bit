@@ -50,7 +50,7 @@ pub trait DataIter: Db {
         let ctx = ctx.to_owned();
         let res = tokio::task::spawn_blocking(move || {
             let mut res: Vec<Self::IterOutputType> = Vec::new();
-            let f = std::fs::File::open(ctx.bit_data_path().unwrap().join(PATH_REMOTE)).unwrap();
+            let f = std::fs::File::open(ctx.bit_data_path().unwrap().join(Self::DB_PATH)).unwrap();
             loop {
                 match bincode::deserialize_from(&f) {
                     Ok(r) => res.push(r),
@@ -73,7 +73,7 @@ pub trait DataUpdate: Db {
             .read(true)
             .write(true)
             .truncate(true)
-            .open(ctx.bit_data_path().unwrap().join(PATH_STAGING))
+            .open(ctx.bit_data_path().unwrap().join(Self::DB_PATH))
             .await
             .map_err(|_| BitError::new("No staging db file found"))?;
         file.write_all(&bincode::serialize(&data).unwrap()).await?;
@@ -91,7 +91,7 @@ pub trait DataAppend: Db {
             let mut file = std::fs::OpenOptions::new()
                 .read(true)
                 .write(true)
-                .open(ctx.bit_data_path().unwrap().join(PATH_REMOTE))
+                .open(ctx.bit_data_path().unwrap().join(Self::DB_PATH))
                 .map_err(|_| BitError::new("No REMOTE db file found"))?;
             file.seek(SeekFrom::End(0)).unwrap();
             bincode::serialize_into(&file, &data).unwrap();
@@ -387,7 +387,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_index() {
         let ctx = Context::new(Mode::Local);
-        Database::load(&ctx)
+        let res = Database::load(&ctx)
             .await
             .unwrap()
             .lock()
@@ -395,6 +395,7 @@ mod tests {
             .get_index(&ctx)
             .await
             .unwrap();
+        println!("{:?}", res);
     }
 
     #[tokio::test]
