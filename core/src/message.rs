@@ -1,12 +1,11 @@
 use crate::{
-    context::{Context, VERSION},
+    context::VERSION,
     prelude::{BitError, BitResult},
 };
 use chrono::Utc;
 use proto::bit_sync::PacketBytes;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
-use tokio::sync::mpsc::{Receiver, Sender};
+use std::collections::BTreeMap;
 use tonic::Streaming;
 
 pub enum Status {
@@ -99,25 +98,25 @@ impl Message {
         }
         Ok(res)
     }
-    pub fn set_path(mut self, path: &str) -> Self {
+    pub fn set_path(self, path: &str) -> Self {
         self.add_header("path", path)
     }
-    pub fn set_status(mut self, status: Status) -> Self {
+    pub fn set_status(self, status: Status) -> Self {
         self.add_header("status", status as i32)
     }
-    fn set_bit_version(mut self) -> Self {
+    fn set_bit_version(self) -> Self {
         self.add_header("bit_version", VERSION)
     }
-    fn set_dtime(mut self) -> Self {
+    fn set_dtime(self) -> Self {
         self.add_header("dtime", Utc::now().to_rfc3339())
     }
-    pub fn set_content_type<A>(mut self, v: A) -> Self
+    pub fn set_content_type<A>(self, v: A) -> Self
     where
         A: ToString,
     {
         self.add_header("content_type", v)
     }
-    pub fn set_content_length<A>(mut self, length: A) -> Self
+    pub fn set_content_length<A>(self, length: A) -> Self
     where
         A: ToString,
     {

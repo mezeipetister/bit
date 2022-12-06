@@ -3,9 +3,8 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    context::Context,
-    prelude::BitResult,
     core::{Commit, CommitCandidate, Staging},
+    prelude::BitResult,
 };
 
 #[derive(Serialize, Deserialize, Debug, Default)]

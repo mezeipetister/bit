@@ -26,6 +26,12 @@ pub struct Database {
     inner_lock: Mutex<LockedDb>,
 }
 
+// AddEvent
+// Revert
+// Commit
+// Pull
+// Push
+// ReIndex
 impl Database {
     pub async fn load() -> Self {
         Database {
@@ -34,6 +40,9 @@ impl Database {
     }
     pub async fn lock(&self) -> MutexGuard<LockedDb> {
         self.inner_lock.lock().await
+    }
+    pub async fn commit(&self) -> BitResult<()> {
+        unimplemented!()
     }
 }
 

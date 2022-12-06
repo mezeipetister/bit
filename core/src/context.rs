@@ -1,7 +1,4 @@
-use std::{
-    env::args,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use crate::prelude::{BitError, BitResult};
 

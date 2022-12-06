@@ -1,11 +1,9 @@
-use std::net::SocketAddr;
-
 use proto::bit_sync::{bit_sync_client::BitSyncClient, bit_sync_server::*, PacketBytes};
 use tokio::sync::oneshot::Receiver;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{
     transport::{server::Server, Channel},
-    Request, Response, Streaming,
+    Request, Response,
 };
 
 use crate::{
@@ -48,7 +46,6 @@ impl RpcClient {
 
 pub struct RpcServer {
     socket_address: &'static str,
-    context: Context,
 }
 
 #[tonic::async_trait]
@@ -64,11 +61,7 @@ impl BitSync for RpcServer {
             .unwrap();
 
         // Create channel for stream response
-        let (mut tx, rx) = tokio::sync::mpsc::channel(100);
-
-        // TODO! implement core logic
-        // TODO! Now its just an empty message
-        let res_msg: Message = Message::new().add_header("path", r.get_path().unwrap());
+        let (tx, rx) = tokio::sync::mpsc::channel(100);
 
         let res_msg: Message = match r.get_path().unwrap().as_str() {
             "/commit" => Message::new().add_header("path", r.get_path().unwrap()),
@@ -91,11 +84,8 @@ impl BitSync for RpcServer {
 }
 
 impl RpcServer {
-    pub fn new(ctx: &Context, socket_address: &'static str) -> Self {
-        Self {
-            context: ctx.to_owned(),
-            socket_address,
-        }
+    pub fn new(socket_address: &'static str) -> Self {
+        Self { socket_address }
     }
     pub async fn start(self, rx: Receiver<()>) -> BitResult<()> {
         let addr = self.socket_address.parse().unwrap();

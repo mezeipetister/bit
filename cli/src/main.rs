@@ -13,7 +13,7 @@ async fn main() -> Result<(), ()> {
                 let ctx = Context::new_server().unwrap();
                 // Create shutdown channel
                 let (tx, rx) = oneshot::channel();
-                let server = bit_core::rpc::RpcServer::new(&ctx, "[::1]:17017");
+                let server = bit_core::rpc::RpcServer::new("[::1]:17017");
                 server.start(rx).await.unwrap();
                 tokio::signal::ctrl_c().await.unwrap();
                 println!("SIGINT");
