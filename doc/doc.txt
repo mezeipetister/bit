@@ -1,3 +1,6 @@
+TODO:
+  Blob size max limit
+
 SYNC
 
   Entry

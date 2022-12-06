@@ -1,144 +1,144 @@
-use crate::{context::Context, db::Database, prelude::BitResult};
-use chrono::{DateTime, Utc};
+use crate::{
+    context::Context,
+    prelude::{BitError, BitResult},
+};
+use chrono::Utc;
+use proto::bit_sync::PacketBytes;
 use serde::{Deserialize, Serialize};
-use sha1::{Digest, Sha1};
-use uuid::Uuid;
+use std::collections::{BTreeMap, HashMap};
+use tokio::sync::mpsc::{Receiver, Sender};
+use tonic::Streaming;
 
-struct Signature([u8; 20]);
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Packet {
+    Header { key: String, value: String },
+    Data(Vec<u8>),
+}
 
-impl Signature {
-    fn as_slice(&self) -> &[u8] {
-        &self.0
+#[derive(Debug, Default)]
+pub struct Request {
+    header_stream: BTreeMap<String, String>,
+    body_stream: Vec<Vec<u8>>,
+}
+
+impl Request {
+    pub async fn from_packet_stream(mut pkt_stream: Streaming<PacketBytes>) -> BitResult<Self> {
+        let mut res: Request = Request::default();
+        while let Some(bytes) = pkt_stream.message().await? {
+            let pkt: Packet = bincode::deserialize(&bytes.pkt_data)?;
+            res = res.insert_packet(pkt);
+        }
+        Ok(res)
     }
-    fn to_string(&self) -> String {
-        hex::encode(&self.0)
+    fn insert_packet(mut self, packet: Packet) -> Self {
+        match packet {
+            Packet::Header { key, value } => {
+                let _ = self.header_stream.insert(key, value);
+            }
+            Packet::Data(bytes) => self.body_stream.push(bytes),
+        }
+        self
+    }
+    pub fn get_path(&self) -> BitResult<&String> {
+        self.get_header("path")
+            .ok_or(BitError::new("Request must have path header attr"))
+    }
+    pub fn get_username(&self) -> BitResult<&String> {
+        self.get_header("username")
+            .ok_or(BitError::new("Request must have username header attr"))
+    }
+    pub fn get_access_token(&self) -> BitResult<&String> {
+        self.get_header("access_token").ok_or(BitError::new(
+            "Unauthorized request. No access token provided",
+        ))
+    }
+    pub fn get_header(&self, k: &str) -> Option<&String> {
+        self.header_stream.get(k)
+    }
+    pub fn get_header_stream(&self) -> &BTreeMap<String, String> {
+        &self.header_stream
+    }
+    pub fn get_body_stream_raw(self) -> Vec<Vec<u8>> {
+        unimplemented!()
+    }
+    pub fn get_body_stream<T>(self) -> BitResult<Vec<T>>
+    where
+        for<'de> T: Deserialize<'de>,
+    {
+        let mut res: Vec<T> = Vec::new();
+        for item in self.body_stream {
+            res.push(bincode::deserialize(&item)?);
+        }
+        Ok(res)
     }
 }
 
-fn sha1_sign<T>(i: T) -> BitResult<Signature>
+#[derive(Debug)]
+pub struct Response<T>
 where
     T: Serialize,
 {
-    let mut hasher = Sha1::new();
-    hasher.update(&bincode::serialize(&i)?);
-    let signature = hasher
-        .finalize()
-        .as_slice()
-        .try_into()
-        .expect("Error during converting sha1 to 20 bytes array");
-    Ok(Signature(signature))
+    header_stream: HashMap<String, String>,
+    body_stream: Vec<T>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct CommitCandidate {
-    id: Uuid,
-    uid: String,
-    dtime: DateTime<Utc>,
-    message: String,
-    entries: Vec<Entry>,
-    previous_commit_id: Uuid,
-}
-
-impl CommitCandidate {
-    pub fn id(&self) -> Uuid {
-        self.id
+impl<T> Response<T>
+where
+    T: Serialize,
+    Self: Sized,
+{
+    pub fn new(ctx: &Context) -> Self {
+        let mut r = Response {
+            header_stream: HashMap::new(),
+            body_stream: Vec::new(),
+        };
+        // Auto set bit version and dtime header attrs
+        r.set_bit_version(ctx).set_dtime()
     }
-    pub fn uid(&self) -> &str {
-        &self.uid
+    fn set_bit_version(mut self, ctx: &Context) -> Self {
+        self.add_header("bit_version", ctx.bit_version())
     }
-    pub fn message(&self) -> &str {
-        &self.message
+    fn set_dtime(mut self) -> Self {
+        self.add_header("dtime", Utc::now().to_rfc3339())
     }
-    pub fn dtime(&self) -> DateTime<Utc> {
-        self.dtime
+    pub fn set_content_type<A>(mut self, v: A) -> Self
+    where
+        A: ToString,
+    {
+        self.add_header("content_type", v)
     }
-    pub fn previous_commit_id(&self) -> Uuid {
-        self.previous_commit_id
+    pub fn set_content_length<A>(mut self, length: A) -> Self
+    where
+        A: ToString,
+    {
+        self.add_header("content_length", length)
     }
-    pub fn etries(&self) -> &Vec<Entry> {
-        &self.entries
+    pub fn add_header<K, V>(mut self, k: K, v: V) -> Self
+    where
+        K: ToString,
+        V: ToString,
+    {
+        self.header_stream.insert(k.to_string(), v.to_string());
+        self
     }
-    fn sign(&self) -> BitResult<Signature> {
-        sha1_sign(&self)
-    }
-    pub fn from_staging(
-        ctx: &Context,
-        staging: &Staging,
-        message: String,
-        previous_commit_id: Uuid,
-    ) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            uid: ctx.username().into(),
-            dtime: Utc::now(),
-            message,
-            entries: staging.entries.clone(),
-            previous_commit_id,
-        }
-    }
-    pub fn set_previous_commit_id(&mut self, pci: Uuid) {
-        self.previous_commit_id = pci;
+    pub fn into_packet_stream(self) -> Vec<Packet> {
+        let mut res: Vec<Packet> = Vec::new();
+        self.header_stream
+            .into_iter()
+            .for_each(|(k, v)| res.push(Packet::Header { key: k, value: v }));
+        self.body_stream
+            .into_iter()
+            .for_each(|d| match bincode::serialize(&d) {
+                Ok(data) => res.push(Packet::Data(data)),
+                Err(_) => (),
+            });
+        res
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Commit {
-    data: CommitCandidate,
-    signature: String,
-}
-
-impl Commit {
-    pub fn from_candidate(db: &Database, ctx: &Context, data: CommitCandidate) -> BitResult<Self> {
-        // SERVER ONLY
-        if !ctx.mode_is_server() {
-            panic!("Signing is not allowed in local mode");
-        }
-        let signature = data.sign()?.to_string();
-        Ok(Self { data, signature })
-    }
-    pub fn has_valid_signature(&self) -> bool {
-        self.signature == self.data.sign().unwrap().to_string()
-    }
-    pub fn data(&self) -> &CommitCandidate {
-        &self.data
-    }
-    pub fn signature_str(&self) -> &str {
-        &self.signature
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct Staging {
-    entries: Vec<Entry>,
-}
-
-impl Staging {
-    pub fn reset(&mut self) {
-        self.entries = Vec::new();
-    }
-    pub fn add_entry(&mut self, entry: Entry) {
-        self.entries.push(entry);
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct Entry {
-    id: Uuid,             // Entry id
-    dtime: DateTime<Utc>, //
-    uid: String,          // User id
-    command: String,      // String
-    params: String,       // JSON encoded string
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_candidate_signature() {
-        // assert_eq!(
-        //     "ef38fd3c89d9b6cf432d391705084b4d79b31d39",
-        //     CommitCandidate::default().sign().unwrap().to_string()
-        // );
-    }
+pub trait ToResponse<T>
+where
+    T: Serialize,
+{
+    fn to_response(self, ctx: &Context) -> Response<T>;
 }

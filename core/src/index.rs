@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     context::Context,
     prelude::BitResult,
-    sync::{Commit, CommitCandidate, Staging},
+    core::{Commit, CommitCandidate, Staging},
 };
 
 #[derive(Serialize, Deserialize, Debug, Default)]

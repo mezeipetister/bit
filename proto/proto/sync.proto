@@ -1,12 +1,8 @@
 syntax = "proto3";
 package bit_sync;
 
-service Sync {
-  rpc Pull(PullRequest) returns (Status);
-  rpc Push(PushRequest) returns (Status);
+service BitSync {
+  rpc Request(stream PacketBytes) returns (stream PacketBytes);
 }
 
-message PullRequest { string local_last_commit_id = 1; }
-message PushRequest { int64 logs_after = 1; }
-
-message Status { bool is_synced = 1; }
+message PacketBytes { bytes pkt_data = 1; }

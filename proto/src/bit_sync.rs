@@ -1,39 +1,19 @@
 #[derive(serde::Serialize, serde::Deserialize)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct LogRequest {
-    #[prost(int64, tag = "1")]
-    pub logs_after: i64,
-}
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Entry {
-    #[prost(int64, optional, tag = "1")]
-    pub created: ::core::option::Option<i64>,
-    #[prost(string, optional, tag = "2")]
-    pub ip: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "3")]
-    pub level: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "4")]
-    pub uid: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "5")]
-    pub app_name: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "6")]
-    pub app_version: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "7")]
-    pub event: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "8")]
-    pub msg: ::core::option::Option<::prost::alloc::string::String>,
+pub struct PacketBytes {
+    #[prost(bytes = "vec", tag = "1")]
+    pub pkt_data: ::prost::alloc::vec::Vec<u8>,
 }
 /// Generated client implementations.
-pub mod towl_client {
+pub mod bit_sync_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct TowlClient<T> {
+    pub struct BitSyncClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl TowlClient<tonic::transport::Channel> {
+    impl BitSyncClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -44,7 +24,7 @@ pub mod towl_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> TowlClient<T>
+    impl<T> BitSyncClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -62,7 +42,7 @@ pub mod towl_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> TowlClient<InterceptedService<T, F>>
+        ) -> BitSyncClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -76,7 +56,7 @@ pub mod towl_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            TowlClient::new(InterceptedService::new(inner, interceptor))
+            BitSyncClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -93,11 +73,11 @@ pub mod towl_client {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
-        pub async fn get_logs(
+        pub async fn request(
             &mut self,
-            request: impl tonic::IntoRequest<super::LogRequest>,
+            request: impl tonic::IntoStreamingRequest<Message = super::PacketBytes>,
         ) -> Result<
-            tonic::Response<tonic::codec::Streaming<super::Entry>>,
+            tonic::Response<tonic::codec::Streaming<super::PacketBytes>>,
             tonic::Status,
         > {
             self.inner
@@ -110,37 +90,37 @@ pub mod towl_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/bit_sync.Towl/GetLogs");
-            self.inner.server_streaming(request.into_request(), path, codec).await
+            let path = http::uri::PathAndQuery::from_static("/bit_sync.BitSync/Request");
+            self.inner.streaming(request.into_streaming_request(), path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod towl_server {
+pub mod bit_sync_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with TowlServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with BitSyncServer.
     #[async_trait]
-    pub trait Towl: Send + Sync + 'static {
-        /// Server streaming response type for the GetLogs method.
-        type GetLogsStream: futures_core::Stream<
-                Item = Result<super::Entry, tonic::Status>,
+    pub trait BitSync: Send + Sync + 'static {
+        /// Server streaming response type for the Request method.
+        type RequestStream: futures_core::Stream<
+                Item = Result<super::PacketBytes, tonic::Status>,
             >
             + Send
             + 'static;
-        async fn get_logs(
+        async fn request(
             &self,
-            request: tonic::Request<super::LogRequest>,
-        ) -> Result<tonic::Response<Self::GetLogsStream>, tonic::Status>;
+            request: tonic::Request<tonic::Streaming<super::PacketBytes>>,
+        ) -> Result<tonic::Response<Self::RequestStream>, tonic::Status>;
     }
     #[derive(Debug)]
-    pub struct TowlServer<T: Towl> {
+    pub struct BitSyncServer<T: BitSync> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Towl> TowlServer<T> {
+    impl<T: BitSync> BitSyncServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -174,9 +154,9 @@ pub mod towl_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for TowlServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for BitSyncServer<T>
     where
-        T: Towl,
+        T: BitSync,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -192,25 +172,23 @@ pub mod towl_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/bit_sync.Towl/GetLogs" => {
+                "/bit_sync.BitSync/Request" => {
                     #[allow(non_camel_case_types)]
-                    struct GetLogsSvc<T: Towl>(pub Arc<T>);
-                    impl<
-                        T: Towl,
-                    > tonic::server::ServerStreamingService<super::LogRequest>
-                    for GetLogsSvc<T> {
-                        type Response = super::Entry;
-                        type ResponseStream = T::GetLogsStream;
+                    struct RequestSvc<T: BitSync>(pub Arc<T>);
+                    impl<T: BitSync> tonic::server::StreamingService<super::PacketBytes>
+                    for RequestSvc<T> {
+                        type Response = super::PacketBytes;
+                        type ResponseStream = T::RequestStream;
                         type Future = BoxFuture<
                             tonic::Response<Self::ResponseStream>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::LogRequest>,
+                            request: tonic::Request<tonic::Streaming<super::PacketBytes>>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
-                            let fut = async move { (*inner).get_logs(request).await };
+                            let fut = async move { (*inner).request(request).await };
                             Box::pin(fut)
                         }
                     }
@@ -219,14 +197,14 @@ pub mod towl_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = GetLogsSvc(inner);
+                        let method = RequestSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
                                 accept_compression_encodings,
                                 send_compression_encodings,
                             );
-                        let res = grpc.server_streaming(method, req).await;
+                        let res = grpc.streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
@@ -246,7 +224,7 @@ pub mod towl_server {
             }
         }
     }
-    impl<T: Towl> Clone for TowlServer<T> {
+    impl<T: BitSync> Clone for BitSyncServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -256,7 +234,7 @@ pub mod towl_server {
             }
         }
     }
-    impl<T: Towl> Clone for _Inner<T> {
+    impl<T: BitSync> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -266,7 +244,7 @@ pub mod towl_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Towl> tonic::server::NamedService for TowlServer<T> {
-        const NAME: &'static str = "bit_sync.Towl";
+    impl<T: BitSync> tonic::server::NamedService for BitSyncServer<T> {
+        const NAME: &'static str = "bit_sync.BitSync";
     }
 }

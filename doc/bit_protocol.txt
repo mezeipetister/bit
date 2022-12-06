@@ -1,0 +1,45 @@
+Example REQUEST
+  
+  0 version x
+  1 target /T
+  2 username U
+  3 access_token A
+  4 data_bytes D
+  5 data_bytes D
+  6 data_bytes D
+  .
+  .
+  .
+  N data_bytes D
+  M closed
+
+Pull REQUEST
+
+  0 version x
+  1 target /pull
+  2 username demouser
+  3 access_token 18ae23d28ef
+  4 pull_after f3168f0f816c426faad7b59242ff9637
+  5 closed
+
+Pull RESPONSE
+
+  0 status ok | behind
+  1 stream_lenght 4
+  2 data_bytes D
+  3 data_bytes D
+  4 data_bytes D
+  5 data_bytes D
+  6 closed
+
+Example RESPONSE
+
+  0 status ok | behind
+  1
+
+Response status
+
+  ok
+  behind
+  unauthenticated
+  data_error
