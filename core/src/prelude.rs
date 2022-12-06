@@ -3,7 +3,7 @@ use std::{error::Error, fmt::Display};
 use serde::Deserialize;
 use tokio::fs::File;
 
-use crate::sync::{Message, ToMessage};
+use crate::message::{Message, ToMessage};
 
 #[macro_export]
 macro_rules! commands {
@@ -50,11 +50,11 @@ impl BitError {
 impl ToMessage for BitError {
     fn to_message(self, ctx: &crate::context::Context) -> Message {
         let status = match self {
-            BitError::Msg(_) => crate::sync::Status::Internal,
-            BitError::ClientVersionError => crate::sync::Status::VersionError,
-            BitError::Unauthorized => crate::sync::Status::UnAuthorized,
-            BitError::BehindRemote => crate::sync::Status::BehindRemote,
-            BitError::Internal(_) => crate::sync::Status::Internal,
+            BitError::Msg(_) => crate::message::Status::Internal,
+            BitError::ClientVersionError => crate::message::Status::VersionError,
+            BitError::Unauthorized => crate::message::Status::UnAuthorized,
+            BitError::BehindRemote => crate::message::Status::BehindRemote,
+            BitError::Internal(_) => crate::message::Status::Internal,
         };
         Message::new_response(ctx, status)
     }

@@ -2,7 +2,7 @@ use crate::{
     context::Context,
     db::Database,
     prelude::BitResult,
-    sync::{Message, ToMessage},
+    message::{Message, ToMessage},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -113,8 +113,8 @@ impl Commit {
 }
 
 impl ToMessage for Vec<Commit> {
-    fn to_message(self, ctx: &Context) -> crate::sync::Message {
-        Message::new_response(ctx, crate::sync::Status::Ok)
+    fn to_message(self, ctx: &Context) -> crate::message::Message {
+        Message::new_response(ctx, crate::message::Status::Ok)
     }
 }
 

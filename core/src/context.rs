@@ -30,6 +30,7 @@ pub struct Context {
     username: String,
     current_dir: PathBuf,
     is_bit_project_path: bool,
+    remote_address: Option<String>,
     project_path: Option<PathBuf>,
     bit_data_path: Option<PathBuf>,
     mode: Mode,
@@ -51,6 +52,7 @@ impl Context {
             username: "mezeipetister".to_string(),
             current_dir: current_dir,
             is_bit_project_path: current_project_path.is_ok(),
+            remote_address: None,
             bit_data_path: current_project_path
                 .as_ref()
                 .map(|p| Some(p.join(".bit")))
@@ -93,6 +95,9 @@ impl Context {
     }
     pub fn bit_data_path(&self) -> Option<&PathBuf> {
         self.bit_data_path.as_ref()
+    }
+    pub fn remote_address(&self) -> Option<&String> {
+        self.remote_address.as_ref()
     }
 }
 

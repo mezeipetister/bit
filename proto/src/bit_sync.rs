@@ -73,7 +73,7 @@ pub mod bit_sync_client {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
-        pub async fn request(
+        pub async fn message(
             &mut self,
             request: impl tonic::IntoStreamingRequest<Message = super::PacketBytes>,
         ) -> Result<
@@ -90,7 +90,7 @@ pub mod bit_sync_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/bit_sync.BitSync/Request");
+            let path = http::uri::PathAndQuery::from_static("/bit_sync.BitSync/Message");
             self.inner.streaming(request.into_streaming_request(), path, codec).await
         }
     }
@@ -102,16 +102,16 @@ pub mod bit_sync_server {
     /// Generated trait containing gRPC methods that should be implemented for use with BitSyncServer.
     #[async_trait]
     pub trait BitSync: Send + Sync + 'static {
-        /// Server streaming response type for the Request method.
-        type RequestStream: futures_core::Stream<
+        /// Server streaming response type for the Message method.
+        type MessageStream: futures_core::Stream<
                 Item = Result<super::PacketBytes, tonic::Status>,
             >
             + Send
             + 'static;
-        async fn request(
+        async fn message(
             &self,
             request: tonic::Request<tonic::Streaming<super::PacketBytes>>,
-        ) -> Result<tonic::Response<Self::RequestStream>, tonic::Status>;
+        ) -> Result<tonic::Response<Self::MessageStream>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct BitSyncServer<T: BitSync> {
@@ -172,13 +172,13 @@ pub mod bit_sync_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/bit_sync.BitSync/Request" => {
+                "/bit_sync.BitSync/Message" => {
                     #[allow(non_camel_case_types)]
-                    struct RequestSvc<T: BitSync>(pub Arc<T>);
+                    struct MessageSvc<T: BitSync>(pub Arc<T>);
                     impl<T: BitSync> tonic::server::StreamingService<super::PacketBytes>
-                    for RequestSvc<T> {
+                    for MessageSvc<T> {
                         type Response = super::PacketBytes;
-                        type ResponseStream = T::RequestStream;
+                        type ResponseStream = T::MessageStream;
                         type Future = BoxFuture<
                             tonic::Response<Self::ResponseStream>,
                             tonic::Status,
@@ -188,7 +188,7 @@ pub mod bit_sync_server {
                             request: tonic::Request<tonic::Streaming<super::PacketBytes>>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
-                            let fut = async move { (*inner).request(request).await };
+                            let fut = async move { (*inner).message(request).await };
                             Box::pin(fut)
                         }
                     }
@@ -197,7 +197,7 @@ pub mod bit_sync_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = RequestSvc(inner);
+                        let method = MessageSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

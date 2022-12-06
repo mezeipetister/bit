@@ -23,6 +23,17 @@ pub enum Packet {
     Data(Vec<u8>),
 }
 
+impl Packet {
+    pub fn as_bytes(&self) -> Vec<u8> {
+        bincode::serialize(self).unwrap()
+    }
+    pub fn as_packet_bytes(&self) -> PacketBytes {
+        PacketBytes {
+            pkt_data: self.as_bytes(),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Message {
     header_stream: BTreeMap<String, String>,
@@ -72,7 +83,7 @@ impl Message {
     pub fn get_header(&self, k: &str) -> Option<&String> {
         self.header_stream.get(k)
     }
-    pub fn get_header_stream(&self) -> &BTreeMap<String, String> {
+    pub fn get_header_map(&self) -> &BTreeMap<String, String> {
         &self.header_stream
     }
     pub fn get_body_stream_raw(self) -> Vec<Vec<u8>> {

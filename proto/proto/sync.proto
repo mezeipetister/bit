@@ -2,7 +2,7 @@ syntax = "proto3";
 package bit_sync;
 
 service BitSync {
-  rpc Request(stream PacketBytes) returns (stream PacketBytes);
+  rpc Message(stream PacketBytes) returns (stream PacketBytes);
 }
 
 message PacketBytes { bytes pkt_data = 1; }

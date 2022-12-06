@@ -8,13 +8,14 @@ use crate::cmd::Cmd;
 mod cmd;
 // mod cmd_parser;
 mod commands;
+mod rpc;
 mod context;
 mod core;
 mod db;
 mod fs;
 mod index;
+mod message;
 mod prelude;
-mod sync;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct NoteParams {
