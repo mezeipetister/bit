@@ -1,21 +1,17 @@
-use std::error::Error;
-
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::cmd::Cmd;
-
-mod cmd;
+pub mod cmd;
 // mod cmd_parser;
-mod commands;
-mod rpc;
-mod context;
-mod core;
-mod db;
-mod fs;
-mod index;
-mod message;
-mod prelude;
+pub mod commands;
+pub mod context;
+pub mod core;
+pub mod db;
+pub mod fs;
+pub mod index;
+pub mod message;
+pub mod prelude;
+pub mod rpc;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct NoteParams {

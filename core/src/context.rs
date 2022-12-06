@@ -52,7 +52,7 @@ impl Context {
             username: "mezeipetister".to_string(),
             current_dir: current_dir,
             is_bit_project_path: current_project_path.is_ok(),
-            remote_address: None,
+            remote_address: Some("http://localhost:17017".to_string()),
             bit_data_path: current_project_path
                 .as_ref()
                 .map(|p| Some(p.join(".bit")))

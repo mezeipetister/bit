@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use proto::bit_sync::{bit_sync_client::BitSyncClient, bit_sync_server::*, PacketBytes};
 use tokio::sync::oneshot::Receiver;
 use tokio_stream::wrappers::ReceiverStream;
@@ -28,7 +30,7 @@ impl RpcClient {
         };
         Ok(r)
     }
-    pub async fn send<T>(&mut self, message: Message) -> BitResult<Message> {
+    pub async fn send(&mut self, message: Message) -> BitResult<Message> {
         let req: Vec<PacketBytes> = message
             .into_packet_stream()
             .into_iter()
@@ -45,7 +47,7 @@ impl RpcClient {
 }
 
 pub struct RpcServer {
-    remote_address: String,
+    socket_address: &'static str,
     context: Context,
 }
 
@@ -79,14 +81,14 @@ impl BitSync for RpcServer {
 }
 
 impl RpcServer {
-    pub fn new(ctx: &Context) -> Self {
+    pub fn new(ctx: &Context, socket_address: &'static str) -> Self {
         Self {
             context: ctx.to_owned(),
-            remote_address: String::default(),
+            socket_address,
         }
     }
     pub async fn start(self, rx: Receiver<()>) -> BitResult<()> {
-        let addr = self.remote_address.clone().parse().unwrap();
+        let addr = self.socket_address.parse().unwrap();
         // Spawn the server into a runtime
         tokio::task::spawn(async move {
             Server::builder()
