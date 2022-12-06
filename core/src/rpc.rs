@@ -66,7 +66,10 @@ impl BitSync for RpcServer {
         // Create channel for stream response
         let (mut tx, rx) = tokio::sync::mpsc::channel(100);
 
-        let res_msg: Message = Message::new(&self.context);
+        // TODO! implement core logic
+        // TODO! Now its just an empty message
+        let res_msg: Message =
+            Message::new(&self.context).add_header("path", r.get_path().unwrap());
 
         // Send the result items through the channel
         tokio::spawn(async move {
@@ -96,6 +99,7 @@ impl RpcServer {
                 .serve_with_shutdown(addr, async { rx.await.unwrap() })
                 .await
         });
+        println!("BIT server started at address: {}", addr);
         Ok(())
     }
 }

@@ -21,7 +21,10 @@ async fn main() {
             }
             "commit" => {
                 let mut client = bit_core::rpc::RpcClient::new(&ctx).await.unwrap();
-                let r = client.send(Message::new_request(&ctx)).await.unwrap();
+                let r = client
+                    .send(Message::new_request(&ctx, "/commit"))
+                    .await
+                    .unwrap();
                 println!("{:?}", r);
             }
             _ => (),

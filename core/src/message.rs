@@ -47,8 +47,8 @@ impl Message {
     pub fn new_response(ctx: &Context, status: Status) -> Self {
         Message::new(ctx).set_status(status)
     }
-    pub fn new_request(ctx: &Context) -> Self {
-        Message::new(ctx)
+    pub fn new_request(ctx: &Context, path: &str) -> Self {
+        Message::new(ctx).set_path(path)
     }
     pub async fn from_packet_stream(mut pkt_stream: Streaming<PacketBytes>) -> BitResult<Self> {
         let mut res: Message = Message::default();
@@ -98,6 +98,9 @@ impl Message {
             res.push(bincode::deserialize(&item)?);
         }
         Ok(res)
+    }
+    pub fn set_path(mut self, path: &str) -> Self {
+        self.add_header("path", path)
     }
     pub fn set_status(mut self, status: Status) -> Self {
         self.add_header("status", status as i32)
