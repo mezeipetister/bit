@@ -46,6 +46,7 @@ impl RpcClient {
 
 pub struct RpcServer {
     remote_address: String,
+    context: Context,
 }
 
 #[tonic::async_trait]
@@ -63,7 +64,7 @@ impl BitSync for RpcServer {
         // Create channel for stream response
         let (mut tx, rx) = tokio::sync::mpsc::channel(100);
 
-        let res_msg: Message = todo!();
+        let res_msg: Message = Message::new(&self.context);
 
         // Send the result items through the channel
         tokio::spawn(async move {
@@ -80,6 +81,7 @@ impl BitSync for RpcServer {
 impl RpcServer {
     pub fn new(ctx: &Context) -> Self {
         Self {
+            context: ctx.to_owned(),
             remote_address: String::default(),
         }
     }
