@@ -229,13 +229,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_db_init() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load().await.lock().await.init().await.unwrap();
     }
 
     #[tokio::test]
     async fn test_db_add_entry() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load()
             .await
             .lock()
@@ -247,7 +247,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_db_commit() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load()
             .await
             .lock()
@@ -259,7 +259,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_staging_reset() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load()
             .await
             .lock()
@@ -271,7 +271,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_reset_index() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load()
             .await
             .lock()
@@ -283,7 +283,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_re_index() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load()
             .await
             .lock()
@@ -295,7 +295,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_index() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         let res = Database::load()
             .await
             .lock()
@@ -308,7 +308,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_remote() {
-        let ctx = Context::new(Mode::Local).unwrap();
+        let ctx = Context::new(Mode::Client).unwrap();
         Database::load()
             .await
             .lock()

@@ -68,8 +68,15 @@ impl BitSync for RpcServer {
 
         // TODO! implement core logic
         // TODO! Now its just an empty message
-        let res_msg: Message =
-            Message::new(&self.context).add_header("path", r.get_path().unwrap());
+        let res_msg: Message = Message::new().add_header("path", r.get_path().unwrap());
+
+        let res_msg: Message = match r.get_path().unwrap().as_str() {
+            "/commit" => Message::new().add_header("path", r.get_path().unwrap()),
+            "/login" => Message::new().add_header("path", r.get_path().unwrap()),
+            "/push" => Message::new().add_header("path", r.get_path().unwrap()),
+            "/pull" => Message::new().add_header("path", r.get_path().unwrap()),
+            _ => BitError::new("Unknown request path!").to_message(),
+        };
 
         // Send the result items through the channel
         tokio::spawn(async move {

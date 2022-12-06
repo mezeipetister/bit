@@ -10,7 +10,7 @@ async fn main() -> Result<(), ()> {
     if params.len() > 1 {
         match params[1].as_str() {
             "server" => {
-                let ctx = Context::new(bit_core::context::Mode::Server).unwrap();
+                let ctx = Context::new_server().unwrap();
                 // Create shutdown channel
                 let (tx, rx) = oneshot::channel();
                 let server = bit_core::rpc::RpcServer::new(&ctx, "[::1]:17017");
@@ -21,12 +21,9 @@ async fn main() -> Result<(), ()> {
                 let _ = tx.send(());
             }
             "commit" => {
-                let ctx = Context::new(bit_core::context::Mode::Local).unwrap();
+                let ctx = Context::new_client().unwrap();
                 let mut client = bit_core::rpc::RpcClient::new(&ctx).await.unwrap();
-                let r = client
-                    .send(Message::new_request(&ctx, "/commit"))
-                    .await
-                    .unwrap();
+                let r = client.send(Message::new_request("/commit")).await.unwrap();
                 println!("{:?}", r);
             }
             "init" => {

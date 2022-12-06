@@ -1,5 +1,5 @@
 use crate::{
-    context::Context,
+    context::{Context, VERSION},
     prelude::{BitError, BitResult},
 };
 use chrono::Utc;
@@ -41,14 +41,14 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(ctx: &Context) -> Self {
-        Message::default().set_bit_version(ctx).set_dtime()
+    pub fn new() -> Self {
+        Message::default().set_bit_version().set_dtime()
     }
-    pub fn new_response(ctx: &Context, status: Status) -> Self {
-        Message::new(ctx).set_status(status)
+    pub fn new_response(status: Status) -> Self {
+        Message::new().set_status(status)
     }
-    pub fn new_request(ctx: &Context, path: &str) -> Self {
-        Message::new(ctx).set_path(path)
+    pub fn new_request(path: &str) -> Self {
+        Message::new().set_path(path)
     }
     pub async fn from_packet_stream(mut pkt_stream: Streaming<PacketBytes>) -> BitResult<Self> {
         let mut res: Message = Message::default();
@@ -105,8 +105,8 @@ impl Message {
     pub fn set_status(mut self, status: Status) -> Self {
         self.add_header("status", status as i32)
     }
-    fn set_bit_version(mut self, ctx: &Context) -> Self {
-        self.add_header("bit_version", ctx.bit_version())
+    fn set_bit_version(mut self) -> Self {
+        self.add_header("bit_version", VERSION)
     }
     fn set_dtime(mut self) -> Self {
         self.add_header("dtime", Utc::now().to_rfc3339())
@@ -158,5 +158,5 @@ impl Message {
 }
 
 pub trait ToMessage {
-    fn to_message(self, ctx: &Context) -> Message;
+    fn to_message(self) -> Message;
 }

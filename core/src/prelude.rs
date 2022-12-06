@@ -48,7 +48,7 @@ impl BitError {
 }
 
 impl ToMessage for BitError {
-    fn to_message(self, ctx: &crate::context::Context) -> Message {
+    fn to_message(self) -> Message {
         let status = match self {
             BitError::Msg(_) => crate::message::Status::Internal,
             BitError::ClientVersionError => crate::message::Status::VersionError,
@@ -56,6 +56,6 @@ impl ToMessage for BitError {
             BitError::BehindRemote => crate::message::Status::BehindRemote,
             BitError::Internal(_) => crate::message::Status::Internal,
         };
-        Message::new_response(ctx, status)
+        Message::new_response(status)
     }
 }

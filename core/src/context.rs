@@ -5,11 +5,11 @@ use std::{
 
 use crate::prelude::{BitError, BitResult};
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Clone, Debug)]
 pub enum Mode {
-    Local,
+    Client,
     Server,
     Setup,
 }
@@ -17,7 +17,7 @@ pub enum Mode {
 impl PartialEq for Mode {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Mode::Local, Mode::Local) => true,
+            (Mode::Client, Mode::Client) => true,
             (Mode::Server, Mode::Server) => true,
             (Mode::Setup, Mode::Setup) => true,
             _ => false,
@@ -60,6 +60,12 @@ impl Context {
         };
         Ok(res)
     }
+    pub fn new_client() -> BitResult<Self> {
+        Self::new(Mode::Client)
+    }
+    pub fn new_server() -> BitResult<Self> {
+        Self::new(Mode::Server)
+    }
     pub fn mode(&self) -> &Mode {
         &self.mode
     }
@@ -67,7 +73,7 @@ impl Context {
         self.mode == Mode::Server
     }
     pub fn mode_is_local(&self) -> bool {
-        self.mode == Mode::Local
+        self.mode == Mode::Client
     }
     pub fn username(&self) -> &str {
         &self.username
