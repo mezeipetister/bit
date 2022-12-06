@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::prelude::BitResult;
+use crate::prelude::{BitError, BitResult};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -11,15 +11,16 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub enum Mode {
     Local,
     Server,
+    Setup,
 }
 
 impl PartialEq for Mode {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Mode::Local, Mode::Local) => true,
-            (Mode::Local, Mode::Server) => false,
-            (Mode::Server, Mode::Local) => false,
             (Mode::Server, Mode::Server) => true,
+            (Mode::Setup, Mode::Setup) => true,
+            _ => false,
         }
     }
 }
@@ -29,39 +30,35 @@ pub struct Context {
     bit_version: String,
     username: String,
     current_dir: PathBuf,
-    is_bit_project_path: bool,
     remote_address: Option<String>,
-    project_path: Option<PathBuf>,
-    bit_data_path: Option<PathBuf>,
+    project_path: PathBuf,
+    bit_data_path: PathBuf,
     mode: Mode,
     args_raw: Vec<String>,
     args: String,
 }
 
 impl Context {
-    pub fn new(mode: Mode) -> Self {
+    pub fn new(mode: Mode) -> BitResult<Self> {
         let current_dir = std::env::current_dir().unwrap();
-        let current_project_path = get_project_dir(&current_dir);
+        let current_project_path = get_project_dir(&current_dir)?;
         let args_raw = std::env::args().collect::<Vec<String>>();
         let args = match args_raw.len() > 1 {
             true => args_raw[1..].join(" "),
             false => "".to_string(),
         };
-        Self {
+        let res = Self {
             bit_version: VERSION.to_string(),
             username: "mezeipetister".to_string(),
-            current_dir: current_dir,
-            is_bit_project_path: current_project_path.is_ok(),
+            current_dir,
             remote_address: Some("http://localhost:17017".to_string()),
-            bit_data_path: current_project_path
-                .as_ref()
-                .map(|p| Some(p.join(".bit")))
-                .unwrap_or(None),
-            project_path: current_project_path.map(|p| Some(p)).unwrap_or(None),
+            bit_data_path: current_project_path.join(".bit"),
+            project_path: current_project_path,
             mode,
             args_raw,
             args,
-        }
+        };
+        Ok(res)
     }
     pub fn mode(&self) -> &Mode {
         &self.mode
@@ -78,11 +75,8 @@ impl Context {
     pub fn current_dir(&self) -> &PathBuf {
         &self.current_dir
     }
-    pub fn current_project_path(&self) -> Option<&PathBuf> {
-        self.project_path.as_ref()
-    }
-    pub fn is_bit_project_path(&self) -> bool {
-        self.is_bit_project_path
+    pub fn current_project_path(&self) -> &PathBuf {
+        &self.project_path
     }
     pub fn bit_version(&self) -> &str {
         &self.bit_version
@@ -93,8 +87,8 @@ impl Context {
     pub fn args(&self) -> &str {
         &self.args
     }
-    pub fn bit_data_path(&self) -> Option<&PathBuf> {
-        self.bit_data_path.as_ref()
+    pub fn bit_data_path(&self) -> &PathBuf {
+        &self.bit_data_path
     }
     pub fn remote_address(&self) -> Option<&String> {
         self.remote_address.as_ref()
@@ -102,13 +96,13 @@ impl Context {
 }
 
 // Try to get Yo project root path
-fn get_project_dir(dir: &Path) -> Result<PathBuf, String> {
+fn get_project_dir(dir: &Path) -> BitResult<PathBuf> {
     let p = dir.join(".bit");
     match p.exists() && p.is_dir() {
         true => Ok(dir.to_path_buf()),
         false => get_project_dir(
             dir.parent()
-                .ok_or("Given directory is not inside a BIT Project".to_string())?,
+                .ok_or(BitError::new("Given directory is not inside a BIT Project"))?,
         ),
     }
 }

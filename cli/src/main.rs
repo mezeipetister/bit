@@ -1,4 +1,4 @@
-use bit_core::message::Message;
+use bit_core::{db::Database, message::Message};
 use tokio::sync::oneshot;
 
 mod input_parser;
@@ -6,7 +6,7 @@ mod input_parser;
 #[tokio::main]
 async fn main() {
     let params: Vec<_> = std::env::args().collect();
-    let ctx = bit_core::context::Context::new(bit_core::context::Mode::Server);
+    let ctx = bit_core::context::Context::new(bit_core::context::Mode::Server).unwrap();
     if params.len() > 1 {
         match params[1].as_str() {
             "server" => {
@@ -27,6 +27,7 @@ async fn main() {
                     .unwrap();
                 println!("{:?}", r);
             }
+            "init" => (),
             _ => (),
         }
     }

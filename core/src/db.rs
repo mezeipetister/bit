@@ -115,27 +115,30 @@ impl LockedDb {
             },
         }
     }
-    async fn init(&self, ctx: &Context) -> BitResult<()> {
-        if ctx.is_bit_project_path() {
-            return Err(BitError::new("Already a bit project. Cannot init it again"));
+    async fn init(&self) -> BitResult<()> {
+        // Check whether already a bit project
+        match Context::new(crate::context::Mode::Setup) {
+            Ok(_) => return Err(BitError::new("Already a bit project. Cannot init it again")),
+            Err(_) => {
+                let cwd = std::env::current_dir().unwrap();
+                tokio::fs::create_dir_all(cwd.join(".bit")).await?;
+                // Init context again
+                let ctx = Context::new(crate::context::Mode::Setup).unwrap();
+                // Init empty STAGING db file
+                let _ = File::create(ctx.bit_data_path().join(PATH_STAGING)).await;
+                self.reset_staging(&ctx).await?;
+                // Init empty LOCAL db file
+                let _ = File::create(ctx.bit_data_path().join(PATH_LOCAL)).await;
+                self.reset_local(&ctx).await?;
+                // Init empty REMOTE db file
+                let _ = File::create(ctx.bit_data_path().join(PATH_REMOTE)).await;
+                self.reset_remote(&ctx).await?;
+                // Init empty INDEX db file
+                let _ = File::create(ctx.bit_data_path().join(PATH_INDEX)).await;
+                self.reset_index(&ctx).await?;
+                Ok(())
+            }
         }
-        let data_dir = &ctx.current_dir().join(".bit");
-        tokio::fs::create_dir_all(data_dir).await?;
-        // Init context again
-        let ctx = Context::new(ctx.mode().to_owned());
-        // Init empty STAGING db file
-        let _ = File::create(data_dir.join(PATH_STAGING)).await;
-        self.reset_staging(&ctx).await?;
-        // Init empty LOCAL db file
-        let _ = File::create(data_dir.join(PATH_LOCAL)).await;
-        self.reset_local(&ctx).await?;
-        // Init empty REMOTE db file
-        let _ = File::create(data_dir.join(PATH_REMOTE)).await;
-        self.reset_remote(&ctx).await?;
-        // Init empty INDEX db file
-        let _ = File::create(data_dir.join(PATH_INDEX)).await;
-        self.reset_index(&ctx).await?;
-        Ok(())
     }
     // async fn reset(&self, ctx: &Context) -> BitResult<()> {
     //     // First remove .bit directory
@@ -226,20 +229,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_db_init() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
             .lock()
             .await
-            .init(&ctx)
+            .init()
             .await
             .unwrap();
     }
 
     #[tokio::test]
     async fn test_db_add_entry() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
@@ -252,7 +255,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_db_commit() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
@@ -265,7 +268,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_staging_reset() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
@@ -278,7 +281,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_reset_index() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
@@ -291,7 +294,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_re_index() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
@@ -304,7 +307,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_index() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         let res = Database::load(&ctx)
             .await
             .unwrap()
@@ -318,7 +321,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_remote() {
-        let ctx = Context::new(Mode::Local);
+        let ctx = Context::new(Mode::Local).unwrap();
         Database::load(&ctx)
             .await
             .unwrap()
