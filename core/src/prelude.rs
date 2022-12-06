@@ -3,6 +3,8 @@ use std::{error::Error, fmt::Display};
 use serde::Deserialize;
 use tokio::fs::File;
 
+use crate::sync::{Message, ToMessage};
+
 #[macro_export]
 macro_rules! commands {
     ( $( $x:expr ),* ) => {
@@ -19,8 +21,12 @@ macro_rules! commands {
 pub type BitResult<T> = Result<T, BitError>;
 
 #[derive(Debug)]
-pub struct BitError {
-    msg: String,
+pub enum BitError {
+    Msg(String),
+    ClientVersionError,
+    Unauthorized,
+    BehindRemote,
+    Internal(String),
 }
 
 impl<T> From<T> for BitError
@@ -28,7 +34,7 @@ where
     T: Error,
 {
     fn from(e: T) -> Self {
-        BitError::new(e)
+        BitError::Internal(e.to_string())
     }
 }
 
@@ -37,8 +43,19 @@ impl BitError {
     where
         T: Display,
     {
-        Self {
-            msg: format!("{}", msg),
-        }
+        Self::Msg(format!("{}", msg))
+    }
+}
+
+impl ToMessage for BitError {
+    fn to_message(self, ctx: &crate::context::Context) -> Message {
+        let status = match self {
+            BitError::Msg(_) => crate::sync::Status::Internal,
+            BitError::ClientVersionError => crate::sync::Status::VersionError,
+            BitError::Unauthorized => crate::sync::Status::UnAuthorized,
+            BitError::BehindRemote => crate::sync::Status::BehindRemote,
+            BitError::Internal(_) => crate::sync::Status::Internal,
+        };
+        Message::new_response(ctx, status)
     }
 }

@@ -9,6 +9,14 @@ use std::collections::{BTreeMap, HashMap};
 use tokio::sync::mpsc::{Receiver, Sender};
 use tonic::Streaming;
 
+pub enum Status {
+    Ok = 0,
+    UnAuthorized = 1,
+    VersionError = 2,
+    BehindRemote = 3,
+    Internal = 4,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Packet {
     Header { key: String, value: String },
@@ -16,14 +24,23 @@ pub enum Packet {
 }
 
 #[derive(Debug, Default)]
-pub struct Request {
+pub struct Message {
     header_stream: BTreeMap<String, String>,
     body_stream: Vec<Vec<u8>>,
 }
 
-impl Request {
+impl Message {
+    pub fn new(ctx: &Context) -> Self {
+        Message::default().set_bit_version(ctx).set_dtime()
+    }
+    pub fn new_response(ctx: &Context, status: Status) -> Self {
+        Message::new(ctx).set_status(status)
+    }
+    pub fn new_request(ctx: &Context) -> Self {
+        Message::new(ctx)
+    }
     pub async fn from_packet_stream(mut pkt_stream: Streaming<PacketBytes>) -> BitResult<Self> {
-        let mut res: Request = Request::default();
+        let mut res: Message = Message::default();
         while let Some(bytes) = pkt_stream.message().await? {
             let pkt: Packet = bincode::deserialize(&bytes.pkt_data)?;
             res = res.insert_packet(pkt);
@@ -71,29 +88,8 @@ impl Request {
         }
         Ok(res)
     }
-}
-
-#[derive(Debug)]
-pub struct Response<T>
-where
-    T: Serialize,
-{
-    header_stream: HashMap<String, String>,
-    body_stream: Vec<T>,
-}
-
-impl<T> Response<T>
-where
-    T: Serialize,
-    Self: Sized,
-{
-    pub fn new(ctx: &Context) -> Self {
-        let mut r = Response {
-            header_stream: HashMap::new(),
-            body_stream: Vec::new(),
-        };
-        // Auto set bit version and dtime header attrs
-        r.set_bit_version(ctx).set_dtime()
+    pub fn set_status(mut self, status: Status) -> Self {
+        self.add_header("status", status as i32)
     }
     fn set_bit_version(mut self, ctx: &Context) -> Self {
         self.add_header("bit_version", ctx.bit_version())
@@ -121,6 +117,17 @@ where
         self.header_stream.insert(k.to_string(), v.to_string());
         self
     }
+    pub fn set_body<T>(mut self, body: Vec<T>) -> BitResult<Self>
+    where
+        T: Serialize,
+    {
+        let mut _body: Vec<Vec<u8>> = Vec::new();
+        for item in body {
+            _body.push(bincode::serialize(&item)?);
+        }
+        self.body_stream = _body;
+        Ok(self)
+    }
     pub fn into_packet_stream(self) -> Vec<Packet> {
         let mut res: Vec<Packet> = Vec::new();
         self.header_stream
@@ -136,9 +143,6 @@ where
     }
 }
 
-pub trait ToResponse<T>
-where
-    T: Serialize,
-{
-    fn to_response(self, ctx: &Context) -> Response<T>;
+pub trait ToMessage {
+    fn to_message(self, ctx: &Context) -> Message;
 }

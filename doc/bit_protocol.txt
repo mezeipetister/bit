@@ -37,9 +37,20 @@ Example RESPONSE
   0 status ok | behind
   1
 
-Response status
+Possible request header attributes
 
-  ok
-  behind
-  unauthenticated
-  data_error
+  bit_version
+  username
+  access_token
+  password
+  path
+  pull_after
+
+Response header attributes
+
+  bit_version
+  status_code
+    0 Ok
+    1 UnAuthorized
+    2 VersionError
+    3 BehindRemote
