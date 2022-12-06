@@ -27,10 +27,10 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn load(ctx: &Context) -> BitResult<Self> {
-        Ok(Database {
+    pub async fn load() -> Self {
+        Database {
             inner_lock: Mutex::new(LockedDb::default()),
-        })
+        }
     }
     pub async fn lock(&self) -> MutexGuard<LockedDb> {
         self.inner_lock.lock().await
@@ -115,7 +115,7 @@ impl LockedDb {
             },
         }
     }
-    async fn init(&self) -> BitResult<()> {
+    pub async fn init(&self) -> BitResult<()> {
         // Check whether already a bit project
         match Context::new(crate::context::Mode::Setup) {
             Ok(_) => return Err(BitError::new("Already a bit project. Cannot init it again")),
@@ -230,22 +230,14 @@ mod tests {
     #[tokio::test]
     async fn test_db_init() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
-            .await
-            .unwrap()
-            .lock()
-            .await
-            .init()
-            .await
-            .unwrap();
+        Database::load().await.lock().await.init().await.unwrap();
     }
 
     #[tokio::test]
     async fn test_db_add_entry() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
+        Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .add_to_staging(&ctx, Entry::default())
@@ -256,9 +248,8 @@ mod tests {
     #[tokio::test]
     async fn test_db_commit() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
+        Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .commit(&ctx, "demo".to_string())
@@ -269,9 +260,8 @@ mod tests {
     #[tokio::test]
     async fn test_staging_reset() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
+        Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .reset_staging(&ctx)
@@ -282,9 +272,8 @@ mod tests {
     #[tokio::test]
     async fn test_reset_index() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
+        Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .reset_index(&ctx)
@@ -295,9 +284,8 @@ mod tests {
     #[tokio::test]
     async fn test_re_index() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
+        Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .re_index(&ctx)
@@ -308,9 +296,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_index() {
         let ctx = Context::new(Mode::Local).unwrap();
-        let res = Database::load(&ctx)
+        let res = Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .get_index(&ctx)
@@ -322,9 +309,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_remote() {
         let ctx = Context::new(Mode::Local).unwrap();
-        Database::load(&ctx)
+        Database::load()
             .await
-            .unwrap()
             .lock()
             .await
             .get_remote(&ctx)
