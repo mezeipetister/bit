@@ -1,0 +1,75 @@
+BitEvents
+
+  Account
+    - CreateAccount
+      :: ID
+      :: NAME
+    - SetAccount
+      :: ID
+      :: NAME
+  
+  Note
+    - CreateNote
+      :: ID
+      :: PARTNER
+      :: IDATE
+      :: CDATE
+      :: DDATE
+      :: TRANSACTION
+    - SetNote
+      :: ID*
+    - AddTransaction
+      :: ID*
+
+  User
+    - CreateUser
+      :: UID*
+      :: NAME
+      :: EMAIL
+    - SetUser
+      :: UID*
+      :: NAME
+      :: EMAIL
+      :: ROLE
+    - SetPassword
+      :: UID*
+      :: PASSWORD
+
+  Partner
+    - CreatePartner
+      :: ID
+      :: NAME
+    - SetPartner
+      :: ID
+      :: NAME
+
+  Blob
+    - CreateBlob
+      :: ID
+      :: ALIAS
+      :: DESCRIPTION
+      :: BYTES
+    - SetBlob
+      :: ID*
+      :: ALIAS
+      :: DESCRIPTION
+
+  Project
+    - SetProject
+      :: NAME
+      :: DESCRIPTION
+      :: YEAR
+      :: CURRENCY
+      :: BIT_VERSION
+
+---
+
+EVENT_ID    DTIME     UID
+  CMD CreateBlob
+  SET ID          ..
+  SET DESCRIPTION ..
+  SET BYTES       ..
+
+---
+
+bit add_transaction @2022/00000-167

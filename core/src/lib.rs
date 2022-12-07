@@ -7,6 +7,7 @@ pub mod commands;
 pub mod context;
 pub mod core;
 pub mod db;
+pub mod event;
 pub mod fs;
 pub mod index;
 pub mod message;

@@ -132,13 +132,32 @@ impl Staging {
     }
 }
 
+pub trait EntryExt {
+    const EVENT_NAME: &'static str;
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Entry {
     id: Uuid,             // Entry id
     dtime: DateTime<Utc>, //
     uid: String,          // User id
-    command: String,      // String
-    params: String,       // JSON encoded string
+    event_name: String,   // String
+    event_json: String,   // JSON encoded string
+}
+
+impl Entry {
+    pub fn from_obj<T>(object: &T, ctx: &Context) -> Entry
+    where
+        for<'de> T: EntryExt + Serialize + Deserialize<'de>,
+    {
+        Self {
+            id: Uuid::new_v4(),
+            dtime: Utc::now(),
+            uid: ctx.username().to_string(),
+            event_name: T::EVENT_NAME.to_string(),
+            event_json: serde_json::to_string(&object).unwrap(),
+        }
+    }
 }
 
 #[cfg(test)]
