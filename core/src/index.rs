@@ -112,6 +112,9 @@ impl DbInner {
         let res = binary_read(path_helper::index(ctx))?;
         Ok(res)
     }
+    pub fn account_exist(&self, id: &str) -> bool {
+        self.accounts.iter().find(|a| a.id == id).is_some()
+    }
     pub fn account_get(&self, id: &str) -> Result<&Account, CliError> {
         self.accounts
             .iter()
@@ -142,6 +145,34 @@ impl DbInner {
     pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
         let a = self.account_get_mut(id)?;
         a.name = name;
+        Ok(())
+    }
+    pub fn note_get(&self, id: &str) -> Result<&Note, CliError> {
+        self.notes
+            .iter()
+            .find(|n| n.id == Some(id.to_string()))
+            .ok_or(CliError::Error("Not found".to_string()))
+    }
+    pub fn note_get_mut(&mut self, id: &str) -> Result<&mut Note, CliError> {
+        self.notes
+            .iter_mut()
+            .find(|n| n.id == Some(id.to_string()))
+            .ok_or(CliError::Error("Not found".to_string()))
+    }
+    pub fn note_new(&mut self, id: String) -> Result<(), CliError> {
+        self.notes.push(Note::new(Some(id)));
+        Ok(())
+    }
+    pub fn note_set_transaction(
+        &mut self,
+        id: &str,
+        debit: Account,
+        credit: Account,
+        amount: f32,
+        comment: Option<String>,
+    ) -> Result<(), CliError> {
+        let mut note = self.note_get_mut(id)?;
+        note.set_transaction(amount, debit, credit, comment)?;
         Ok(())
     }
 }

@@ -2,7 +2,7 @@ use core::{
     index::Db,
     prelude::{CliDisplay, CliError},
 };
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
 use clap::{Parser, Subcommand};
 use prelude::read_confirm;
@@ -32,6 +32,11 @@ enum Commands {
         #[command(subcommand)]
         command: Option<AccountCommands>,
     },
+    Note {
+        id: Option<String>,
+        #[command(subcommand)]
+        command: Option<NoteCommands>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -40,6 +45,16 @@ enum AccountCommands {
     New,
     Remove { id: String },
     SetName { id: String },
+}
+
+#[derive(Subcommand)]
+enum NoteCommands {
+    New,
+    SetTransaction {
+        debit: String,
+        credit: String,
+        amount: String,
+    },
 }
 
 fn main() -> Result<(), CliError> {
@@ -55,6 +70,7 @@ fn main() -> Result<(), CliError> {
         Some(Commands::Pull) => println!("Pull"),
         Some(Commands::Push) => println!("Push"),
         Some(Commands::Clone) => println!("Clone"),
+
         Some(Commands::Account { id, command }) => match id {
             Some(id) => {
                 let mut db = Db::load()?;
@@ -84,6 +100,36 @@ fn main() -> Result<(), CliError> {
                 }
                 _ => (),
             },
+        },
+
+        Some(Commands::Note { id, command }) => match (id, command) {
+            (Some(id), None) => {
+                let mut db = Db::load()?;
+                println!("{}", db.note_get(&id)?)
+            }
+            (Some(id), command) => match command {
+                Some(NoteCommands::SetTransaction {
+                    debit,
+                    credit,
+                    amount,
+                }) => {
+                    let mut db = Db::load()?;
+                    let debit = db.account_get(&debit)?.to_owned();
+                    let credit = db.account_get(&credit)?.to_owned();
+                    let mut note = db.note_get_mut(&id)?;
+                    note.set_transaction(amount.parse().unwrap(), debit, credit, None)?;
+                }
+                _ => (),
+            },
+            (None, command) => match command {
+                Some(NoteCommands::New) => {
+                    let mut db = Db::load()?;
+                    let mut id = read_input("ID:");
+                    db.note_new(id.trim().to_string())?;
+                }
+                _ => (),
+            },
+            (_, _) => (),
         },
 
         None => {}

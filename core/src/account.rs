@@ -3,7 +3,7 @@ use std::fmt::Display;
 use cli_table::{format::Justify, print_stdout, Cell, Style, Table, WithTitle};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Default, Eq, Hash, PartialEq, Table)]
+#[derive(Serialize, Deserialize, Debug, Default, Eq, Hash, PartialEq, Table, Clone)]
 pub struct Account {
     #[table(title = "ID", justify = "Justify::Right")]
     pub id: String,
