@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package sync_api;
+
+service Api {
+  rpc Pull(PullRequest) returns (stream CommitObj);
+  rpc Push(CommitObj) returns (CommitObj);
+}
+
+message PullRequest { string after_commit_id = 1; }
+message CommitObj { string obj_json_string = 1; }

@@ -1,22 +1,6 @@
-[package]
-authors = ["Peter Mezei <mezeipetister@gmail.com>"]
-edition = "2021"
-license = "GPLv2"
-name = "bit"
-version = "0.0.3"
-
-[[bin]]
-name = "bit"
-
-[dependencies]
-chrono = {version = "0.4", features = ["serde"]}
-hex-literal = "0.2.2"
-md4 = "0.10.1"
-packman = "*"
-serde = {version = "1.0", features = ["derive"]}
-serde_cbor = "0.11.1"
-structopt = "*"
-thousands = "0.2.0"
-toml = "*"
-uuid = {version = "0.8", features = ["serde", "v4"]}
-walkdir = "*"
+[workspace]
+members = [
+  "db_sync",
+  "core",
+  "cli",
+]

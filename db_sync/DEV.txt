@@ -1,0 +1,19 @@
+Repository
+  Context
+  Document[] - ID
+  CommitIndex
+  CommitLog
+    Remote
+      Commit[]
+    Local
+
+Repository
+  set_storage(storage_id)
+  get_storages()
+  get_by_id(storage_id, id)
+  get_all_docs(storage_id)
+  add_aob()
+  merge_commit()              - merge pushed/pulled commit
+  pull()
+  push()
+  serve()
