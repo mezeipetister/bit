@@ -118,6 +118,12 @@ impl DbInner {
             .find(|a| a.id == id)
             .ok_or(CliError::Error("Not found".to_string()))
     }
+    pub fn account_get_mut(&mut self, id: &str) -> Result<&mut Account, CliError> {
+        self.accounts
+            .iter_mut()
+            .find(|a| a.id == id)
+            .ok_or(CliError::Error("Not found".to_string()))
+    }
     pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
         if self.account_get(&id).is_ok() {
             return Err(CliError::Error("Account is taken".to_string()));
@@ -131,6 +137,11 @@ impl DbInner {
     pub fn account_remove(&mut self, id: &str) -> Result<(), CliError> {
         let _ = self.account_get(id)?;
         self.accounts.retain(|a| a.id != id);
+        Ok(())
+    }
+    pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
+        let a = self.account_get_mut(id)?;
+        a.name = name;
         Ok(())
     }
 }

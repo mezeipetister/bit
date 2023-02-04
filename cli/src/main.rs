@@ -24,6 +24,9 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Init,
+    Pull,
+    Push,
+    Clone,
     Account {
         id: Option<String>,
         #[command(subcommand)]
@@ -36,6 +39,7 @@ enum AccountCommands {
     All,
     New,
     Remove { id: String },
+    SetName { id: String },
 }
 
 fn main() -> Result<(), CliError> {
@@ -48,6 +52,9 @@ fn main() -> Result<(), CliError> {
             let e = Db::init()?;
             println!("Repo inited");
         }
+        Some(Commands::Pull) => println!("Pull"),
+        Some(Commands::Push) => println!("Push"),
+        Some(Commands::Clone) => println!("Clone"),
         Some(Commands::Account { id, command }) => match id {
             Some(id) => {
                 let mut db = Db::load()?;
@@ -69,6 +76,11 @@ fn main() -> Result<(), CliError> {
                     if read_confirm() {
                         db.account_remove(&id)?;
                     }
+                }
+                Some(AccountCommands::SetName { id }) => {
+                    let mut db = Db::load()?;
+                    let name = read_input("New name:");
+                    db.account_rename(&id, name)?;
                 }
                 _ => (),
             },
