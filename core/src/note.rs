@@ -74,8 +74,12 @@ impl Display for Note {
 
         let mut transactions = Vec::new();
 
-        for tr in &self.transactions {
+        for (i, tr) in self.transactions.iter().enumerate() {
             let row = vec![
+                // (i + 1)
+                //     .cell()
+                //     .italic(true)
+                //     .foreground_color(Some(cli_table::Color::Yellow)),
                 (&tr.debit).cell(),
                 (&tr.credit).cell(),
                 (&tr.amount).cell(),
@@ -90,7 +94,17 @@ impl Display for Note {
             f,
             "{}\n\nTransactions\n{}",
             note.display().unwrap(),
-            transactions.table().display().unwrap()
+            transactions
+                .table()
+                .title(vec![
+                    // "".cell(),
+                    "Debit".cell().italic(true),
+                    "Credit".cell().italic(true),
+                    "Amount".cell().italic(true),
+                    "Comment".cell().italic(true),
+                ])
+                .display()
+                .unwrap()
         )
     }
 }
