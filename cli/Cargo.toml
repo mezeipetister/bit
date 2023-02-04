@@ -6,6 +6,10 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = {version = "0.4.23", features = ["serde"]}
 clap = {version = "4.1.4", features = ["derive"]}
-# clap_generate = "3.0.3"
 core = {path = "../core"}
+
+[build-dependencies]
+clap = "4.1.4"
+clap_generate = "3.0.3"

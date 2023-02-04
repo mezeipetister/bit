@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 use cli_table::{format::Justify, Cell, Style, Table};
 use serde::{Deserialize, Serialize};
 
-use crate::{account::Account, prelude::CliError};
+use crate::{account::Account, partner::Partner, prelude::CliError};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Transaction {
@@ -35,6 +35,8 @@ impl Display for Note {
                 "ID".cell(),
                 (self.id.as_deref().unwrap_or("-"))
                     .cell()
+                    .italic(true)
+                    .bold(true)
                     .justify(Justify::Right),
             ],
             vec![
@@ -115,6 +117,80 @@ impl Note {
             id,
             ..Self::default()
         }
+    }
+    pub fn set(
+        &mut self,
+        partner: Option<Partner>,
+        description: Option<String>,
+        idate: Option<NaiveDate>,
+        cdate: Option<NaiveDate>,
+        ddate: Option<NaiveDate>,
+        net: Option<f32>,
+        vat: Option<f32>,
+        gross: Option<f32>,
+    ) -> Result<(), CliError> {
+        if partner.is_some() {
+            self.partner = partner.map(|p| p.id);
+        }
+        if description.is_some() {
+            self.description = description;
+        }
+        if idate.is_some() {
+            self.idate = idate;
+        }
+        if cdate.is_some() {
+            self.cdate = cdate;
+        }
+        if ddate.is_some() {
+            self.ddate = ddate;
+        }
+        if net.is_some() {
+            self.net = net;
+        }
+        if vat.is_some() {
+            self.vat = vat;
+        }
+        if gross.is_some() {
+            self.gross = gross;
+        }
+        Ok(())
+    }
+    pub fn unset(
+        &mut self,
+        partner: bool,
+        description: bool,
+        idate: bool,
+        cdate: bool,
+        ddate: bool,
+        net: bool,
+        vat: bool,
+        gross: bool,
+    ) -> Result<(), CliError> {
+        if partner {
+            self.partner = None;
+        }
+        if description {
+            self.description = None;
+        }
+        if idate {
+            self.idate = None;
+        }
+        if cdate {
+            self.cdate = None;
+        }
+        if ddate {
+            self.ddate = None;
+        }
+        if net {
+            self.net = None;
+        }
+        if vat {
+            self.vat = None;
+        }
+        if gross {
+            self.gross = None;
+        }
+        Ok(())
     }
     pub fn set_transaction(
         &mut self,

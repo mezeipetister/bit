@@ -6,8 +6,8 @@ include!("src/main.rs");
 
 fn main() {
     let mut app = Args::into_app();
-    app.set_bin_name("grab-xkcd");
+    app.set_bin_name("bit");
 
     let outdir = env!("CARGO_MANIFEST_DIR");
-    generate_to::<Bash, _, _>(&mut app, "grab-xkcd", outdir);
+    generate_to::<Bash, _, _>(&mut app, "bit", outdir);
 }

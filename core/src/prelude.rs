@@ -25,6 +25,15 @@ pub mod path_helper {
     }
 }
 
+pub mod clap_parser {
+    use chrono::NaiveDate;
+
+    pub fn parse_to_naivedate(str: &str) -> Result<NaiveDate, String> {
+        NaiveDate::parse_from_str(str, "%Y-%m-%d")
+            .map_err(|_| format!("{} has invalid date format. (YYYY-mm-dd)", str))
+    }
+}
+
 pub trait CliDisplay
 where
     Self: Sized,

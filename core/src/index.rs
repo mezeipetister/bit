@@ -10,6 +10,7 @@ use crate::{
     partner::Partner,
     prelude::{path_helper, CliDisplay, CliError},
 };
+use chrono::NaiveDate;
 use cli_table::{Table, WithTitle};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -119,17 +120,17 @@ impl DbInner {
         self.accounts
             .iter()
             .find(|a| a.id == id)
-            .ok_or(CliError::Error("Not found".to_string()))
+            .ok_or(CliError::Error("Account not found".to_string()))
     }
     pub fn account_get_mut(&mut self, id: &str) -> Result<&mut Account, CliError> {
         self.accounts
             .iter_mut()
             .find(|a| a.id == id)
-            .ok_or(CliError::Error("Not found".to_string()))
+            .ok_or(CliError::Error("Account not found".to_string()))
     }
     pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
         if self.account_get(&id).is_ok() {
-            return Err(CliError::Error("Account is taken".to_string()));
+            return Err(CliError::Error("Account id is taken".to_string()));
         }
         self.accounts.push(Account { id, name });
         Ok(())
@@ -144,6 +145,41 @@ impl DbInner {
     }
     pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
         let a = self.account_get_mut(id)?;
+        a.name = name;
+        Ok(())
+    }
+    pub fn partner_exist(&self, id: &str) -> bool {
+        self.partners.iter().find(|a| a.id == id).is_some()
+    }
+    pub fn partner_get(&self, id: &str) -> Result<&Partner, CliError> {
+        self.partners
+            .iter()
+            .find(|a| a.id == id)
+            .ok_or(CliError::Error("Partner not found".to_string()))
+    }
+    pub fn partner_get_mut(&mut self, id: &str) -> Result<&mut Partner, CliError> {
+        self.partners
+            .iter_mut()
+            .find(|a| a.id == id)
+            .ok_or(CliError::Error("Partner not found".to_string()))
+    }
+    pub fn partner_add(&mut self, id: String, name: String) -> Result<(), CliError> {
+        if self.partner_get(&id).is_ok() {
+            return Err(CliError::Error("Partner id is taken".to_string()));
+        }
+        self.partners.push(Partner { id, name });
+        Ok(())
+    }
+    pub fn partner_get_all(&self) -> impl Display {
+        (&self.partners).with_title().table().display().unwrap()
+    }
+    pub fn partner_remove(&mut self, id: &str) -> Result<(), CliError> {
+        let _ = self.partner_get(id)?;
+        self.partners.retain(|a| a.id != id);
+        Ok(())
+    }
+    pub fn partner_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
+        let a = self.partner_get_mut(id)?;
         a.name = name;
         Ok(())
     }
@@ -162,6 +198,36 @@ impl DbInner {
     pub fn note_new(&mut self, id: String) -> Result<(), CliError> {
         self.notes.push(Note::new(Some(id)));
         Ok(())
+    }
+    pub fn note_set(
+        &mut self,
+        id: &str,
+        partner: Option<Partner>,
+        description: Option<String>,
+        idate: Option<NaiveDate>,
+        cdate: Option<NaiveDate>,
+        ddate: Option<NaiveDate>,
+        net: Option<f32>,
+        vat: Option<f32>,
+        gross: Option<f32>,
+    ) -> Result<(), CliError> {
+        let mut note = self.note_get_mut(id)?;
+        note.set(partner, description, idate, cdate, ddate, net, vat, gross)
+    }
+    pub fn note_unset(
+        &mut self,
+        id: &str,
+        partner: bool,
+        description: bool,
+        idate: bool,
+        cdate: bool,
+        ddate: bool,
+        net: bool,
+        vat: bool,
+        gross: bool,
+    ) -> Result<(), CliError> {
+        let mut note = self.note_get_mut(id)?;
+        note.unset(partner, description, idate, cdate, ddate, net, vat, gross)
     }
     pub fn note_set_transaction(
         &mut self,
