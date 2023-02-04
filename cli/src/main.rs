@@ -5,6 +5,9 @@ use core::{
 use std::fmt::Display;
 
 use clap::{Parser, Subcommand};
+use prelude::read_confirm;
+
+use crate::prelude::read_input;
 
 mod prelude;
 
@@ -32,6 +35,7 @@ enum Commands {
 enum AccountCommands {
     All,
     New,
+    Remove { id: String },
 }
 
 fn main() -> Result<(), CliError> {
@@ -56,13 +60,15 @@ fn main() -> Result<(), CliError> {
                 }
                 Some(AccountCommands::New) => {
                     let mut db = Db::load()?;
-                    let mut id = String::new();
-                    let mut name = String::new();
-                    println!("ID: ");
-                    std::io::stdin().read_line(&mut id).unwrap();
-                    println!("Name: ");
-                    std::io::stdin().read_line(&mut name).unwrap();
+                    let mut id = read_input("ID:");
+                    let mut name = read_input("Name:");
                     db.account_add(id.trim().to_string(), name.trim().to_string())?;
+                }
+                Some(AccountCommands::Remove { id }) => {
+                    let mut db = Db::load()?;
+                    if read_confirm() {
+                        db.account_remove(&id)?;
+                    }
                 }
                 _ => (),
             },

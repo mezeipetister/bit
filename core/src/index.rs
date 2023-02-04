@@ -128,6 +128,11 @@ impl DbInner {
     pub fn account_get_all(&self) -> impl Display {
         (&self.accounts).with_title().table().display().unwrap()
     }
+    pub fn account_remove(&mut self, id: &str) -> Result<(), CliError> {
+        let _ = self.account_get(id)?;
+        self.accounts.retain(|a| a.id != id);
+        Ok(())
+    }
 }
 
 impl Drop for Db {
