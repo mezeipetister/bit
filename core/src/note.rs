@@ -8,24 +8,24 @@ use crate::{account::Account, partner::Partner, prelude::CliError};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Transaction {
-    amount: f32,
-    debit: String,
-    credit: String,
-    comment: Option<String>,
+    pub amount: f32,
+    pub debit: String,
+    pub credit: String,
+    pub comment: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Note {
-    pub id: Option<String>,         // Note ID
-    partner: Option<String>,        // Partner id
-    description: Option<String>,    // Note description
-    idate: Option<NaiveDate>,       // Issue date
-    cdate: Option<NaiveDate>,       // Completion date
-    ddate: Option<NaiveDate>,       // Due date
-    net: Option<f32>,               // Note total net value
-    vat: Option<f32>,               // Note total vat amount
-    gross: Option<f32>,             // Note total gross value
-    transactions: Vec<Transaction>, // Transactions
+    pub id: Option<String>,             // Note ID
+    pub partner: Option<String>,        // Partner id
+    pub description: Option<String>,    // Note description
+    pub cdate: Option<NaiveDate>,       // Completion date
+    pub idate: Option<NaiveDate>,       // Issue date
+    pub ddate: Option<NaiveDate>,       // Due date
+    pub net: Option<f32>,               // Note total net value
+    pub vat: Option<f32>,               // Note total vat amount
+    pub gross: Option<f32>,             // Note total gross value
+    pub transactions: Vec<Transaction>, // Transactions
 }
 
 impl Display for Note {
@@ -76,7 +76,7 @@ impl Display for Note {
 
         let mut transactions = Vec::new();
 
-        for (i, tr) in self.transactions.iter().enumerate() {
+        for (_, tr) in self.transactions.iter().enumerate() {
             let row = vec![
                 // (i + 1)
                 //     .cell()
@@ -209,5 +209,8 @@ impl Note {
     }
     pub fn transactions(&self) -> &Vec<Transaction> {
         &self.transactions
+    }
+    pub fn has_cdate(&self) -> bool {
+        self.cdate.is_some()
     }
 }

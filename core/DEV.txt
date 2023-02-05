@@ -1,0 +1,10 @@
+LedgerIndex as 2D array
+
+      Cat_0  Cat_1 Cat_2 Cat_3
+d1    [d,c]  [d,c] [d,c] [d,c]
+d2    [d,c]  [d,c] ..    ..
+d3    [d,c]  [d,c] ..    ..
+d4    [d,c]  [d,c] ..    ..
+.     ..     ..    ..    ..
+.     ..     ..    ..    ..
+d365  [d,c]  [d,c] ..    ..

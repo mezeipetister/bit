@@ -1,4 +1,4 @@
-use std::{fmt::Display, io::Write};
+use std::io::Write;
 
 pub fn read_input(question: &str) -> String {
     let mut buffer = String::new();

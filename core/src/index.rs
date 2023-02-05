@@ -2,9 +2,7 @@ use crate::{
     account::Account,
     blob::Blob,
     context::{Context, CtxError},
-    fs::{
-        binary_init, binary_init_empty, binary_read, binary_update, cwd, is_project_cwd, FsError,
-    },
+    fs::{binary_init, binary_init_empty, binary_read, binary_update, is_project_cwd, FsError},
     ledger::Ledger,
     note::Note,
     partner::Partner,
@@ -16,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
+    rc::Rc,
 };
 
 #[derive(Debug)]
@@ -124,6 +123,7 @@ impl DbInner {
     }
     pub fn account_get_mut(&mut self, id: &str) -> Result<&mut Account, CliError> {
         self.accounts
+            .deref_mut()
             .iter_mut()
             .find(|a| a.id == id)
             .ok_or(CliError::Error("Account not found".to_string()))
@@ -211,7 +211,7 @@ impl DbInner {
         vat: Option<f32>,
         gross: Option<f32>,
     ) -> Result<(), CliError> {
-        let mut note = self.note_get_mut(id)?;
+        let note = self.note_get_mut(id)?;
         note.set(partner, description, idate, cdate, ddate, net, vat, gross)
     }
     pub fn note_unset(
@@ -226,7 +226,7 @@ impl DbInner {
         vat: bool,
         gross: bool,
     ) -> Result<(), CliError> {
-        let mut note = self.note_get_mut(id)?;
+        let note = self.note_get_mut(id)?;
         note.unset(partner, description, idate, cdate, ddate, net, vat, gross)
     }
     pub fn note_set_transaction(
@@ -237,9 +237,12 @@ impl DbInner {
         amount: f32,
         comment: Option<String>,
     ) -> Result<(), CliError> {
-        let mut note = self.note_get_mut(id)?;
+        let note = self.note_get_mut(id)?;
         note.set_transaction(amount, debit, credit, comment)?;
         Ok(())
+    }
+    pub fn get_ledger(&mut self, month: Option<u32>) {
+        self.ledger.get(&self.accounts, &self.notes, None);
     }
 }
 

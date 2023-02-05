@@ -1,215 +1,197 @@
 use chrono::{Datelike, NaiveDate, Utc};
+use cli_table::{format::Justify, Cell, Style, Table};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
+    fmt::Display,
     ops::Add,
-    path::PathBuf,
+    rc::Rc,
 };
 use thousands::Separable;
 
-use crate::note::Note;
+use crate::{
+    account::Account,
+    note::{Note, Transaction},
+    prelude::CliError,
+};
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+pub struct AccountSummary {
+    /// Balance opening
+    balance_opening: f32,
+    /// Turnover debit
+    turnover_debit: f32,
+    /// Turnover credit
+    turnover_credit: f32,
+    /// Balance closing
+    balance_closing: f32,
+}
+
+impl AccountSummary {
+    fn add_debit(&mut self, value: f32) {
+        self.turnover_debit += value;
+    }
+    fn add_credit(&mut self, value: f32) {
+        self.turnover_credit += value;
+    }
+}
+
+impl Add for AccountSummary {
+    type Output = AccountSummary;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let new_td = self.turnover_debit + rhs.turnover_debit;
+        let new_tc = self.turnover_credit + rhs.turnover_credit;
+        AccountSummary {
+            balance_opening: self.balance_opening,
+            turnover_debit: new_td,
+            turnover_credit: new_tc,
+            balance_closing: self.balance_opening + new_td - new_tc,
+        }
+    }
+}
+
+impl Display for AccountSummary {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // self.turnover_debit.separate_with_spaces(),
+        unimplemented!()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct MonthlySummary {
+    accounts: Vec<(AccountSummary)>,
+}
+
+impl MonthlySummary {
+    fn init(accounts: &Vec<Account>) -> Self {
+        let mut res = Self { accounts: vec![] };
+        accounts
+            .iter()
+            .for_each(|_| res.accounts.push(AccountSummary::default()));
+        res
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Ledger {
-    ledger_index: Vec<HashMap<String, LedgerIndexItem>>,
-    note_counter: i32,
-    transaction_counter: i32,
+    // Store accounts here again
+    accounts: Vec<Account>,
+    // 2D array; 12month;
+    // Monthly results
+    ledger: [MonthlySummary; 12],
+    // If
+    should_update: bool,
+    // Total notes we tried to use
+    total_notes: i32,
+    // Total successfully processed notes
+    processed_notes: i32,
+    // These notes had issues to process
+    notes_with_error: Vec<String>,
 }
 
 impl Ledger {
-    pub fn init(&mut self, accounts: &HashSet<String>) {
-        // Create all days in index as empty
-        self.ledger_index = (0..NaiveDate::from_ymd(Utc::today().year(), 12, 31).ordinal0())
-            .into_iter()
-            .map(|_| HashMap::new())
-            .collect();
-        // Add accounts to index to each day
-        accounts.iter().for_each(|account| {
-            self.ledger_index.iter_mut().for_each(|day| {
-                day.insert(account.clone(), LedgerIndexItem::default());
-            });
+    pub fn get(
+        &mut self,
+        accounts: &Vec<Account>,
+        notes: &Vec<Note>,
+        month: Option<u32>,
+    ) -> Result<&MonthlySummary, CliError> {
+        // Try to get query month ID
+        let month_index = match month {
+            Some(i) => match i {
+                x if x >= 1 && x <= 12 => i - 1,
+                _ => {
+                    return Err(CliError::Error(
+                        "Wrong ledger query month. 1-12".to_string(),
+                    ))
+                }
+            },
+            None => Utc::now().month0(),
+        };
+        // Run self test
+        self.check_should_update(accounts, notes);
+        // Clear itself if update needed;
+        if self.should_update {
+            // Clear local accounts
+            self.accounts.clear();
+            // Set local accounts with latest available accounts
+            accounts
+                .iter()
+                .for_each(|a| self.accounts.push(a.to_owned()));
+            // Clear ledger
+            let monthly_summary = MonthlySummary::init(accounts);
+            (0..11)
+                .into_iter()
+                .for_each(|i| self.ledger[i] = monthly_summary.clone());
+            // Set total notes to 0;
+            self.total_notes = 0;
+            // Set processed_notes to 0;
+            self.processed_notes = 0;
+            // Set notes with error to 0;
+            self.notes_with_error = vec![];
+            // Update
+            let data = self.calculate_year(accounts, notes);
+            println!("{:?}", data);
+        }
+        // Get
+        let res = &self.ledger[month_index as usize];
+        // Return result
+        Ok(res)
+    }
+    // Set for update manually
+    pub fn set_should_update(&mut self) {
+        self.should_update = true;
+    }
+    fn check_should_update(&mut self, accounts: &Vec<Account>, notes: &Vec<Note>) {
+        // Check if categories are the same
+        if &self.accounts != accounts {
+            self.should_update = true;
+        }
+    }
+    fn calculate_year(
+        &mut self,
+        accounts: &Vec<Account>,
+        notes: &Vec<Note>,
+    ) -> [Vec<AccountSummary>; 12] {
+        // Init account hash lookup table
+        let mut account_lookup: HashMap<String, usize> = HashMap::new();
+        accounts.iter().enumerate().for_each(|(i, a)| {
+            account_lookup.insert(a.id.to_string(), i);
         });
-    }
-    // pub fn add_note(&mut self, note: &Note, accounts: &HashSet<String>) -> Result<(), String> {
-    //     if note.transactions.len() == 0 {
-    //         return Ok(());
-    //     }
-    //     let completion_date = note
-    //         .completion_date
-    //         .clone()
-    //         .ok_or_else(|| "No completion date for note!".to_string())?;
-    //     self.note_counter += 1;
-    //     for transaction in &note.transactions {
-    //         self.add_transaction(
-    //             Transaction {
-    //                 completion_date: completion_date,
-    //                 amount: transaction.amount,
-    //                 debit: transaction.debit.clone(),
-    //                 credit: transaction.credit.clone(),
-    //             },
-    //             accounts,
-    //         )?;
-    //     }
-    //     Ok(())
-    // }
-    // fn add_transaction(
-    //     &mut self,
-    //     transaction: Transaction,
-    //     accounts: &HashSet<String>,
-    // ) -> Result<(), String> {
-    //     let has_account = |account_id: &str| accounts.contains(account_id);
-    //     // Check tr debit account
-    //     if !has_account(&transaction.debit) {
-    //         return Err(format!(
-    //             "Unknown account ID {} for debit",
-    //             &transaction.debit
-    //         ));
-    //     }
-    //     // Check tr credit account
-    //     if !has_account(&transaction.credit) {
-    //         return Err(format!(
-    //             "Unknown account ID for credit {}",
-    //             &transaction.credit
-    //         ));
-    //     }
-    //     // Add transaction to index
-    //     let last_day = self.ledger_index.len();
-    //     let completion_day = transaction.completion_date.ordinal0() as usize;
 
-    //     // Process completion day debit
-    //     let index = &mut self.ledger_index[completion_day];
-    //     // cbd => closing balance debit
-    //     let cbd = match index.get_mut(&transaction.debit) {
-    //         Some(index_item) => {
-    //             index_item.td += transaction.amount;
-    //             index_item.bc = index_item.bo + (index_item.td - index_item.tc);
-    //             index_item.bc
-    //         }
-    //         None => panic!("Cannot get mutable account"),
-    //     };
-    //     // cbc => closing balance credit
-    //     let cbc = match index.get_mut(&transaction.credit) {
-    //         Some(index_item) => {
-    //             index_item.tc += transaction.amount;
-    //             index_item.bc = index_item.bo + (index_item.td - index_item.tc);
-    //             index_item.bc
-    //         }
-    //         None => panic!("Cannot get mutable account"),
-    //     };
+        // Init data to calculate width
+        let mut data: [Vec<AccountSummary>; 12] = Default::default();
 
-    //     (completion_day + 1..last_day)
-    //         .into_iter()
-    //         .for_each(|day_number| {
-    //             let item = &mut self.ledger_index[day_number];
+        // Init accounts
+        (0..11).into_iter().for_each(|i| {
+            accounts
+                .iter()
+                .for_each(|_| data[i].push(AccountSummary::default()));
+        });
 
-    //             // Process debit
-    //             match item.get_mut(&transaction.debit) {
-    //                 Some(index_item) => {
-    //                     index_item.bo += cbd;
-    //                     index_item.bc += index_item.bo + index_item.td - index_item.tc;
-    //                 }
-    //                 None => (),
-    //             }
-
-    //             // Process credit
-    //             match item.get_mut(&transaction.credit) {
-    //                 Some(index_item) => {
-    //                     index_item.bo += cbc;
-    //                     index_item.bc += index_item.bo + index_item.td - index_item.tc;
-    //                 }
-    //                 None => (),
-    //             }
-    //         });
-    //     Ok(())
-    // }
-    pub fn get_ledger_by_date(
-        &self,
-        day_index: usize,
-    ) -> Result<HashMap<String, LedgerIndexItem>, String> {
-        let day = self
-            .ledger_index
-            .get(day_index)
-            .ok_or("Out of range date")?;
-        Ok((*day).clone())
-    }
-}
-
-#[derive(Serialize, Deserialize, Default, Debug, Clone)]
-pub struct LedgerIndexItem {
-    /// Balance opening
-    bo: i64,
-    /// Turnover debit
-    td: i64,
-    /// Turnover credit
-    tc: i64,
-    /// Balance closing
-    bc: i64,
-}
-
-impl Add for LedgerIndexItem {
-    type Output = LedgerIndexItem;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let new_td = self.td + rhs.td;
-        let new_tc = self.tc + rhs.tc;
-        LedgerIndexItem {
-            bo: self.bo,
-            td: new_td,
-            tc: new_tc,
-            bc: self.bo + new_td - new_tc,
-        }
-    }
-}
-
-impl LedgerIndexItem {
-    pub fn print_full(&self) -> String {
-        format!(
-            "{0: <13} | {1: <13} | {2: <13} | {3: <13}",
-            self.td.separate_with_spaces(),
-            self.tc.separate_with_spaces(),
-            match self.bc {
-                x if x >= 0 => x.abs(),
-                _ => 0,
+        // Iter over all notes
+        notes.iter().for_each(|n| {
+            // Check if we can process it
+            // If has cdate and ID
+            match (n.cdate.map(|d| d.month0()), &n.id) {
+                (Some(month0_index), Some(id)) => {
+                    n.transactions.iter().for_each(|tr| {
+                        let debit_account_index: usize =
+                            *account_lookup.get(&tr.debit).expect("Unkown account id");
+                        let credit_account_index: usize =
+                            *account_lookup.get(&tr.credit).expect("Unknown account id");
+                        data[month0_index as usize][debit_account_index].add_debit(tr.amount);
+                        data[month0_index as usize][credit_account_index].add_credit(tr.amount);
+                    });
+                }
+                // Add ID to error vector if has no cdate or ID
+                _ => self
+                    .notes_with_error
+                    .push(n.id.as_deref().unwrap_or("no_id").to_string()),
             }
-            .separate_with_spaces(),
-            match self.bc {
-                x if x < 0 => x.abs(),
-                _ => 0,
-            }
-            .separate_with_spaces()
-        )
-    }
-}
-
-// None => yearly YYYY-01-01 - Current month
-// mm => full month of current year
-pub fn unzip_dates(date_str: Option<String>) -> Result<(NaiveDate, NaiveDate), String> {
-    match date_str {
-        Some(month) => {
-            // Try to map month str to i32
-            let month = month
-                .parse::<u32>()
-                .map_err(|_| "Wrong month number. 1-12".to_string())?;
-
-            // Check date range
-            if month < 1 || month > 12 {
-                return Err("Month date should be a valid 1-12 integer".to_string());
-            }
-
-            // Define month first day
-            let sdate = NaiveDate::from_ymd(Utc::today().year(), month, 1);
-
-            // Define month last day
-            let ldate = NaiveDate::from_ymd_opt(Utc::today().year(), month + 1, 1)
-                .unwrap_or(NaiveDate::from_ymd(Utc::today().year() + 1, 1, 1))
-                .pred();
-
-            // Return month date range
-            Ok((sdate, ldate))
-        }
-        None => Ok((
-            NaiveDate::from_ymd(Utc::today().year(), 1, 1),
-            Utc::today().naive_local(),
-        )),
+        });
+        // Return result
+        data
     }
 }

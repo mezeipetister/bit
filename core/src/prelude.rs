@@ -1,4 +1,4 @@
-use std::{fmt::Display, io::Write, path::PathBuf};
+use std::{fmt::Display, io::Write};
 
 #[derive(Debug)]
 pub enum CliError {

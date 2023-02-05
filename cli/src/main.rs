@@ -1,110 +1,8 @@
-use core::{
-    index::Db,
-    prelude::{clap_parser::parse_to_naivedate, CliDisplay, CliError},
-};
-use std::{fmt::Display, ops::Deref};
+use core::{index::Db, prelude::CliError};
 
-use crate::prelude::read_input;
-use chrono::NaiveDate;
-use clap::{Parser, Subcommand};
-use prelude::read_confirm;
-
-mod prelude;
-
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    debug: u8,
-
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Init,
-    Pull,
-    Push,
-    Clone,
-    Account {
-        id: Option<String>,
-        #[command(subcommand)]
-        command: Option<AccountCommands>,
-    },
-    Partner {
-        id: Option<String>,
-        #[command(subcommand)]
-        command: Option<PartnerCommands>,
-    },
-    Note {
-        id: Option<String>,
-        #[command(subcommand)]
-        command: Option<NoteCommands>,
-    },
-}
-
-#[derive(Subcommand)]
-enum AccountCommands {
-    All,
-    New,
-    Remove { id: String },
-    SetName { id: String },
-}
-
-#[derive(Subcommand)]
-enum PartnerCommands {
-    All,
-    New,
-    Remove { id: String },
-    SetName { id: String },
-}
-
-#[derive(Subcommand)]
-enum NoteCommands {
-    New,
-    Set {
-        #[arg(long)]
-        description: Option<String>,
-        #[arg(long)]
-        partner: Option<String>,
-        #[arg(long, value_parser = parse_to_naivedate)]
-        idate: Option<NaiveDate>,
-        #[arg(long, value_parser = parse_to_naivedate)]
-        cdate: Option<NaiveDate>,
-        #[arg(long, value_parser = parse_to_naivedate)]
-        ddate: Option<NaiveDate>,
-        #[arg(long)]
-        net: Option<f32>,
-        #[arg(long)]
-        vat: Option<f32>,
-        #[arg(long)]
-        gross: Option<f32>,
-    },
-    Unset {
-        #[arg(long)]
-        description: bool,
-        #[arg(long)]
-        partner: bool,
-        #[arg(long)]
-        idate: bool,
-        #[arg(long)]
-        cdate: bool,
-        #[arg(long)]
-        ddate: bool,
-        #[arg(long)]
-        net: bool,
-        #[arg(long)]
-        vat: bool,
-        #[arg(long)]
-        gross: bool,
-    },
-    SetTransaction {
-        debit: String,
-        credit: String,
-        amount: String,
-    },
-}
+use bit::cli::*;
+use bit::prelude::{read_confirm, read_input};
+use clap::Parser;
 
 fn main() -> Result<(), CliError> {
     let cli = Cli::parse();
@@ -113,7 +11,7 @@ fn main() -> Result<(), CliError> {
     // matches just as you would the top level cmd
     match cli.command {
         Some(Commands::Init) => {
-            let e = Db::init()?;
+            let _ = Db::init()?;
             println!("Repo inited");
         }
         Some(Commands::Pull) => println!("Pull"),
@@ -122,18 +20,18 @@ fn main() -> Result<(), CliError> {
 
         Some(Commands::Account { id, command }) => match id {
             Some(id) => {
-                let mut db = Db::load()?;
+                let db = Db::load()?;
                 println!("{}", db.account_get(&id)?)
             }
             None => match command {
                 Some(AccountCommands::All) => {
-                    let mut db = Db::load()?;
+                    let db = Db::load()?;
                     println!("{}", db.account_get_all());
                 }
                 Some(AccountCommands::New) => {
                     let mut db = Db::load()?;
-                    let mut id = read_input("ID:");
-                    let mut name = read_input("Name:");
+                    let id = read_input("ID:");
+                    let name = read_input("Name:");
                     db.account_add(id.trim().to_string(), name.trim().to_string())?;
                 }
                 Some(AccountCommands::Remove { id }) => {
@@ -153,18 +51,18 @@ fn main() -> Result<(), CliError> {
 
         Some(Commands::Partner { id, command }) => match id {
             Some(id) => {
-                let mut db = Db::load()?;
+                let db = Db::load()?;
                 println!("{}", db.partner_get(&id)?)
             }
             None => match command {
                 Some(PartnerCommands::All) => {
-                    let mut db = Db::load()?;
+                    let db = Db::load()?;
                     println!("{}", db.partner_get_all());
                 }
                 Some(PartnerCommands::New) => {
                     let mut db = Db::load()?;
-                    let mut id = read_input("ID:");
-                    let mut name = read_input("Name:");
+                    let id = read_input("ID:");
+                    let name = read_input("Name:");
                     db.partner_add(id.trim().to_string(), name.trim().to_string())?;
                 }
                 Some(PartnerCommands::Remove { id }) => {
@@ -184,7 +82,7 @@ fn main() -> Result<(), CliError> {
 
         Some(Commands::Note { id, command }) => match (id, command) {
             (Some(id), None) => {
-                let mut db = Db::load()?;
+                let db = Db::load()?;
                 println!("{}", db.note_get(&id)?)
             }
             (Some(id), command) => match command {
@@ -196,7 +94,7 @@ fn main() -> Result<(), CliError> {
                     let mut db = Db::load()?;
                     let debit = db.account_get(&debit)?.to_owned();
                     let credit = db.account_get(&credit)?.to_owned();
-                    let mut note = db.note_get_mut(&id)?;
+                    let note = db.note_get_mut(&id)?;
                     note.set_transaction(amount.parse().unwrap(), debit, credit, None)?;
                 }
                 Some(NoteCommands::Set {
@@ -257,13 +155,17 @@ fn main() -> Result<(), CliError> {
             (None, command) => match command {
                 Some(NoteCommands::New) => {
                     let mut db = Db::load()?;
-                    let mut id = read_input("ID:");
+                    let id = read_input("ID:");
                     db.note_new(id.trim().to_string())?;
                 }
                 _ => (),
             },
-            (_, _) => (),
         },
+
+        Some(Commands::Ledger { month }) => {
+            let mut db = Db::load()?;
+            db.get_ledger(month);
+        }
 
         None => {}
     }

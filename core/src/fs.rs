@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::f32::consts::E;
 use std::fmt::Display;
 use std::fs::OpenOptions;
 use std::io::{Read, Seek, SeekFrom, Write};

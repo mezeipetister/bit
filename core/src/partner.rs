@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use cli_table::{format::Justify, print_stdout, Cell, Style, Table, WithTitle};
+use cli_table::{format::Justify, Cell, Style, Table};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default, Eq, Hash, PartialEq, Table, Clone)]
