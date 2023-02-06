@@ -115,6 +115,9 @@ impl DbInner {
     pub fn account_exist(&self, id: &str) -> bool {
         self.accounts.iter().find(|a| a.id == id).is_some()
     }
+    pub fn account_sort(&mut self) {
+        self.accounts.sort_by(|a, b| a.id.cmp(&b.id));
+    }
     pub fn account_get(&self, id: &str) -> Result<&Account, CliError> {
         self.accounts
             .iter()
@@ -133,6 +136,7 @@ impl DbInner {
             return Err(CliError::Error("Account id is taken".to_string()));
         }
         self.accounts.push(Account { id, name });
+        self.account_sort();
         Ok(())
     }
     pub fn account_get_all(&self) -> impl Display {
@@ -141,11 +145,13 @@ impl DbInner {
     pub fn account_remove(&mut self, id: &str) -> Result<(), CliError> {
         let _ = self.account_get(id)?;
         self.accounts.retain(|a| a.id != id);
+        self.account_sort();
         Ok(())
     }
     pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
         let a = self.account_get_mut(id)?;
         a.name = name;
+        self.account_sort();
         Ok(())
     }
     pub fn partner_exist(&self, id: &str) -> bool {

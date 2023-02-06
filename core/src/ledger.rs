@@ -72,7 +72,7 @@ impl<'a> Display for MonthlySummary<'a> {
         for (account_index, account_summary) in self.ledger.iter().enumerate() {
             let row = vec![
                 (&self.accounts[account_index].id).cell(),
-                (&self.accounts[account_index].name).cell(),
+                (textwrap::fill(&self.accounts[account_index].name, 20)).cell(),
                 (account_summary.balance_opening).cell(),
                 (account_summary.turnover_debit).cell(),
                 (account_summary.turnover_credit).cell(),
@@ -131,7 +131,8 @@ impl Ledger {
         // Run self test
         self.check_should_update(accounts, notes);
         // Clear itself if update needed;
-        if self.should_update {
+        // if self.should_update {
+        if true {
             // Clear local accounts
             self.accounts.clear();
             // Set local accounts with latest available accounts
