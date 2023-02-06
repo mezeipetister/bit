@@ -77,7 +77,10 @@ pub enum PartnerCommands {
 
 #[derive(Subcommand)]
 pub enum NoteCommands {
-    New,
+    New {
+        #[arg(long)]
+        id: Option<String>,
+    },
     Set {
         #[arg(long)]
         description: Option<String>,

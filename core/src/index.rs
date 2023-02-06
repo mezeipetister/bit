@@ -242,7 +242,10 @@ impl DbInner {
         Ok(())
     }
     pub fn get_ledger(&mut self, month: Option<u32>) -> Result<MonthlySummary, CliError> {
-        self.ledger.get(&self.accounts, &self.notes, None)
+        self.ledger.get(&self.accounts, &self.notes, month)
+    }
+    pub fn ledger_set_should_update(&mut self) {
+        self.ledger.set_should_update();
     }
 }
 

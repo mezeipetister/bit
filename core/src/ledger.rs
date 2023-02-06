@@ -36,28 +36,22 @@ impl AccountSummary {
     }
 }
 
-impl Add for AccountSummary {
+impl<'a> Add for &'a AccountSummary {
     type Output = AccountSummary;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let new_td = self.turnover_debit + rhs.turnover_debit;
-        let new_tc = self.turnover_credit + rhs.turnover_credit;
+        let new_td = rhs.turnover_debit;
+        let new_tc = rhs.turnover_credit;
         AccountSummary {
-            balance_opening: self.balance_opening,
+            balance_opening: self.balance_closing,
             turnover_debit: new_td,
             turnover_credit: new_tc,
-            balance_closing: self.balance_opening + new_td - new_tc,
+            balance_closing: self.balance_closing + new_td - new_tc,
         }
     }
 }
 
-impl Display for AccountSummary {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // self.turnover_debit.separate_with_spaces(),
-        unimplemented!()
-    }
-}
-
+#[derive(Debug)]
 pub struct MonthlySummary<'a> {
     accounts: &'a Vec<Account>,
     ledger: &'a Vec<AccountSummary>,
@@ -71,7 +65,34 @@ impl<'a> MonthlySummary<'a> {
 
 impl<'a> Display for MonthlySummary<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Ledger result")
+        // self.turnover_debit.separate_with_spaces(),
+        let mut transactions = Vec::new();
+        // println!("{self:?}");
+        // unimplemented!();
+        for (account_index, account_summary) in self.ledger.iter().enumerate() {
+            let row = vec![
+                (&self.accounts[account_index].id).cell(),
+                (&self.accounts[account_index].name).cell(),
+                (account_summary.balance_opening).cell(),
+                (account_summary.turnover_debit).cell(),
+                (account_summary.turnover_credit).cell(),
+                (account_summary.balance_closing).cell(),
+            ];
+            transactions.push(row);
+        }
+        let res = transactions
+            .table()
+            .title(vec![
+                "Account ID".cell().italic(true),
+                "Account name".cell().italic(true),
+                "Balance opening".cell().italic(true),
+                "Debit turnover".cell().italic(true),
+                "Credit turnover".cell().italic(true),
+                "Balance closing".cell().italic(true),
+            ])
+            .display()
+            .unwrap();
+        write!(f, "{res}")
     }
 }
 
@@ -101,14 +122,10 @@ impl Ledger {
     ) -> Result<MonthlySummary<'a>, CliError> {
         // Try to get query month ID
         let month_index = match month {
-            Some(i) => match i {
-                x if x >= 1 && x <= 12 => i - 1,
-                _ => {
-                    return Err(CliError::Error(
-                        "Wrong ledger query month. 1-12".to_string(),
-                    ))
-                }
-            },
+            Some(i) => {
+                assert!(i > 0, "Month number must be between 1-12");
+                i - 1
+            }
             None => Utc::now().month0(),
         };
         // Run self test
@@ -132,12 +149,34 @@ impl Ledger {
             // Update
             let data = self.calculate_year(accounts, notes);
             // Set ledger
-            println!("{:?}", data);
+            // Set monthly data
+            (0..12).into_iter().for_each(|month0| {
+                if month0 == 0 {
+                    data[0].iter().for_each(|a| {
+                        let first_account_summary = AccountSummary {
+                            balance_opening: a.balance_opening,
+                            turnover_debit: a.turnover_debit,
+                            turnover_credit: a.turnover_credit,
+                            balance_closing: a.balance_closing + a.turnover_debit
+                                - a.turnover_credit,
+                        };
+                        self.ledger[0].push(a.to_owned());
+                    });
+                } else {
+                    data[month0]
+                        .iter()
+                        .enumerate()
+                        .for_each(|(account0, account_summary)| {
+                            let d: AccountSummary =
+                                &self.ledger[month0 - 1][account0] + account_summary;
+                            self.ledger[month0].push(d);
+                        });
+                }
+            });
+            self.should_update = false;
         }
         // Get
         let res = &self.ledger[month_index as usize];
-        // Set monthly data
-
         // Return monthly summary
         Ok(MonthlySummary::new(accounts, res))
     }
@@ -166,7 +205,7 @@ impl Ledger {
         let mut data: [Vec<AccountSummary>; 12] = Default::default();
 
         // Init accounts
-        (0..11).into_iter().for_each(|i| {
+        (0..12).into_iter().for_each(|i| {
             accounts
                 .iter()
                 .for_each(|_| data[i].push(AccountSummary::default()));

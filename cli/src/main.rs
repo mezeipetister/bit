@@ -110,6 +110,7 @@ fn main() -> Result<(), CliError> {
                     gross,
                 }) => {
                     let mut db = Db::load()?;
+                    db.ledger_set_should_update();
                     let partner = match partner {
                         Some(id) => {
                             let partner = db.partner_get(&id)?.to_owned();
@@ -140,6 +141,7 @@ fn main() -> Result<(), CliError> {
                     gross,
                 }) => {
                     let mut db = Db::load()?;
+                    db.ledger_set_should_update();
                     db.note_unset(
                         &id,
                         partner,
@@ -155,9 +157,9 @@ fn main() -> Result<(), CliError> {
                 _ => (),
             },
             (None, command) => match command {
-                Some(NoteCommands::New) => {
+                Some(NoteCommands::New { id }) => {
                     let mut db = Db::load()?;
-                    let id = read_input("ID:");
+                    let id = id.unwrap_or_else(|| read_input("ID:"));
                     db.note_new(id.trim().to_string())?;
                 }
                 _ => (),
