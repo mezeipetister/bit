@@ -7,6 +7,8 @@ use clap::Parser;
 fn main() -> Result<(), CliError> {
     let cli = Cli::parse();
 
+    let sudo = cli.y;
+
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match cli.command {
@@ -28,15 +30,15 @@ fn main() -> Result<(), CliError> {
                     let db = Db::load()?;
                     println!("{}", db.account_get_all());
                 }
-                Some(AccountCommands::New) => {
+                Some(AccountCommands::New { id, name }) => {
                     let mut db = Db::load()?;
-                    let id = read_input("ID:");
-                    let name = read_input("Name:");
+                    let id = id.unwrap_or_else(|| read_input("ID:"));
+                    let name = name.unwrap_or_else(|| read_input("Name:"));
                     db.account_add(id.trim().to_string(), name.trim().to_string())?;
                 }
                 Some(AccountCommands::Remove { id }) => {
                     let mut db = Db::load()?;
-                    if read_confirm() {
+                    if read_confirm(sudo) {
                         db.account_remove(&id)?;
                     }
                 }
@@ -59,15 +61,15 @@ fn main() -> Result<(), CliError> {
                     let db = Db::load()?;
                     println!("{}", db.partner_get_all());
                 }
-                Some(PartnerCommands::New) => {
+                Some(PartnerCommands::New { id, name }) => {
                     let mut db = Db::load()?;
-                    let id = read_input("ID:");
-                    let name = read_input("Name:");
+                    let id = id.unwrap_or_else(|| read_input("ID:"));
+                    let name = name.unwrap_or_else(|| read_input("Name:"));
                     db.partner_add(id.trim().to_string(), name.trim().to_string())?;
                 }
                 Some(PartnerCommands::Remove { id }) => {
                     let mut db = Db::load()?;
-                    if read_confirm() {
+                    if read_confirm(sudo) {
                         db.partner_remove(&id)?;
                     }
                 }

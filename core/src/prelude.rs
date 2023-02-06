@@ -26,11 +26,24 @@ pub mod path_helper {
 }
 
 pub mod clap_parser {
-    use chrono::NaiveDate;
+    use chrono::{Month, NaiveDate};
 
     pub fn parse_to_naivedate(str: &str) -> Result<NaiveDate, String> {
         NaiveDate::parse_from_str(str, "%Y-%m-%d")
             .map_err(|_| format!("{} has invalid date format. (YYYY-mm-dd)", str))
+    }
+
+    pub fn parse_month(str: &str) -> Result<u32, String> {
+        match str.parse::<u32>() {
+            Ok(u) => match u {
+                x if x >= 1 && x <= 12 => Ok(x),
+                _ => Err("Month must be 1-12 or english word".to_string()),
+            },
+            Err(_) => match str.parse::<Month>() {
+                Ok(m) => Ok(m.number_from_month()),
+                Err(_) => Err("Month must be 1-12 or english word".to_string()),
+            },
+        }
     }
 }
 

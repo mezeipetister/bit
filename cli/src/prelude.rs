@@ -8,7 +8,10 @@ pub fn read_input(question: &str) -> String {
     buffer.trim().to_string()
 }
 
-pub fn read_confirm() -> bool {
+pub fn read_confirm(sudo: bool) -> bool {
+    if sudo {
+        return true;
+    }
     let mut buffer = String::new();
     print!("Are you sure? (y/n): ");
     std::io::stdout().flush().unwrap();

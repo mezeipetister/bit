@@ -1,4 +1,4 @@
-use core::prelude::clap_parser::parse_to_naivedate;
+use core::prelude::clap_parser::*;
 
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
@@ -8,7 +8,8 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     pub debug: u8,
-
+    #[arg(short, long, action, global = true)]
+    pub y: bool,
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
@@ -35,6 +36,7 @@ pub enum Commands {
         command: Option<NoteCommands>,
     },
     Ledger {
+        #[arg(value_parser = parse_month)]
         month: Option<u32>,
     },
 }
@@ -42,17 +44,35 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum AccountCommands {
     All,
-    New,
-    Remove { id: String },
-    SetName { id: String },
+    New {
+        #[arg(long)]
+        id: Option<String>,
+        #[arg(long)]
+        name: Option<String>,
+    },
+    Remove {
+        id: String,
+    },
+    SetName {
+        id: String,
+    },
 }
 
 #[derive(Subcommand)]
 pub enum PartnerCommands {
     All,
-    New,
-    Remove { id: String },
-    SetName { id: String },
+    New {
+        #[arg(long)]
+        id: Option<String>,
+        #[arg(long)]
+        name: Option<String>,
+    },
+    Remove {
+        id: String,
+    },
+    SetName {
+        id: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -95,8 +115,11 @@ pub enum NoteCommands {
         gross: bool,
     },
     SetTransaction {
+        #[arg(short, long)]
         debit: String,
+        #[arg(short, long)]
         credit: String,
+        #[arg(short, long)]
         amount: String,
     },
 }
