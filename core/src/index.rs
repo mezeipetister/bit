@@ -247,6 +247,32 @@ impl DbInner {
         note.set_transaction(amount, debit, credit, comment)?;
         Ok(())
     }
+    pub fn note_filter(&self, id: Option<String>, partner: Option<String>) -> Vec<String> {
+        self.notes
+            .iter()
+            .filter(|n| {
+                if let Some(_id) = &id {
+                    match &n.id {
+                        Some(id) => id.contains(_id),
+                        None => false,
+                    }
+                } else {
+                    true
+                }
+            })
+            .filter(|n| {
+                if let Some(_partner) = &partner {
+                    match &n.partner {
+                        Some(partner) => partner.contains(_partner),
+                        None => false,
+                    }
+                } else {
+                    true
+                }
+            })
+            .map(|n| n.id.as_deref().unwrap().to_owned())
+            .collect::<Vec<String>>()
+    }
     pub fn get_ledger(&mut self, month: Option<u32>) -> Result<MonthlySummary, CliError> {
         self.ledger.get(&self.accounts, &self.notes, month)
     }

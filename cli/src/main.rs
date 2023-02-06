@@ -20,66 +20,74 @@ fn main() -> Result<(), CliError> {
         Some(Commands::Push) => println!("Push"),
         Some(Commands::Clone) => println!("Clone"),
 
-        Some(Commands::Account { id, command }) => match id {
-            Some(id) => {
+        Some(Commands::Account { id, command }) => match (id, command) {
+            (Some(id), None) => {
                 let db = Db::load()?;
                 println!("{}", db.account_get(&id)?)
             }
-            None => match command {
-                Some(AccountCommands::All) => {
-                    let db = Db::load()?;
-                    println!("{}", db.account_get_all());
-                }
-                Some(AccountCommands::New { id, name }) => {
-                    let mut db = Db::load()?;
-                    let id = id.unwrap_or_else(|| read_input("ID:"));
-                    let name = name.unwrap_or_else(|| read_input("Name:"));
-                    db.account_add(id.trim().to_string(), name.trim().to_string())?;
-                }
-                Some(AccountCommands::Remove { id }) => {
+            (Some(id), Some(command)) => match command {
+                AccountCommands::Remove => {
                     let mut db = Db::load()?;
                     if read_confirm(sudo) {
                         db.account_remove(&id)?;
                     }
                 }
-                Some(AccountCommands::SetName { id }) => {
+                AccountCommands::Set { name } => {
                     let mut db = Db::load()?;
-                    let name = read_input("New name:");
+                    let name = name.unwrap_or_else(|| read_input("New name:"));
                     db.account_rename(&id, name)?;
                 }
-                _ => (),
+                _ => println!("Unknown command"),
             },
-        },
-
-        Some(Commands::Partner { id, command }) => match id {
-            Some(id) => {
-                let db = Db::load()?;
-                println!("{}", db.partner_get(&id)?)
-            }
-            None => match command {
-                Some(PartnerCommands::All) => {
+            (None, Some(command)) => match command {
+                AccountCommands::All => {
                     let db = Db::load()?;
-                    println!("{}", db.partner_get_all());
+                    println!("{}", db.account_get_all());
                 }
-                Some(PartnerCommands::New { id, name }) => {
+                AccountCommands::Add { id, name } => {
                     let mut db = Db::load()?;
                     let id = id.unwrap_or_else(|| read_input("ID:"));
                     let name = name.unwrap_or_else(|| read_input("Name:"));
-                    db.partner_add(id.trim().to_string(), name.trim().to_string())?;
+                    db.account_add(id.trim().to_string(), name.trim().to_string())?;
                 }
-                Some(PartnerCommands::Remove { id }) => {
+                _ => (),
+            },
+            _ => (),
+        },
+
+        Some(Commands::Partner { id, command }) => match (id, command) {
+            (Some(id), None) => {
+                let db = Db::load()?;
+                println!("{}", db.partner_get(&id)?)
+            }
+            (Some(id), Some(command)) => match command {
+                PartnerCommands::Remove => {
                     let mut db = Db::load()?;
                     if read_confirm(sudo) {
                         db.partner_remove(&id)?;
                     }
                 }
-                Some(PartnerCommands::SetName { id }) => {
+                PartnerCommands::Set { name } => {
                     let mut db = Db::load()?;
-                    let name = read_input("New name:");
+                    let name = name.unwrap_or_else(|| read_input("New name:"));
                     db.partner_rename(&id, name)?;
                 }
                 _ => (),
             },
+            (None, Some(command)) => match command {
+                PartnerCommands::All => {
+                    let db = Db::load()?;
+                    println!("{}", db.partner_get_all());
+                }
+                PartnerCommands::Add { id, name } => {
+                    let mut db = Db::load()?;
+                    let id = id.unwrap_or_else(|| read_input("ID:"));
+                    let name = name.unwrap_or_else(|| read_input("Name:"));
+                    db.partner_add(id.trim().to_string(), name.trim().to_string())?;
+                }
+                _ => (),
+            },
+            _ => (),
         },
 
         Some(Commands::Note { id, command }) => match (id, command) {
@@ -157,10 +165,15 @@ fn main() -> Result<(), CliError> {
                 _ => (),
             },
             (None, command) => match command {
-                Some(NoteCommands::New { id }) => {
+                Some(NoteCommands::Add { id }) => {
                     let mut db = Db::load()?;
                     let id = id.unwrap_or_else(|| read_input("ID:"));
                     db.note_new(id.trim().to_string())?;
+                }
+                Some(NoteCommands::Filter { id, partner }) => {
+                    let db = Db::load()?;
+                    let res = db.note_filter(id, partner);
+                    res.iter().for_each(|res| println!("{res}"));
                 }
                 _ => (),
             },

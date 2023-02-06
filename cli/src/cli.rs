@@ -21,6 +21,7 @@ pub enum Commands {
     Push,
     Clone,
     Account {
+        #[arg(required = true)]
         id: Option<String>,
         #[command(subcommand)]
         command: Option<AccountCommands>,
@@ -44,40 +45,38 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum AccountCommands {
     All,
-    New {
+    Add {
         #[arg(long)]
         id: Option<String>,
         #[arg(long)]
         name: Option<String>,
     },
-    Remove {
-        id: String,
-    },
-    SetName {
-        id: String,
+    Remove,
+    Set {
+        #[arg(long)]
+        name: Option<String>,
     },
 }
 
 #[derive(Subcommand)]
 pub enum PartnerCommands {
     All,
-    New {
+    Add {
         #[arg(long)]
         id: Option<String>,
         #[arg(long)]
         name: Option<String>,
     },
-    Remove {
-        id: String,
-    },
-    SetName {
-        id: String,
+    Remove,
+    Set {
+        #[arg(long)]
+        name: Option<String>,
     },
 }
 
 #[derive(Subcommand)]
 pub enum NoteCommands {
-    New {
+    Add {
         #[arg(long)]
         id: Option<String>,
     },
@@ -124,5 +123,11 @@ pub enum NoteCommands {
         credit: String,
         #[arg(short, long)]
         amount: String,
+    },
+    Filter {
+        #[arg(short, long)]
+        id: Option<String>,
+        #[arg(short, long)]
+        partner: Option<String>,
     },
 }

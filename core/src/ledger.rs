@@ -73,22 +73,22 @@ impl<'a> Display for MonthlySummary<'a> {
             let row = vec![
                 (&self.accounts[account_index].id).cell(),
                 (textwrap::fill(&self.accounts[account_index].name, 20)).cell(),
-                (account_summary.balance_opening).cell(),
-                (account_summary.turnover_debit).cell(),
-                (account_summary.turnover_credit).cell(),
-                (account_summary.balance_closing).cell(),
+                (account_summary.balance_opening.separate_with_underscores()).cell(),
+                (account_summary.turnover_debit.separate_with_underscores()).cell(),
+                (account_summary.turnover_credit.separate_with_underscores()).cell(),
+                (account_summary.balance_closing.separate_with_underscores()).cell(),
             ];
             transactions.push(row);
         }
         let res = transactions
             .table()
             .title(vec![
-                "Account ID".cell().italic(true),
-                "Account name".cell().italic(true),
-                "Balance opening".cell().italic(true),
-                "Debit turnover".cell().italic(true),
-                "Credit turnover".cell().italic(true),
-                "Balance closing".cell().italic(true),
+                "Account\nID".cell().italic(true),
+                "Account\nname".cell().italic(true),
+                "Balance\nopening".cell().italic(true),
+                "Debit\nturnover".cell().italic(true),
+                "Credit\nturnover".cell().italic(true),
+                "Balance\nclosing".cell().italic(true),
             ])
             .display()
             .unwrap();
