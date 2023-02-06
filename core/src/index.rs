@@ -3,7 +3,7 @@ use crate::{
     blob::Blob,
     context::{Context, CtxError},
     fs::{binary_init, binary_init_empty, binary_read, binary_update, is_project_cwd, FsError},
-    ledger::Ledger,
+    ledger::{Ledger, MonthlySummary},
     note::Note,
     partner::Partner,
     prelude::{path_helper, CliDisplay, CliError},
@@ -241,8 +241,8 @@ impl DbInner {
         note.set_transaction(amount, debit, credit, comment)?;
         Ok(())
     }
-    pub fn get_ledger(&mut self, month: Option<u32>) {
-        self.ledger.get(&self.accounts, &self.notes, None);
+    pub fn get_ledger(&mut self, month: Option<u32>) -> Result<MonthlySummary, CliError> {
+        self.ledger.get(&self.accounts, &self.notes, None)
     }
 }
 

@@ -58,18 +58,20 @@ impl Display for AccountSummary {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct MonthlySummary {
-    accounts: Vec<(AccountSummary)>,
+pub struct MonthlySummary<'a> {
+    accounts: &'a Vec<Account>,
+    ledger: &'a Vec<AccountSummary>,
 }
 
-impl MonthlySummary {
-    fn init(accounts: &Vec<Account>) -> Self {
-        let mut res = Self { accounts: vec![] };
-        accounts
-            .iter()
-            .for_each(|_| res.accounts.push(AccountSummary::default()));
-        res
+impl<'a> MonthlySummary<'a> {
+    fn new(accounts: &'a Vec<Account>, ledger: &'a Vec<AccountSummary>) -> Self {
+        Self { accounts, ledger }
+    }
+}
+
+impl<'a> Display for MonthlySummary<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Ledger result")
     }
 }
 
@@ -79,7 +81,7 @@ pub struct Ledger {
     accounts: Vec<Account>,
     // 2D array; 12month;
     // Monthly results
-    ledger: [MonthlySummary; 12],
+    ledger: [Vec<AccountSummary>; 12],
     // If
     should_update: bool,
     // Total notes we tried to use
@@ -91,12 +93,12 @@ pub struct Ledger {
 }
 
 impl Ledger {
-    pub fn get(
-        &mut self,
-        accounts: &Vec<Account>,
-        notes: &Vec<Note>,
+    pub fn get<'a>(
+        &'a mut self,
+        accounts: &'a Vec<Account>,
+        notes: &'a Vec<Note>,
         month: Option<u32>,
-    ) -> Result<&MonthlySummary, CliError> {
+    ) -> Result<MonthlySummary<'a>, CliError> {
         // Try to get query month ID
         let month_index = match month {
             Some(i) => match i {
@@ -120,10 +122,7 @@ impl Ledger {
                 .iter()
                 .for_each(|a| self.accounts.push(a.to_owned()));
             // Clear ledger
-            let monthly_summary = MonthlySummary::init(accounts);
-            (0..11)
-                .into_iter()
-                .for_each(|i| self.ledger[i] = monthly_summary.clone());
+            self.ledger = Default::default();
             // Set total notes to 0;
             self.total_notes = 0;
             // Set processed_notes to 0;
@@ -132,12 +131,15 @@ impl Ledger {
             self.notes_with_error = vec![];
             // Update
             let data = self.calculate_year(accounts, notes);
+            // Set ledger
             println!("{:?}", data);
         }
         // Get
         let res = &self.ledger[month_index as usize];
-        // Return result
-        Ok(res)
+        // Set monthly data
+
+        // Return monthly summary
+        Ok(MonthlySummary::new(accounts, res))
     }
     // Set for update manually
     pub fn set_should_update(&mut self) {

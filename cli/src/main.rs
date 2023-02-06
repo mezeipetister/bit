@@ -166,7 +166,8 @@ fn main() -> Result<(), CliError> {
 
         Some(Commands::Ledger { month }) => {
             let mut db = Db::load()?;
-            db.get_ledger(month);
+            let res = db.get_ledger(month)?;
+            println!("{res}");
         }
 
         None => {}
