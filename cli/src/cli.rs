@@ -21,7 +21,6 @@ pub enum Commands {
     Push,
     Clone,
     Account {
-        #[arg(required = true)]
         id: Option<String>,
         #[command(subcommand)]
         command: Option<AccountCommands>,
