@@ -20,6 +20,7 @@ pub enum Commands {
     Pull,
     Push,
     Clone,
+    Check,
     Account {
         id: Option<String>,
         #[command(subcommand)]
