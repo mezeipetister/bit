@@ -174,6 +174,15 @@ enum Status {
   Conflict,
 }
 
+// Data layer to sync with storage documents
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DocRef<T> {
+  // Storage Object unique ID
+  doc_id: Uuid,
+  data: T,
+  last_aob_id: Uuid,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Document<A>
 where
@@ -197,7 +206,7 @@ where
   /// and add it to the given Document
   pub fn patch(&mut self, ctx: &Context, action: A) -> Result<(), String> {
     let aob = self.create_aob(ctx, ActionKind::Patch(action))?;
-    self.add_aob(aob);
+    self.add_aob(aob)?;
     Ok(())
   }
 
