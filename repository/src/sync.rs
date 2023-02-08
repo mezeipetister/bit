@@ -763,6 +763,9 @@ impl RepoDetails {
     // Return repo details
     Ok(repo_details)
   }
+  fn save_fs(&self, ctx: &Context) -> Result<(), String> {
+    binary_update(path_helper::repo_details(ctx), self.to_owned())
+  }
   fn document_get<
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   >(
@@ -778,7 +781,7 @@ impl RepoDetails {
   fn document_create<
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   >(
-    &self,
+    &mut self,
     ctx: &Context,
     aob: ActionObject<A>,
   ) -> Result<Document<A>, String> {
@@ -797,6 +800,11 @@ impl RepoDetails {
           crate::prelude::path_helper::storage_object_path(ctx, new_doc.id),
           new_doc.clone(),
         )?;
+        // Insert doc id
+        self.document_ids.insert(new_doc.id);
+        // Save repo details
+        self.save_fs(ctx)?;
+        // Return new doc
         Ok(new_doc)
       }
       ActionKind::Patch(_) => {
@@ -827,14 +835,14 @@ impl Repository {
   pub fn add_aob<
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   >(
-    &self,
+    &mut self,
     new_aob: ActionObject<A>,
     index: &mut impl IndexExt<ActionType = A>,
   ) -> Result<(), String> {
     let doc = match &new_aob.action {
       ActionKind::Create(_) => {
-        let ctx = self.ctx();
-        self.repo_details.document_create(ctx, new_aob)?
+        let ctx = self.ctx().to_owned();
+        self.repo_details.document_create(&ctx, new_aob)?
       }
       ActionKind::Patch(_) => {
         let doc: Document<A> = self.get_doc(new_aob.object_id)?;

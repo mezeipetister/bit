@@ -60,6 +60,7 @@ pub enum AccountCommands {
         name: Option<String>,
     },
     Remove,
+    Restore,
     Set {
         #[arg(long)]
         name: Option<String>,
@@ -131,6 +132,8 @@ pub enum NoteCommands {
         credit: String,
         #[arg(short, long)]
         amount: String,
+        #[arg(short, long)]
+        comment: Option<String>,
     },
     Filter {
         #[arg(short, long)]

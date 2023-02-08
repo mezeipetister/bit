@@ -112,6 +112,10 @@ fn main() -> Result<(), CliError> {
                         db.account_remove(&id)?;
                     }
                 }
+                AccountCommands::Restore => {
+                    let mut db = IndexDb::load()?;
+                    db.account_restore(&id)?;
+                }
                 AccountCommands::Set { name } => {
                     let mut db = IndexDb::load()?;
                     let name = name.unwrap_or_else(|| read_input("New name:"));
@@ -180,13 +184,12 @@ fn main() -> Result<(), CliError> {
                     debit,
                     credit,
                     amount,
+                    comment,
                 }) => {
                     let mut db = IndexDb::load()?;
                     let debit = db.account_get(&debit)?.to_owned();
                     let credit = db.account_get(&credit)?.to_owned();
-                    let note = db.note_get_mut(&id)?;
-                    // note.set_transaction(amount.parse().unwrap(), debit, credit, None)?;
-                    // TODO! Implement this
+                    db.note_set_transaction(&id, debit, credit, amount.parse().unwrap(), comment)?;
                 }
                 Some(NoteCommands::Set {
                     description,
@@ -249,7 +252,7 @@ fn main() -> Result<(), CliError> {
                 Some(NoteCommands::Add { id }) => {
                     let mut db = IndexDb::load()?;
                     let id = id.unwrap_or_else(|| read_input("ID:"));
-                    db.note_new(id.trim().to_string())?;
+                    db.note_add(id.trim().to_string())?;
                 }
                 Some(NoteCommands::Filter { id, partner }) => {
                     let db = IndexDb::load()?;

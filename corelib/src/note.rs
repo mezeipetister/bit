@@ -32,6 +32,9 @@ impl ActionPatch<BitAction> for Note {
     const storage_id: &'static str = "note";
     fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
         match action {
+            BitAction::NoteCreate { id } => {
+                self.id = Some(id);
+            }
             BitAction::NoteSet {
                 partner,
                 description,

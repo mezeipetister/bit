@@ -15,10 +15,18 @@ pub enum BitAction {
         name: String,
     },
     AccountRemove,
+    AccountRestore,
+    PartnerCreate {
+        id: String,
+        name: String,
+    },
     PartnerRename {
         name: String,
     },
     PartnerRemove,
+    NoteCreate {
+        id: String,
+    },
     NoteSet {
         partner: Option<String>,
         description: Option<String>,
@@ -55,8 +63,11 @@ impl Display for BitAction {
         write!(f, "Rename account to: {name}")
       }
       BitAction::AccountRemove => write!(f, "Remove account"),
+      BitAction::AccountRestore => write!(f, "Restore account"),
+      BitAction::PartnerCreate{id, name} => write!(f, "Partner created {id} {name}"),
       BitAction::PartnerRename { name } => write!(f, "Rename partner to: {name}"),
       BitAction::PartnerRemove => write!(f, "Remove partner"),
+      BitAction::NoteCreate { id } => write!(f, "Note created"),
       BitAction::NoteSet {
         partner,
         description,

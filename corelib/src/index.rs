@@ -127,6 +127,174 @@ impl IndexDb {
             }
         }
     }
+    fn account_patch(&mut self, id: &str, patch: BitAction) -> Result<(), CliError> {
+        let account = self
+            .accounts
+            .iter()
+            .find(|a| a.deref().id() == id)
+            .ok_or(CliError::Error("Account not found".to_string()))?;
+        let aob = account
+            .create_aob(&self.repository, patch)
+            .map_err(|e| CliError::Error(e))?;
+        self.repository.add_aob(aob, &mut self.inner).unwrap();
+        self.account_sort();
+        Ok(())
+    }
+    pub fn account_remove(&mut self, id: &str) -> Result<(), CliError> {
+        self.account_patch(id, BitAction::AccountRemove)?;
+        Ok(())
+    }
+    pub fn account_restore(&mut self, id: &str) -> Result<(), CliError> {
+        self.account_patch(id, BitAction::AccountRestore)?;
+        Ok(())
+    }
+    pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
+        self.account_patch(id, BitAction::AccountRename { name })?;
+        Ok(())
+    }
+    fn partner_patch(&mut self, id: &str, patch: BitAction) -> Result<(), CliError> {
+        let partner = self
+            .partners
+            .iter()
+            .find(|a| a.deref().id == id)
+            .ok_or(CliError::Error("Partner not found".to_string()))?;
+        let aob = partner
+            .create_aob(&self.repository, patch)
+            .map_err(|e| CliError::Error(e))?;
+        self.repository.add_aob(aob, &mut self.inner).unwrap();
+        self.account_sort();
+        Ok(())
+    }
+    pub fn partner_add(&mut self, id: String, name: String) -> Result<(), CliError> {
+        if self.partner_get(&id).is_ok() {
+            return Err(CliError::Error("Partner id is taken".to_string()));
+        }
+        let aob = self.partners.create_init_aob(
+            BitAction::PartnerCreate { id, name },
+            "mezeipetister".to_string(),
+        );
+        self.repository.add_aob(aob, &mut self.inner).unwrap();
+        self.account_sort();
+        Ok(())
+    }
+    pub fn partner_remove(&mut self, id: &str) -> Result<(), CliError> {
+        let _ = self.partner_get(id)?;
+        self.partners.retain(|a| a.id != id);
+        Ok(())
+    }
+    pub fn partner_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
+        let a = self.partner_get_mut(id)?;
+        a.name = name;
+        Ok(())
+    }
+    pub fn note_add(&mut self, id: String) -> Result<(), CliError> {
+        if self.note_get(&id).is_ok() {
+            return Err(CliError::Error("Note id is taken".to_string()));
+        }
+        let aob = self
+            .notes
+            .create_init_aob(BitAction::NoteCreate { id }, "mezeipetister".to_string());
+        self.repository.add_aob(aob, &mut self.inner).unwrap();
+        Ok(())
+    }
+    fn note_patch(&mut self, id: &str, patch: BitAction) -> Result<(), CliError> {
+        let note = self
+            .notes
+            .iter()
+            .find(|a| a.deref().id.as_deref() == Some(id))
+            .ok_or(CliError::Error("Note not found".to_string()))?;
+        let aob = note
+            .create_aob(&self.repository, patch)
+            .map_err(|e| CliError::Error(e))?;
+        self.repository.add_aob(aob, &mut self.inner).unwrap();
+        Ok(())
+    }
+    pub fn note_set(
+        &mut self,
+        id: &str,
+        partner: Option<Partner>,
+        description: Option<String>,
+        idate: Option<NaiveDate>,
+        cdate: Option<NaiveDate>,
+        ddate: Option<NaiveDate>,
+        net: Option<f32>,
+        vat: Option<f32>,
+        gross: Option<f32>,
+    ) -> Result<(), CliError> {
+        if self.note_get(id).is_err() {
+            return Err(CliError::Error("Note not found".to_string()));
+        }
+
+        self.note_patch(
+            id,
+            BitAction::NoteSet {
+                partner: partner.map(|p| p.id),
+                description,
+                idate,
+                cdate,
+                ddate,
+                net,
+                vat,
+                gross,
+            },
+        )?;
+
+        Ok(())
+    }
+    pub fn note_unset(
+        &mut self,
+        id: &str,
+        partner: bool,
+        description: bool,
+        idate: bool,
+        cdate: bool,
+        ddate: bool,
+        net: bool,
+        vat: bool,
+        gross: bool,
+    ) -> Result<(), CliError> {
+        if self.note_get(id).is_err() {
+            return Err(CliError::Error("Note not found".to_string()));
+        }
+        // TODO! Implement repository connection
+        self.note_patch(
+            id,
+            BitAction::NoteUnset {
+                partner,
+                description,
+                idate,
+                cdate,
+                ddate,
+                net,
+                vat,
+                gross,
+            },
+        )?;
+        Ok(())
+    }
+    pub fn note_set_transaction(
+        &mut self,
+        id: &str,
+        debit: Account,
+        credit: Account,
+        amount: f32,
+        comment: Option<String>,
+    ) -> Result<(), CliError> {
+        if self.note_get(id).is_err() {
+            return Err(CliError::Error("Note not found".to_string()));
+        }
+
+        self.note_patch(
+            id,
+            BitAction::NoteSetTransaction {
+                amount,
+                debit: debit.id().to_string(),
+                credit: credit.id().to_string(),
+                comment,
+            },
+        )?;
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -212,20 +380,6 @@ impl IndexInner {
             .display()
             .unwrap()
     }
-    pub fn account_remove(&mut self, id: &str) -> Result<(), CliError> {
-        let _ = self.account_get(id)?;
-        // TODO! Implement stroage connection
-        self.accounts.retain(|a| a.id() != id);
-        self.account_sort();
-        Ok(())
-    }
-    pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
-        let a = self.account_get_mut(id)?;
-        // TODO! Implement stroage connection
-        a.rename(name);
-        self.account_sort();
-        Ok(())
-    }
     pub fn partner_exist(&self, id: &str) -> bool {
         self.partners.iter().find(|a| a.id == id).is_some()
     }
@@ -243,14 +397,6 @@ impl IndexInner {
             .map(|a| a.deref_mut())
             .ok_or(CliError::Error("Partner not found".to_string()))
     }
-    pub fn partner_add(&mut self, id: String, name: String) -> Result<(), CliError> {
-        if self.partner_get(&id).is_ok() {
-            return Err(CliError::Error("Partner id is taken".to_string()));
-        }
-        // TODO! Implement stroage connection
-        // self.partners.push(Partner { id, name });
-        Ok(())
-    }
     pub fn partner_get_all(&self) -> impl Display {
         self.partners
             .iter()
@@ -260,16 +406,6 @@ impl IndexInner {
             .table()
             .display()
             .unwrap()
-    }
-    pub fn partner_remove(&mut self, id: &str) -> Result<(), CliError> {
-        let _ = self.partner_get(id)?;
-        self.partners.retain(|a| a.id != id);
-        Ok(())
-    }
-    pub fn partner_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
-        let a = self.partner_get_mut(id)?;
-        a.name = name;
-        Ok(())
     }
     pub fn note_get(&self, id: &str) -> Result<&Note, CliError> {
         self.notes
@@ -284,58 +420,6 @@ impl IndexInner {
             .find(|n| n.id == Some(id.to_string()))
             .map(|n| n.deref_mut())
             .ok_or(CliError::Error("Not found".to_string()))
-    }
-    pub fn note_new(&mut self, id: String) -> Result<(), CliError> {
-        // TODO! Implement repository connection
-        // self.notes.push(Note::new(Some(id)));
-        Ok(())
-    }
-    pub fn note_set(
-        &mut self,
-        id: &str,
-        partner: Option<Partner>,
-        description: Option<String>,
-        idate: Option<NaiveDate>,
-        cdate: Option<NaiveDate>,
-        ddate: Option<NaiveDate>,
-        net: Option<f32>,
-        vat: Option<f32>,
-        gross: Option<f32>,
-    ) -> Result<(), CliError> {
-        let note = self.note_get_mut(id)?;
-        // TODO! Implement repository connection
-        // note.set(partner, description, idate, cdate, ddate, net, vat, gross)
-        unimplemented!()
-    }
-    pub fn note_unset(
-        &mut self,
-        id: &str,
-        partner: bool,
-        description: bool,
-        idate: bool,
-        cdate: bool,
-        ddate: bool,
-        net: bool,
-        vat: bool,
-        gross: bool,
-    ) -> Result<(), CliError> {
-        let note = self.note_get_mut(id)?;
-        // TODO! Implement repository connection
-        // note.unset(partner, description, idate, cdate, ddate, net, vat, gross)
-        unimplemented!()
-    }
-    pub fn note_set_transaction(
-        &mut self,
-        id: &str,
-        debit: Account,
-        credit: Account,
-        amount: f32,
-        comment: Option<String>,
-    ) -> Result<(), CliError> {
-        let note = self.note_get_mut(id)?;
-        // TODO! Implement repository connection
-        // note.set_transaction(amount, debit, credit, comment)?;
-        Ok(())
     }
     pub fn note_filter(&self, id: Option<String>, partner: Option<String>) -> Vec<String> {
         self.notes

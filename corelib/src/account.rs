@@ -25,6 +25,7 @@ impl ActionPatch<BitAction> for Account {
             }
             BitAction::AccountRename { name } => self.rename(name),
             BitAction::AccountRemove => self.remove(),
+            BitAction::AccountRestore => self.restore(),
             _ => panic!("Just account action can be processed for accounts"),
         }
     }
@@ -62,5 +63,8 @@ impl Account {
     }
     pub fn remove(&mut self) {
         self.removed = true;
+    }
+    pub fn restore(&mut self) {
+        self.removed = false;
     }
 }

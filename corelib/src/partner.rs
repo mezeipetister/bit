@@ -17,6 +17,10 @@ impl ActionPatch<BitAction> for Partner {
     const storage_id: &'static str = "partner";
     fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
         match action {
+            BitAction::PartnerCreate { id, name } => {
+                self.id = id;
+                self.name = name;
+            }
             BitAction::PartnerRename { name } => self.set_name(name),
             BitAction::PartnerRemove => self.remove(),
             _ => panic!("Only partner action can be patched to partner"),
@@ -26,10 +30,10 @@ impl ActionPatch<BitAction> for Partner {
 
 impl Display for Partner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let table = vec![
-            vec!["ID".cell(), (&self.id).cell().justify(Justify::Right)],
-            vec!["Name".cell(), (&self.name).cell().justify(Justify::Right)],
-        ]
+        let table = vec![vec![
+            (&self.id).cell().justify(Justify::Right),
+            (&self.name).cell().justify(Justify::Right),
+        ]]
         .table()
         .title(vec!["ID".cell().bold(true), "Name".cell().bold(true)]);
         // .bold(true);
