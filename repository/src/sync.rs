@@ -1,6 +1,7 @@
 use std::{
-  collections::HashMap,
+  collections::{HashMap, HashSet},
   fmt::{Debug, Display},
+  hash::Hash,
   marker::PhantomData,
   ops::{Deref, DerefMut},
   path::PathBuf,
@@ -45,7 +46,7 @@ where
   A: ActionExt,
 {
   /// Create a new empty object
-  Create,
+  Create(A),
   /// Patch object with action A
   Patch(A),
 }
@@ -93,7 +94,7 @@ where
   }
   // Check if create
   fn is_kind_create(&self) -> bool {
-    if let ActionKind::Create = self.action {
+    if let ActionKind::Create(_) = self.action {
       return true;
     }
     false
@@ -167,6 +168,7 @@ pub enum Status {
 }
 
 pub trait ActionPatch<A: ActionExt>: Default {
+  const storage_id: &'static str;
   fn patch(&mut self, action: A, dtime: DateTime<Utc>, uid: &str);
 }
 
@@ -203,8 +205,8 @@ where
     repository: &Repository,
     patch: A,
   ) -> Result<ActionObject<A>, String> {
+    let doc: Document<A> = repository.get_doc(self.object_id)?;
     let ctx = repository.ctx();
-    let doc: Document<A> = repository.get(self.object_id)?;
     let res = doc.create_aob(ctx, ActionKind::Patch(patch))?;
     Ok(res)
   }
@@ -289,11 +291,31 @@ where
       .unwrap_or(0);
     let aobs_to_update = &doc.actions[pos..];
     for i in aobs_to_update {
+      if let ActionKind::Create(p) = &i.action {
+        r.patch(p.to_owned(), i.dtime, &i.uid);
+      }
       if let ActionKind::Patch(p) = &i.action {
         r.patch(p.to_owned(), i.dtime, &i.uid);
       }
     }
     Ok(())
+  }
+  pub fn create_init_aob(
+    &self,
+    init_action: A,
+    uid: String,
+  ) -> ActionObject<A> {
+    ActionObject {
+      id: Uuid::new_v4(),
+      storage_id: T::storage_id.to_string(),
+      object_id: Uuid::new_v4(),
+      uid,
+      dtime: Utc::now(),
+      commit_id: None,
+      parent_action_id: None,
+      action: ActionKind::Create(init_action),
+      remote_signature: None,
+    }
   }
 }
 
@@ -362,7 +384,7 @@ where
 {
   // Find AOB place in actions
   // and insert it
-  fn add_aob(&mut self, new_aob: ActionObject<A>) -> Result<(), String> {
+  fn add_aob(mut self, new_aob: ActionObject<A>) -> Result<Self, String> {
     match new_aob.is_local() {
       true => self.actions.push(new_aob),
       false => {
@@ -385,7 +407,7 @@ where
         }
       }
     }
-    Ok(())
+    Ok(self)
   }
 
   // Check wether StorageObject is only local
@@ -719,7 +741,7 @@ impl Mode {
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct RepoDetails {
   mode: Mode,
-  storage_ids: HashMap<String, Vec<Uuid>>,
+  document_ids: HashSet<Uuid>,
 }
 
 impl RepoDetails {
@@ -741,6 +763,47 @@ impl RepoDetails {
     // Return repo details
     Ok(repo_details)
   }
+  fn document_get<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &self,
+    ctx: &Context,
+    document_id: Uuid,
+  ) -> Result<Document<A>, String> {
+    if let Some(doc_id) = self.document_ids.get(&document_id) {
+      return Document::read_from_fs(ctx, *doc_id);
+    }
+    Err("No document by id found".to_string())
+  }
+  fn document_create<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &self,
+    ctx: &Context,
+    aob: ActionObject<A>,
+  ) -> Result<Document<A>, String> {
+    if self.document_get::<A>(ctx, aob.object_id).is_ok() {
+      return Err("Document already exist".to_string());
+    }
+    match &aob.action {
+      ActionKind::Create(init_action) => {
+        let new_doc: Document<A> = Document {
+          id: aob.object_id,
+          storage_id: aob.storage_id.to_string(),
+          actions: vec![aob],
+          status: Status::Ok,
+        };
+        crate::fs::binary_init(
+          crate::prelude::path_helper::storage_object_path(ctx, new_doc.id),
+          new_doc.clone(),
+        )?;
+        Ok(new_doc)
+      }
+      ActionKind::Patch(_) => {
+        Err("Aob must be create action kind to create new document".to_string())
+      }
+    }
+  }
 }
 
 #[derive(Debug)]
@@ -750,6 +813,37 @@ pub struct Repository {
 }
 
 impl Repository {
+  fn get_doc<A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug>(
+    &self,
+    document_id: Uuid,
+  ) -> Result<Document<A>, String> {
+    let ctx = self.ctx();
+    self.repo_details.document_get(ctx, document_id)
+  }
+  pub fn get_staging_aobs<A: ActionExt>(&self) -> Vec<ActionObject<A>> {
+    let mut res = vec![];
+    res
+  }
+  pub fn add_aob<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &self,
+    new_aob: ActionObject<A>,
+    index: &mut impl IndexExt<ActionType = A>,
+  ) -> Result<(), String> {
+    let doc = match &new_aob.action {
+      ActionKind::Create(_) => {
+        let ctx = self.ctx();
+        self.repo_details.document_create(ctx, new_aob)?
+      }
+      ActionKind::Patch(_) => {
+        let doc: Document<A> = self.get_doc(new_aob.object_id)?;
+        doc.add_aob(new_aob)?
+      }
+    };
+    index.sync_doc(&doc)?;
+    Ok(())
+  }
   fn ctx(&self) -> &Context {
     &self.ctx
   }

@@ -16,8 +16,13 @@ pub struct Account {
 }
 
 impl ActionPatch<BitAction> for Account {
+    const storage_id: &'static str = "account";
     fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
         match action {
+            BitAction::AccountCreate { id, name } => {
+                self.id = id;
+                self.name = name;
+            }
             BitAction::AccountRename { name } => self.rename(name),
             BitAction::AccountRemove => self.remove(),
             _ => panic!("Just account action can be processed for accounts"),

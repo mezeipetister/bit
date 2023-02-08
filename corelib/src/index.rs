@@ -113,6 +113,20 @@ impl IndexDb {
         binary_update(path_helper::index(&self.ctx), &self.inner)
             .expect("Error writing bit db to fs");
     }
+    pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
+        match self.account_get(&id) {
+            Ok(_) => return Err(CliError::Error("Account id is taken".to_string())),
+            Err(_) => {
+                let aob = self.accounts.create_init_aob(
+                    BitAction::AccountCreate { id, name },
+                    "mezeipetister".to_string(),
+                );
+                self.repository.add_aob(aob, &mut self.inner).unwrap();
+                self.account_sort();
+                Ok(())
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -134,9 +148,9 @@ impl repository::sync::IndexExt for IndexInner {
 
     fn sync_doc(&mut self, doc: &Document<Self::ActionType>) -> Result<(), String> {
         let res = match doc.storage_id.as_str() {
-            "accounts" => self.accounts.sync_with_doc(doc),
-            "notes" => self.notes.sync_with_doc(doc),
-            "partners" => self.partners.sync_with_doc(doc),
+            "account" => self.accounts.sync_with_doc(doc),
+            "note" => self.notes.sync_with_doc(doc),
+            "partner" => self.partners.sync_with_doc(doc),
             _ => panic!("No storage found by id"),
         };
         Ok(())
@@ -186,15 +200,6 @@ impl IndexInner {
             .find(|a| a.id() == id)
             .map(|i| i.deref_mut())
             .ok_or(CliError::Error("Account not found".to_string()))
-    }
-    pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
-        if self.account_get(&id).is_ok() {
-            return Err(CliError::Error("Account id is taken".to_string()));
-        }
-        // todo! Implement
-        // self.accounts.push(Account { id, name });
-        self.account_sort();
-        Ok(())
     }
     pub fn account_get_all(&self) -> impl Display {
         self.accounts

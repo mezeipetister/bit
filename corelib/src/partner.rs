@@ -14,6 +14,7 @@ pub struct Partner {
 }
 
 impl ActionPatch<BitAction> for Partner {
+    const storage_id: &'static str = "partner";
     fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
         match action {
             BitAction::PartnerRename { name } => self.set_name(name),
