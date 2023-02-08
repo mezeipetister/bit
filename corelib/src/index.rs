@@ -118,10 +118,9 @@ impl IndexDb {
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct DbInner {
     accounts: DocRefVec<Account, BitAction>,
-    notes: Vec<Note>,
+    notes: DocRefVec<Note, BitAction>,
     ledger: Ledger,
-    partners: Vec<Partner>,
-    blobs: Vec<Blob>,
+    partners: DocRefVec<Partner, BitAction>,
 }
 
 impl repository::sync::Index for DbInner {
@@ -169,44 +168,56 @@ impl DbInner {
         Ok(res)
     }
     pub fn account_exist(&self, id: &str) -> bool {
-        self.accounts.iter().find(|a| a.id == id).is_some()
+        self.accounts.iter().find(|a| a.id() == id).is_some()
     }
     pub fn account_sort(&mut self) {
-        self.accounts.sort_by(|a, b| a.id.cmp(&b.id));
+        self.accounts.sort_by(|a, b| a.id().cmp(&b.id()));
     }
     pub fn account_get(&self, id: &str) -> Result<&Account, CliError> {
         self.accounts
             .iter()
-            .find(|a| a.id == id)
+            .find(|a| a.deref().id() == id)
+            .map(|i| i.deref())
             .ok_or(CliError::Error("Account not found".to_string()))
     }
     pub fn account_get_mut(&mut self, id: &str) -> Result<&mut Account, CliError> {
         self.accounts
-            .deref_mut()
             .iter_mut()
-            .find(|a| a.id == id)
+            .find(|a| a.id() == id)
+            .map(|i| i.deref_mut())
             .ok_or(CliError::Error("Account not found".to_string()))
     }
     pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
         if self.account_get(&id).is_ok() {
             return Err(CliError::Error("Account id is taken".to_string()));
         }
-        self.accounts.push(Account { id, name });
+        // todo! Implement
+        // self.accounts.push(Account { id, name });
         self.account_sort();
         Ok(())
     }
     pub fn account_get_all(&self) -> impl Display {
-        (&self.accounts).with_title().table().display().unwrap()
+        self.accounts
+            .deref()
+            .iter()
+            .map(|a| a.deref())
+            .collect::<Vec<&Account>>()
+            .with_title()
+            .table()
+            .display()
+            .unwrap()
     }
     pub fn account_remove(&mut self, id: &str) -> Result<(), CliError> {
         let _ = self.account_get(id)?;
-        self.accounts.retain(|a| a.id != id);
+        // TODO! Implement stroage connection
+        self.accounts.retain(|a| a.id() != id);
         self.account_sort();
         Ok(())
     }
     pub fn account_rename(&mut self, id: &str, name: String) -> Result<(), CliError> {
         let a = self.account_get_mut(id)?;
-        a.name = name;
+        // TODO! Implement stroage connection
+        a.rename(name);
         self.account_sort();
         Ok(())
     }
@@ -217,23 +228,33 @@ impl DbInner {
         self.partners
             .iter()
             .find(|a| a.id == id)
+            .map(|a| a.deref())
             .ok_or(CliError::Error("Partner not found".to_string()))
     }
     pub fn partner_get_mut(&mut self, id: &str) -> Result<&mut Partner, CliError> {
         self.partners
             .iter_mut()
             .find(|a| a.id == id)
+            .map(|a| a.deref_mut())
             .ok_or(CliError::Error("Partner not found".to_string()))
     }
     pub fn partner_add(&mut self, id: String, name: String) -> Result<(), CliError> {
         if self.partner_get(&id).is_ok() {
             return Err(CliError::Error("Partner id is taken".to_string()));
         }
-        self.partners.push(Partner { id, name });
+        // TODO! Implement stroage connection
+        // self.partners.push(Partner { id, name });
         Ok(())
     }
     pub fn partner_get_all(&self) -> impl Display {
-        (&self.partners).with_title().table().display().unwrap()
+        self.partners
+            .iter()
+            .map(|p| p.deref())
+            .collect::<Vec<&Partner>>()
+            .with_title()
+            .table()
+            .display()
+            .unwrap()
     }
     pub fn partner_remove(&mut self, id: &str) -> Result<(), CliError> {
         let _ = self.partner_get(id)?;
@@ -249,16 +270,19 @@ impl DbInner {
         self.notes
             .iter()
             .find(|n| n.id == Some(id.to_string()))
+            .map(|n| n.deref())
             .ok_or(CliError::Error("Not found".to_string()))
     }
     pub fn note_get_mut(&mut self, id: &str) -> Result<&mut Note, CliError> {
         self.notes
             .iter_mut()
             .find(|n| n.id == Some(id.to_string()))
+            .map(|n| n.deref_mut())
             .ok_or(CliError::Error("Not found".to_string()))
     }
     pub fn note_new(&mut self, id: String) -> Result<(), CliError> {
-        self.notes.push(Note::new(Some(id)));
+        // TODO! Implement repository connection
+        // self.notes.push(Note::new(Some(id)));
         Ok(())
     }
     pub fn note_set(
@@ -274,7 +298,9 @@ impl DbInner {
         gross: Option<f32>,
     ) -> Result<(), CliError> {
         let note = self.note_get_mut(id)?;
-        note.set(partner, description, idate, cdate, ddate, net, vat, gross)
+        // TODO! Implement repository connection
+        // note.set(partner, description, idate, cdate, ddate, net, vat, gross)
+        unimplemented!()
     }
     pub fn note_unset(
         &mut self,
@@ -289,7 +315,9 @@ impl DbInner {
         gross: bool,
     ) -> Result<(), CliError> {
         let note = self.note_get_mut(id)?;
-        note.unset(partner, description, idate, cdate, ddate, net, vat, gross)
+        // TODO! Implement repository connection
+        // note.unset(partner, description, idate, cdate, ddate, net, vat, gross)
+        unimplemented!()
     }
     pub fn note_set_transaction(
         &mut self,
@@ -300,7 +328,8 @@ impl DbInner {
         comment: Option<String>,
     ) -> Result<(), CliError> {
         let note = self.note_get_mut(id)?;
-        note.set_transaction(amount, debit, credit, comment)?;
+        // TODO! Implement repository connection
+        // note.set_transaction(amount, debit, credit, comment)?;
         Ok(())
     }
     pub fn note_filter(&self, id: Option<String>, partner: Option<String>) -> Vec<String> {
@@ -330,7 +359,14 @@ impl DbInner {
             .collect::<Vec<String>>()
     }
     pub fn get_ledger(&mut self, month: Option<u32>) -> Result<MonthlySummary, CliError> {
-        self.ledger.get(&self.accounts, &self.notes, month)
+        self.ledger.get(
+            self.accounts
+                .iter()
+                .map(|a| a.deref())
+                .collect::<Vec<&Account>>(),
+            self.notes.iter().map(|n| n.deref()).collect::<Vec<&Note>>(),
+            month,
+        )
     }
     pub fn ledger_set_should_update(&mut self) {
         self.ledger.set_should_update();

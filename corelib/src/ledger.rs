@@ -53,12 +53,12 @@ impl<'a> Add for &'a AccountSummary {
 
 #[derive(Debug)]
 pub struct MonthlySummary<'a> {
-    accounts: &'a Vec<Account>,
+    accounts: Vec<&'a Account>,
     ledger: &'a Vec<AccountSummary>,
 }
 
 impl<'a> MonthlySummary<'a> {
-    fn new(accounts: &'a Vec<Account>, ledger: &'a Vec<AccountSummary>) -> Self {
+    fn new(accounts: Vec<&'a Account>, ledger: &'a Vec<AccountSummary>) -> Self {
         Self { accounts, ledger }
     }
 }
@@ -71,8 +71,8 @@ impl<'a> Display for MonthlySummary<'a> {
         // unimplemented!();
         for (account_index, account_summary) in self.ledger.iter().enumerate() {
             let row = vec![
-                (&self.accounts[account_index].id).cell(),
-                (textwrap::fill(&self.accounts[account_index].name, 20)).cell(),
+                (&self.accounts[account_index].id()).cell(),
+                (textwrap::fill(&self.accounts[account_index].name(), 20)).cell(),
                 (account_summary.balance_opening.separate_with_underscores()).cell(),
                 (account_summary.turnover_debit.separate_with_underscores()).cell(),
                 (account_summary.turnover_credit.separate_with_underscores()).cell(),
@@ -116,8 +116,8 @@ pub struct Ledger {
 impl Ledger {
     pub fn get<'a>(
         &'a mut self,
-        accounts: &'a Vec<Account>,
-        notes: &'a Vec<Note>,
+        accounts: Vec<&'a Account>,
+        notes: Vec<&'a Note>,
         month: Option<u32>,
     ) -> Result<MonthlySummary<'a>, CliError> {
         // Try to get query month ID
@@ -129,7 +129,7 @@ impl Ledger {
             None => Utc::now().month0(),
         };
         // Run self test
-        self.check_should_update(accounts, notes);
+        // self.check_should_update(&accounts, &notes); // TODO! Implement this check
         // Clear itself if update needed;
         // if self.should_update {
         if true {
@@ -138,7 +138,7 @@ impl Ledger {
             // Set local accounts with latest available accounts
             accounts
                 .iter()
-                .for_each(|a| self.accounts.push(a.to_owned()));
+                .for_each(|a| self.accounts.push((*a).to_owned()));
             // Clear ledger
             self.ledger = Default::default();
             // Set total notes to 0;
@@ -148,7 +148,7 @@ impl Ledger {
             // Set notes with error to 0;
             self.notes_with_error = vec![];
             // Update
-            let data = self.calculate_year(accounts, notes);
+            let data = self.calculate_year(&accounts, &notes);
             // Set ledger
             // Set monthly data
             (0..12).into_iter().for_each(|month0| {
@@ -179,27 +179,21 @@ impl Ledger {
         // Get
         let res = &self.ledger[month_index as usize];
         // Return monthly summary
-        Ok(MonthlySummary::new(accounts, res))
+        Ok(MonthlySummary::new(accounts, &res))
     }
     // Set for update manually
     pub fn set_should_update(&mut self) {
         self.should_update = true;
     }
-    fn check_should_update(&mut self, accounts: &Vec<Account>, notes: &Vec<Note>) {
-        // Check if categories are the same
-        if &self.accounts != accounts {
-            self.should_update = true;
-        }
-    }
     fn calculate_year(
         &mut self,
-        accounts: &Vec<Account>,
-        notes: &Vec<Note>,
+        accounts: &Vec<&Account>,
+        notes: &Vec<&Note>,
     ) -> [Vec<AccountSummary>; 12] {
         // Init account hash lookup table
         let mut account_lookup: HashMap<String, usize> = HashMap::new();
         accounts.iter().enumerate().for_each(|(i, a)| {
-            account_lookup.insert(a.id.to_string(), i);
+            account_lookup.insert(a.id().to_string(), i);
         });
 
         // Init data to calculate width

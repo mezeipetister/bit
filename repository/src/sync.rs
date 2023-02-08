@@ -176,7 +176,7 @@ enum Status {
 }
 
 pub trait ActionPatch<A: ActionExt> {
-  fn patch(&mut self, action: A);
+  fn patch(&mut self, action: A, dtime: DateTime<Utc>, uid: &str);
 }
 
 // Data layer to sync with storage documents
@@ -192,6 +192,28 @@ where
   action: PhantomData<A>,
 }
 
+impl<T, A> Deref for DocRef<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  type Target = T;
+
+  fn deref(&self) -> &Self::Target {
+    &self.data
+  }
+}
+
+impl<T, A> DerefMut for DocRef<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  fn deref_mut(&mut self) -> &mut Self::Target {
+    &mut self.data
+  }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DocRefVec<T, A>
 where
@@ -200,6 +222,28 @@ where
 {
   doc_refs: Vec<DocRef<T, A>>,
   action: PhantomData<A>,
+}
+
+impl<T, A> Deref for DocRefVec<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  type Target = Vec<DocRef<T, A>>;
+
+  fn deref(&self) -> &Self::Target {
+    &self.doc_refs
+  }
+}
+
+impl<T, A> DerefMut for DocRefVec<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  fn deref_mut(&mut self) -> &mut Self::Target {
+    &mut self.doc_refs
+  }
 }
 
 impl<T, A> Default for DocRefVec<T, A>

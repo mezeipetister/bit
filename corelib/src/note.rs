@@ -1,10 +1,10 @@
-use std::fmt::Display;
-
 use chrono::NaiveDate;
 use cli_table::{format::Justify, Cell, Style, Table};
+use repository::sync::ActionPatch;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
-use crate::{account::Account, partner::Partner, prelude::CliError};
+use crate::{account::Account, actions::BitAction, partner::Partner, prelude::CliError};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Transaction {
@@ -26,6 +26,40 @@ pub struct Note {
     pub vat: Option<f32>,               // Note total vat amount
     pub gross: Option<f32>,             // Note total gross value
     pub transactions: Vec<Transaction>, // Transactions
+}
+
+impl ActionPatch<BitAction> for Note {
+    fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
+        match action {
+            BitAction::NoteSet {
+                partner,
+                description,
+                idate,
+                cdate,
+                ddate,
+                net,
+                vat,
+                gross,
+            } => self.set(partner, description, idate, cdate, ddate, net, vat, gross),
+            BitAction::NoteUnset {
+                partner,
+                description,
+                idate,
+                cdate,
+                ddate,
+                net,
+                vat,
+                gross,
+            } => self.unset(partner, description, idate, cdate, ddate, net, vat, gross),
+            BitAction::NoteSetTransaction {
+                debit,
+                credit,
+                amount,
+                comment,
+            } => self.set_transaction(amount, debit, credit, comment),
+            _ => panic!("Just note actions can be patched to a note"),
+        }
+    }
 }
 
 impl Display for Note {
@@ -120,7 +154,7 @@ impl Note {
     }
     pub fn set(
         &mut self,
-        partner: Option<Partner>,
+        partner: Option<String>,
         description: Option<String>,
         idate: Option<NaiveDate>,
         cdate: Option<NaiveDate>,
@@ -128,9 +162,9 @@ impl Note {
         net: Option<f32>,
         vat: Option<f32>,
         gross: Option<f32>,
-    ) -> Result<(), CliError> {
+    ) {
         if partner.is_some() {
-            self.partner = partner.map(|p| p.id);
+            self.partner = partner;
         }
         if description.is_some() {
             self.description = description;
@@ -153,7 +187,6 @@ impl Note {
         if gross.is_some() {
             self.gross = gross;
         }
-        Ok(())
     }
     pub fn unset(
         &mut self,
@@ -165,7 +198,7 @@ impl Note {
         net: bool,
         vat: bool,
         gross: bool,
-    ) -> Result<(), CliError> {
+    ) {
         if partner {
             self.partner = None;
         }
@@ -190,22 +223,20 @@ impl Note {
         if gross {
             self.gross = None;
         }
-        Ok(())
     }
     pub fn set_transaction(
         &mut self,
         amount: f32,
-        debit: Account,
-        credit: Account,
+        debit: String,
+        credit: String,
         comment: Option<String>,
-    ) -> Result<(), CliError> {
+    ) {
         self.transactions.push(Transaction {
             amount,
-            debit: debit.id.to_owned(),
-            credit: credit.id.to_owned(),
+            debit,
+            credit,
             comment,
         });
-        Ok(())
     }
     pub fn transactions(&self) -> &Vec<Transaction> {
         &self.transactions

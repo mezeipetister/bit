@@ -16,7 +16,7 @@ pub struct Account {
 }
 
 impl ActionPatch<BitAction> for Account {
-    fn patch(&mut self, action: BitAction) {
+    fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
         match action {
             BitAction::AccountRename { name } => self.rename(name),
             BitAction::AccountRemove => self.remove(),
@@ -45,6 +45,12 @@ impl Account {
             name,
             removed: false,
         }
+    }
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+    pub fn name(&self) -> &str {
+        &self.name
     }
     pub fn rename(&mut self, name: String) {
         self.name = name;

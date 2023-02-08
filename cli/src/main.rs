@@ -18,6 +18,9 @@ fn main() -> Result<(), CliError> {
             let _ = IndexDb::init(repository::sync::Mode::Local)?;
             println!("Repo inited");
         }
+        Some(Commands::Commit { message }) => println!("Commit with message {message}"),
+        Some(Commands::LocalChanges) => println!("Local changes.."),
+        Some(Commands::ClearLocalChanges) => println!("Clear local changes.."),
         Some(Commands::Pull) => {
             use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
             use std::thread;
@@ -182,7 +185,8 @@ fn main() -> Result<(), CliError> {
                     let debit = db.account_get(&debit)?.to_owned();
                     let credit = db.account_get(&credit)?.to_owned();
                     let note = db.note_get_mut(&id)?;
-                    note.set_transaction(amount.parse().unwrap(), debit, credit, None)?;
+                    // note.set_transaction(amount.parse().unwrap(), debit, credit, None)?;
+                    // TODO! Implement this
                 }
                 Some(NoteCommands::Set {
                     description,

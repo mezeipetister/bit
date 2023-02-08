@@ -19,6 +19,12 @@ pub enum Commands {
     InitLocal,
     Pull,
     Push,
+    LocalChanges,
+    ClearLocalChanges,
+    Commit {
+        #[arg(short, long)]
+        message: String,
+    },
     Clone {
         remote_address: String,
     },
