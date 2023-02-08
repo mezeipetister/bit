@@ -1,6 +1,5 @@
 use std::{
   collections::HashMap,
-  default,
   fmt::{Debug, Display},
   marker::PhantomData,
   ops::{Deref, DerefMut},
@@ -11,7 +10,6 @@ use std::{
 use chrono::{DateTime, Utc};
 use futures_util::stream;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use tonic::{transport::Server, Request};
 use uuid::Uuid;
 
@@ -123,14 +121,7 @@ where
       None => false,
     }
   }
-  fn add_signature(&mut self, sig: String) -> Result<(), String> {
-    if self.is_remote() {
-      return Err("Signature can added only for local AOB".to_string());
-    }
-    self.remote_signature = Some(sig);
-    Ok(())
-  }
-  fn sign(&mut self) {
+  fn remote_sign(&mut self) {
     // Assert we are in server mode
     // No client can sign object
     assert_eq!(
@@ -170,7 +161,7 @@ where
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-enum Status {
+pub enum Status {
   Ok,
   Conflict,
 }
@@ -195,7 +186,7 @@ where
 
 impl<T, A> DocRef<T, A>
 where
-  A: ActionExt,
+  A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   T: ActionPatch<A> + Default,
 {
   pub fn init_from_aob(aob: &ActionObject<A>) -> Self {
@@ -206,6 +197,16 @@ where
       last_aob_id: aob.id,
       action: PhantomData,
     }
+  }
+  pub fn create_aob(
+    &self,
+    repository: &Repository,
+    patch: A,
+  ) -> Result<ActionObject<A>, String> {
+    let ctx = repository.ctx();
+    let doc: Document<A> = repository.get(self.object_id)?;
+    let res = doc.create_aob(ctx, ActionKind::Patch(patch))?;
+    Ok(res)
   }
 }
 
@@ -243,12 +244,14 @@ where
 
 impl<T, A> DocRefVec<T, A>
 where
-  A: ActionExt,
+  A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   T: ActionPatch<A>,
 {
+  /// Reset all docs
   pub fn reset(&mut self) {
     self.doc_refs = vec![];
   }
+  /// Try to get object ref by object_id
   pub fn get(&self, object_id: Uuid) -> Result<&DocRef<T, A>, String> {
     let res = self
       .doc_refs
@@ -257,6 +260,7 @@ where
       .ok_or("Cannot find docref by objectid".to_string())?;
     Ok(res)
   }
+  /// Try to get mutable object ref by object id
   pub fn get_mut(
     &mut self,
     object_id: Uuid,
@@ -268,17 +272,26 @@ where
       .ok_or("Cannot find docref by objectid".to_string())?;
     Ok(res)
   }
-  pub fn add_aob(&mut self, aob: &ActionObject<A>) -> Result<(), String> {
-    match &aob.action {
-      ActionKind::Create => {
-        let res = DocRef::init_from_aob(aob);
-        self.push(res);
+  /// Sync docref by a document
+  pub fn sync_with_doc(&mut self, doc: &Document<A>) -> Result<(), String> {
+    // Check if index obj exist
+    if self.get(doc.id).is_err() {
+      // Create index obj if has not existed yet
+      self.push(DocRef::init_from_aob(doc.actions.first().unwrap()));
+    }
+    // First find index obj
+    let r = self.get_mut(doc.id)?;
+    let last_index_aob_id = r.last_aob_id;
+    let pos = doc
+      .actions
+      .iter()
+      .position(|aob| aob.id == last_index_aob_id)
+      .unwrap_or(0);
+    let aobs_to_update = &doc.actions[pos..];
+    for i in aobs_to_update {
+      if let ActionKind::Patch(p) = &i.action {
+        r.patch(p.to_owned(), i.dtime, &i.uid);
       }
-      ActionKind::Patch(p) => self.get_mut(aob.object_id)?.patch(
-        p.to_owned(),
-        aob.dtime,
-        &aob.uid.to_owned(),
-      ),
     }
     Ok(())
   }
@@ -322,9 +335,9 @@ where
 pub trait IndexExt {
   type ActionType: ActionExt;
   fn reset_docrefs(&mut self) -> Result<(), String>;
-  fn add_aob(
+  fn sync_doc(
     &mut self,
-    aob: ActionObject<Self::ActionType>,
+    doc: &Document<Self::ActionType>,
   ) -> Result<(), String>;
 }
 
@@ -334,51 +347,56 @@ where
   A: ActionExt,
 {
   // Storage Object unique ID
-  id: Uuid,
+  pub id: Uuid,
   // StorageId
-  storage_id: String,
+  pub storage_id: String,
   // Actions
-  actions: Vec<ActionObject<A>>,
+  pub actions: Vec<ActionObject<A>>,
   // Status
-  status: Status,
+  pub status: Status,
 }
 
 impl<A> Document<A>
 where
   A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
 {
-  /// Create ActionObject from Action
-  /// and add it to the given Document
-  pub fn patch(&mut self, ctx: &Context, action: A) -> Result<(), String> {
-    let aob = self.create_aob(ctx, ActionKind::Patch(action))?;
-    self.add_aob(aob)?;
+  // Find AOB place in actions
+  // and insert it
+  fn add_aob(&mut self, new_aob: ActionObject<A>) -> Result<(), String> {
+    match new_aob.is_local() {
+      true => self.actions.push(new_aob),
+      false => {
+        // find parent position
+        let position = self.actions.iter().position(|aob| {
+          if let Some(parent_action_id) = new_aob.parent_action_id {
+            aob.id == parent_action_id
+          } else {
+            false
+          }
+        });
+        match position {
+          Some(index) => {
+            self.actions.insert(index + 1, new_aob);
+            self.check_status();
+          }
+          None => {
+            return Err("Cannot insert aob; parent aob not found".to_string())
+          }
+        }
+      }
+    }
     Ok(())
   }
 
-  // Find AOB place in actions
-  // and insert it
-  fn add_aob(&mut self, aob: ActionObject<A>) -> Result<(), String> {
-    // find parent position
-    let position = self.actions.iter().position(|_aob| _aob.id == aob.id);
-    match position {
-      Some(index) => {
-        self.actions.insert(index + 1, aob);
-        self.check_status();
-        Ok(())
-      }
-      None => Err("Cannot insert aob; parent aob not found".to_string()),
-    }
-  }
-
   // Check wether StorageObject is only local
-  // True if no remote object
-  fn is_local_object(&self) -> bool {
+  // True if no remote document
+  fn is_local_document(&self) -> bool {
     self.actions.first().unwrap().remote_signature.is_none()
   }
   // Check wether StorageObject is remote
-  // True if Some remote object
-  fn is_remote_object(&self) -> bool {
-    !self.is_local_object()
+  // True if Some remote document
+  fn is_remote_document(&self) -> bool {
+    !self.is_local_document()
   }
   // Clear all local action objects
   // If object is local (no remote actions and object state)
@@ -386,10 +404,11 @@ where
   // clearing it.
   pub fn clear_local_aobs(&mut self) -> Result<(), String> {
     // Check if remote
-    assert!(
-      self.is_remote_object(),
-      "Only remote StorageObject can be cleared locally"
-    );
+    if self.is_local_document() {
+      return Err(
+        "Only remote StorageObject can be cleared locally".to_string(),
+      );
+    }
     // Clear all local actions
     self.actions.retain(|aob| aob.has_valid_signature());
     Ok(())
@@ -421,24 +440,22 @@ where
     Ok(res)
   }
   // Init storage object from FS
-  fn read_from_fs(
-    ctx: &Context,
-    storage_id: &str,
-    object_id: Uuid,
-  ) -> Result<Self, String> {
-    binary_read(path_helper::storage_object_path(ctx, storage_id, object_id))
+  fn read_from_fs(ctx: &Context, object_id: Uuid) -> Result<Self, String> {
+    binary_read(path_helper::storage_object_path(ctx, object_id))
   }
   // Update storage object file
   fn save_to_fs(&self, ctx: &Context) -> Result<(), String> {
-    let object_path =
-      path_helper::storage_object_path(ctx, &self.storage_id, self.id);
+    let object_path = path_helper::storage_object_path(ctx, self.id);
     binary_update(object_path, &self)
   }
   fn check_has_staging_aob(&self) -> bool {
-    match self.actions.last() {
-      Some(aob) => true,
-      None => false,
-    }
+    let mut res = false;
+    self.actions.iter().for_each(|aob| {
+      if aob.is_staging() {
+        res = true;
+      }
+    });
+    res
   }
   fn close_staging(&mut self, commit_id: Uuid) {
     if self.check_has_staging_aob() {

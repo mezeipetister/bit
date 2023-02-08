@@ -20,15 +20,10 @@ pub mod path_helper {
 
   use crate::sync::Context;
 
-  pub fn storage_object_path(
-    ctx: &Context,
-    storage_id: &str,
-    object_id: Uuid,
-  ) -> PathBuf {
+  pub fn storage_object_path(ctx: &Context, object_id: Uuid) -> PathBuf {
     ctx
       .db_root_path
       .join("storage_data")
-      .join(storage_id)
       .join(&object_id.as_simple().to_string())
   }
 

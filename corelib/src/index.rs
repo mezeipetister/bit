@@ -11,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use cli_table::{Table, WithTitle};
-use repository::sync::{DocRefVec, Mode, Repository};
+use repository::sync::{DocRefVec, Document, Mode, Repository};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
@@ -132,14 +132,11 @@ impl repository::sync::IndexExt for IndexInner {
         Ok(())
     }
 
-    fn add_aob(
-        &mut self,
-        aob: repository::sync::ActionObject<Self::ActionType>,
-    ) -> Result<(), String> {
-        let res = match aob.storage_id.as_str() {
-            "accounts" => self.accounts.add_aob(&aob),
-            "notes" => self.notes.add_aob(&aob),
-            "partners" => self.partners.add_aob(&aob),
+    fn sync_doc(&mut self, doc: &Document<Self::ActionType>) -> Result<(), String> {
+        let res = match doc.storage_id.as_str() {
+            "accounts" => self.accounts.sync_with_doc(doc),
+            "notes" => self.notes.sync_with_doc(doc),
+            "partners" => self.partners.sync_with_doc(doc),
             _ => panic!("No storage found by id"),
         };
         Ok(())
