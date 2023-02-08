@@ -247,7 +247,7 @@ where
 impl<T, A> DocRefVec<T, A>
 where
   A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
-  T: ActionPatch<A>,
+  T: ActionPatch<A> + Debug,
 {
   /// Reset all docs
   pub fn reset(&mut self) {
@@ -276,21 +276,23 @@ where
   }
   /// Sync docref by a document
   pub fn sync_with_doc(&mut self, doc: &Document<A>) -> Result<(), String> {
-    println!("{:?}", &doc);
     // Check if index obj exist
     if self.get(doc.id).is_err() {
       // Create index obj if has not existed yet
       self.push(DocRef::init_from_aob(doc.actions.first().unwrap()));
     }
     // First find index obj
-    let r = self.get_mut(doc.id)?;
+    let mut r = self.get_mut(doc.id)?;
     let last_index_aob_id = r.last_aob_id;
     let pos = doc
       .actions
       .iter()
       .position(|aob| aob.id == last_index_aob_id)
       .unwrap_or(0);
-    let aobs_to_update = &doc.actions[pos..];
+    let aobs_to_update = match pos == 0 {
+      true => &doc.actions[0..],
+      false => &doc.actions[pos + 1..],
+    };
     for i in aobs_to_update {
       if let ActionKind::Create(p) = &i.action {
         r.patch(p.to_owned(), i.dtime, &i.uid);
@@ -298,6 +300,7 @@ where
       if let ActionKind::Patch(p) = &i.action {
         r.patch(p.to_owned(), i.dtime, &i.uid);
       }
+      r.last_aob_id = i.id;
     }
     Ok(())
   }
