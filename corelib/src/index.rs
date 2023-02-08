@@ -10,6 +10,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use cli_table::{Table, WithTitle};
+use repository::sync::{Mode, Repository};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
@@ -23,6 +24,7 @@ pub enum IndexError {
     NotRepo,
     Fs(FsError),
     CtxError(CtxError),
+    SyncError(String),
 }
 
 impl Display for IndexError {
@@ -32,6 +34,7 @@ impl Display for IndexError {
             IndexError::NotRepo => write!(f, "Path is not a repository."),
             IndexError::Fs(fs) => write!(f, "{}", fs.to_string()),
             IndexError::CtxError(ctx) => write!(f, "{}", ctx.to_string()),
+            IndexError::SyncError(e) => write!(f, "{e}"),
         }
     }
 }
@@ -42,13 +45,20 @@ impl From<IndexError> for CliError {
     }
 }
 
-#[derive(Debug)]
-pub struct Db {
-    ctx: Context,
-    inner: DbInner,
+impl From<String> for IndexError {
+    fn from(value: String) -> Self {
+        Self::SyncError(value)
+    }
 }
 
-impl Deref for Db {
+#[derive(Debug)]
+pub struct IndexDb {
+    ctx: Context,
+    inner: DbInner,
+    repository: Repository,
+}
+
+impl Deref for IndexDb {
     type Target = DbInner;
 
     fn deref(&self) -> &Self::Target {
@@ -56,22 +66,47 @@ impl Deref for Db {
     }
 }
 
-impl DerefMut for Db {
+impl DerefMut for IndexDb {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }
 }
 
-impl Db {
-    pub fn init() -> Result<Self, IndexError> {
+impl IndexDb {
+    pub fn init(mode: Mode) -> Result<Self, IndexError> {
         let inner = DbInner::init()?;
         let ctx = Context::new()?;
-        Ok(Self { ctx, inner })
+        let repository = Repository::init(
+            repository::sync::Context::init(ctx.bitdir_path().join("sync"), "demo".to_string()), // TODO! Implement UID
+            mode,
+        )?;
+        let mut index = Self {
+            ctx,
+            inner,
+            repository,
+        };
+        Ok(index)
     }
     pub fn load() -> Result<Self, IndexError> {
         let ctx = Context::new()?;
         let inner = DbInner::load(&ctx)?;
-        Ok(Self { ctx, inner })
+        let repository = Repository::load(repository::sync::Context::init(
+            ctx.bitdir_path().join("sync"),
+            "demo".to_string(), // TODO! Implement UID
+        ))?;
+        Ok(Self {
+            ctx,
+            inner,
+            repository,
+        })
+    }
+    pub fn pull(&mut self) -> Result<(), IndexError> {
+        let _ = self.repository.proceed_pull(&mut self.inner)?;
+        Ok(())
+    }
+    pub fn push(&mut self) -> Result<(), IndexError> {
+        let _ = self.repository.proceed_push(&mut self.inner)?;
+        Ok(())
     }
     fn save_fs(&self) {
         binary_update(path_helper::index(&self.ctx), &self.inner)
@@ -86,6 +121,26 @@ pub struct DbInner {
     ledger: Ledger,
     partners: Vec<Partner>,
     blobs: Vec<Blob>,
+}
+
+impl repository::sync::Index for DbInner {
+    fn reset(&mut self) -> Result<(), String> {
+        println!("Reset called");
+        Ok(())
+    }
+
+    fn add_aob<A: repository::sync::ActionExt>(
+        &mut self,
+        aob: repository::sync::ActionObject<A>,
+    ) -> Result<(), String> {
+        println!("Add AOB called");
+        Ok(())
+    }
+
+    fn index(&mut self) -> Result<(), String> {
+        println!("Index called");
+        Ok(())
+    }
 }
 
 impl CliDisplay for DbInner {
@@ -281,7 +336,7 @@ impl DbInner {
     }
 }
 
-impl Drop for Db {
+impl Drop for IndexDb {
     fn drop(&mut self) {
         self.save_fs()
     }

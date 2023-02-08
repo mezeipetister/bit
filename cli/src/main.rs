@@ -1,4 +1,4 @@
-use core::{index::Db, prelude::CliError};
+use corelib::{index::IndexDb, prelude::CliError};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -14,8 +14,8 @@ fn main() -> Result<(), CliError> {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match cli.command {
-        Some(Commands::Init) => {
-            let _ = Db::init()?;
+        Some(Commands::InitLocal) => {
+            let _ = IndexDb::init(repository::sync::Mode::Local)?;
             println!("Repo inited");
         }
         Some(Commands::Pull) => {
@@ -33,6 +33,9 @@ fn main() -> Result<(), CliError> {
                 // ...
                 thread::sleep(Duration::from_millis(1));
             }
+
+            let mut db = IndexDb::load()?;
+            db.pull()?;
 
             println!("Pull OK");
 
@@ -66,6 +69,9 @@ fn main() -> Result<(), CliError> {
                 thread::sleep(Duration::from_millis(1));
             }
 
+            let mut db = IndexDb::load()?;
+            db.push()?;
+
             println!("Pushed OK");
         }
 
@@ -87,22 +93,24 @@ fn main() -> Result<(), CliError> {
             println!("All OK");
         }
 
-        Some(Commands::Clone) => println!("Clone"),
+        Some(Commands::Clone { remote_address }) => {
+            let db = IndexDb::init(repository::sync::Mode::Server { remote_address })?;
+        }
 
         Some(Commands::Account { id, command }) => match (id, command) {
             (Some(id), None) => {
-                let db = Db::load()?;
+                let db = IndexDb::load()?;
                 println!("{}", db.account_get(&id)?)
             }
             (Some(id), Some(command)) => match command {
                 AccountCommands::Remove => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     if read_confirm(sudo) {
                         db.account_remove(&id)?;
                     }
                 }
                 AccountCommands::Set { name } => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     let name = name.unwrap_or_else(|| read_input("New name:"));
                     db.account_rename(&id, name)?;
                 }
@@ -110,11 +118,11 @@ fn main() -> Result<(), CliError> {
             },
             (None, Some(command)) => match command {
                 AccountCommands::All => {
-                    let db = Db::load()?;
+                    let db = IndexDb::load()?;
                     println!("{}", db.account_get_all());
                 }
                 AccountCommands::Add { id, name } => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     let id = id.unwrap_or_else(|| read_input("ID:"));
                     let name = name.unwrap_or_else(|| read_input("Name:"));
                     db.account_add(id.trim().to_string(), name.trim().to_string())?;
@@ -126,18 +134,18 @@ fn main() -> Result<(), CliError> {
 
         Some(Commands::Partner { id, command }) => match (id, command) {
             (Some(id), None) => {
-                let db = Db::load()?;
+                let db = IndexDb::load()?;
                 println!("{}", db.partner_get(&id)?)
             }
             (Some(id), Some(command)) => match command {
                 PartnerCommands::Remove => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     if read_confirm(sudo) {
                         db.partner_remove(&id)?;
                     }
                 }
                 PartnerCommands::Set { name } => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     let name = name.unwrap_or_else(|| read_input("New name:"));
                     db.partner_rename(&id, name)?;
                 }
@@ -145,11 +153,11 @@ fn main() -> Result<(), CliError> {
             },
             (None, Some(command)) => match command {
                 PartnerCommands::All => {
-                    let db = Db::load()?;
+                    let db = IndexDb::load()?;
                     println!("{}", db.partner_get_all());
                 }
                 PartnerCommands::Add { id, name } => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     let id = id.unwrap_or_else(|| read_input("ID:"));
                     let name = name.unwrap_or_else(|| read_input("Name:"));
                     db.partner_add(id.trim().to_string(), name.trim().to_string())?;
@@ -161,7 +169,7 @@ fn main() -> Result<(), CliError> {
 
         Some(Commands::Note { id, command }) => match (id, command) {
             (Some(id), None) => {
-                let db = Db::load()?;
+                let db = IndexDb::load()?;
                 println!("{}", db.note_get(&id)?)
             }
             (Some(id), command) => match command {
@@ -170,7 +178,7 @@ fn main() -> Result<(), CliError> {
                     credit,
                     amount,
                 }) => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     let debit = db.account_get(&debit)?.to_owned();
                     let credit = db.account_get(&credit)?.to_owned();
                     let note = db.note_get_mut(&id)?;
@@ -186,7 +194,7 @@ fn main() -> Result<(), CliError> {
                     vat,
                     gross,
                 }) => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     db.ledger_set_should_update();
                     let partner = match partner {
                         Some(id) => {
@@ -217,7 +225,7 @@ fn main() -> Result<(), CliError> {
                     vat,
                     gross,
                 }) => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     db.ledger_set_should_update();
                     db.note_unset(
                         &id,
@@ -235,12 +243,12 @@ fn main() -> Result<(), CliError> {
             },
             (None, command) => match command {
                 Some(NoteCommands::Add { id }) => {
-                    let mut db = Db::load()?;
+                    let mut db = IndexDb::load()?;
                     let id = id.unwrap_or_else(|| read_input("ID:"));
                     db.note_new(id.trim().to_string())?;
                 }
                 Some(NoteCommands::Filter { id, partner }) => {
-                    let db = Db::load()?;
+                    let db = IndexDb::load()?;
                     let res = db.note_filter(id, partner);
                     res.iter().for_each(|res| println!("{res}"));
                 }
@@ -249,7 +257,7 @@ fn main() -> Result<(), CliError> {
         },
 
         Some(Commands::Ledger { month }) => {
-            let mut db = Db::load()?;
+            let mut db = IndexDb::load()?;
             let res = db.get_ledger(month)?;
             println!("{res}");
         }

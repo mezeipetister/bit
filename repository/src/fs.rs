@@ -110,7 +110,7 @@ pub fn binary_continuous_read_after_filter<
   Ok(res)
 }
 
-pub fn binary_update<T: Serialize + core::fmt::Debug>(
+pub fn binary_update<T: Serialize + std::fmt::Debug>(
   path: PathBuf,
   data: T,
 ) -> Result<(), String> {
@@ -140,7 +140,7 @@ pub fn binary_continuous_append<T: Serialize>(
 }
 
 pub fn binary_init<
-  T: Serialize + for<'de> Deserialize<'de> + core::fmt::Debug,
+  T: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug,
 >(
   path: PathBuf,
   init_data: T,

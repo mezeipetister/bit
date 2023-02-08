@@ -1,4 +1,4 @@
-use core::prelude::clap_parser::*;
+use corelib::prelude::clap_parser::*;
 
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
@@ -16,10 +16,12 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    Init,
+    InitLocal,
     Pull,
     Push,
-    Clone,
+    Clone {
+        remote_address: String,
+    },
     Check,
     Account {
         id: Option<String>,

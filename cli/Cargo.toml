@@ -9,12 +9,13 @@ version = "0.1.0"
 [dependencies]
 chrono = {version = "0.4.23", features = ["serde"]}
 clap = {version = "4.1.4", features = ["derive"]}
-core = {path = "../core"}
+corelib = {path = "../corelib"}
 indicatif = "*"
+repository = {path = "../repository"}
 
 [build-dependencies]
 chrono = {version = "0.4.23", features = ["serde"]}
 clap = "4.1.4"
 clap_complete = "3.1"
 clap_complete_fig = "3.1"
-core = {path = "../core"}
+corelib = {path = "../corelib"}

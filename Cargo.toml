@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "db_sync",
-  "core",
+  "repository",
+  "corelib",
   "cli",
 ]

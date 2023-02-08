@@ -326,7 +326,7 @@ where
   }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Context {
   pub db_root_path: PathBuf,
   pub uid: String,
@@ -521,7 +521,7 @@ impl CommitLog {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub enum Mode {
   Server {
-    server_addr: String,
+    remote_address: String,
   },
   Remote {
     remote_url: String,
@@ -542,7 +542,9 @@ impl Display for Mode {
 
 impl Mode {
   pub fn server(server_addr: String) -> Self {
-    Self::Server { server_addr }
+    Self::Server {
+      remote_address: server_addr,
+    }
   }
   pub fn remote(remote_url: String) -> Self {
     Self::Remote { remote_url }
@@ -579,37 +581,32 @@ impl RepoDetails {
   }
 }
 
+pub trait Index {
+  fn reset(&mut self) -> Result<(), String>;
+  fn add_aob<A: ActionExt>(
+    &mut self,
+    aob: ActionObject<A>,
+  ) -> Result<(), String>;
+  fn index(&mut self) -> Result<(), String>;
+}
+
+#[derive(Debug)]
 pub struct Repository {
-  inner: Arc<Mutex<RepoInner>>,
-}
-
-impl Repository {
-  pub fn inner(&self) -> MutexGuard<RepoInner> {
-    self.inner.lock().unwrap()
-  }
-}
-
-pub struct RepoInner {
   ctx: Context,
   repo_details: RepoDetails,
 }
 
-impl RepoInner {
+impl Repository {
   fn ctx(&self) -> &Context {
     &self.ctx
   }
-}
-
-impl Repository {
   /// Load repository
   pub fn load(ctx: Context) -> Result<Self, String> {
     // Load repo details
     let repo_details = RepoDetails::load(&ctx)?;
     // Create res
-    let inner = RepoInner { ctx, repo_details };
-    Ok(Self {
-      inner: Arc::new(Mutex::new(inner)),
-    })
+    let res = Self { ctx, repo_details };
+    Ok(res)
   }
   /// Init repository
   pub fn init(ctx: Context, mode: Mode) -> Result<Self, String> {
@@ -624,13 +621,11 @@ impl Repository {
     // Load repo details
     let repo_details = RepoDetails::load(&ctx)?;
     // Create res
-    let inner = RepoInner { ctx, repo_details };
-    Ok(Self {
-      inner: Arc::new(Mutex::new(inner)),
-    })
+    let res = Self { ctx, repo_details };
+    Ok(res)
   }
   // Clone remote repository to local
-  fn clone(remote_url: &str) -> Result<Self, String> {
+  fn clone(remote_url: &str, index: &mut impl Index) -> Result<Self, String> {
     // TODO! Fix path and UID
     let ctx = Context::init(PathBuf::from("./data"), "mezeipetister".into());
     // Check if repository inited
@@ -641,12 +636,12 @@ impl Repository {
     unimplemented!()
   }
   /// Start remote server
-  pub fn serve(&self) -> Result<(), String> {
-    let _self = Repository {
-      inner: Arc::clone(&self.inner),
-    };
-    let server_addr = match &_self.inner().repo_details.mode {
-      Mode::Server { server_addr } => server_addr.to_string(),
+  /// Consumes self into server
+  pub fn serve(self) -> Result<(), String> {
+    let server_addr = match &self.repo_details.mode {
+      Mode::Server {
+        remote_address: server_addr,
+      } => server_addr.to_string(),
       _ => {
         panic!("Cannot start server, as the repository is not in server mode")
       }
@@ -659,7 +654,7 @@ impl Repository {
       .unwrap();
     runtime.block_on(async {
       Server::builder()
-        .add_service(ApiServer::new(_self))
+        .add_service(ApiServer::new(self))
         .serve(server_addr.parse().unwrap())
         .await
         .expect("Error starting server");
@@ -668,9 +663,8 @@ impl Repository {
   }
 
   /// Pull remote repository
-  pub fn proceed_pull(&self) -> Result<(), String> {
-    let inner = self.inner();
-    let remote_addr = match &inner.repo_details.mode {
+  pub fn proceed_pull(&self, index: &mut impl Index) -> Result<(), String> {
+    let remote_addr = match &self.repo_details.mode {
       Mode::Remote { remote_url } => remote_url.to_string(),
       _ => {
         panic!("Cannot proceed pull operation, as the repository is not in remote mode")
@@ -684,7 +678,7 @@ impl Repository {
       .build()
       .unwrap();
 
-    let ctx = inner.ctx();
+    let ctx = self.ctx();
 
     // Get last local remote commit id
     let after_commit_id = CommitIndex::latest_remote_commit_id(&ctx)
@@ -719,14 +713,8 @@ impl Repository {
     Ok(())
   }
   /// Push repository local commits to remote
-  pub fn proceed_push(&self) -> Result<(), String> {
-    // Before push operation
-    // Proceed pull
-    self.proceed_pull()?;
-
-    let inner = self.inner();
-
-    let remote_addr = match &inner.repo_details.mode {
+  pub fn proceed_push(&self, index: &mut impl Index) -> Result<(), String> {
+    let remote_addr = match &self.repo_details.mode {
       Mode::Remote { remote_url } => remote_url.to_string(),
       _ => {
         panic!("Cannot proceed push operation, as the repository is not in remote mode")
@@ -768,28 +756,25 @@ impl Repository {
 
     // After push operation
     // Proceed pull to update local storages
-    self.proceed_pull()?;
+    self.proceed_pull(index)?;
 
     Ok(())
   }
   /// Clean local repository, clear local changes
   /// And performs remote pull
-  pub fn proceed_clean(&self) -> Result<(), String> {
+  pub fn proceed_clean(&self, index: &mut impl Index) -> Result<(), String> {
     unimplemented!()
   }
   pub fn local_commits(&self) -> Result<Vec<Commit>, String> {
-    let inner = self.inner();
-    CommitLog::load_locals(inner.ctx())
+    CommitLog::load_locals(self.ctx())
   }
   pub fn remote_commits(&self) -> Result<Vec<Commit>, String> {
-    let inner = self.inner();
-    CommitLog::load_remotes(inner.ctx())
+    CommitLog::load_remotes(self.ctx())
   }
   pub fn remote_commits_after(
     &self,
     after_id: Uuid,
   ) -> Result<Vec<Commit>, String> {
-    let inner = self.inner();
-    CommitLog::load_remotes_after(inner.ctx(), after_id)
+    CommitLog::load_remotes_after(self.ctx(), after_id)
   }
 }

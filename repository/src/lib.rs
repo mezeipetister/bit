@@ -4,6 +4,6 @@ extern crate log;
 
 pub mod actions;
 mod fs;
-mod prelude;
+pub mod prelude;
 pub mod server;
 pub mod sync;
