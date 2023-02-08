@@ -55,12 +55,12 @@ impl From<String> for IndexError {
 #[derive(Debug)]
 pub struct IndexDb {
     ctx: Context,
-    inner: DbInner,
+    inner: IndexInner,
     repository: Repository,
 }
 
 impl Deref for IndexDb {
-    type Target = DbInner;
+    type Target = IndexInner;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -75,7 +75,7 @@ impl DerefMut for IndexDb {
 
 impl IndexDb {
     pub fn init(mode: Mode) -> Result<Self, IndexError> {
-        let inner = DbInner::init()?;
+        let inner = IndexInner::init()?;
         let ctx = Context::new()?;
         let repository = Repository::init(
             repository::sync::Context::init(ctx.bitdir_path().join("sync"), "demo".to_string()), // TODO! Implement UID
@@ -90,7 +90,7 @@ impl IndexDb {
     }
     pub fn load() -> Result<Self, IndexError> {
         let ctx = Context::new()?;
-        let inner = DbInner::load(&ctx)?;
+        let inner = IndexInner::load(&ctx)?;
         let repository = Repository::load(repository::sync::Context::init(
             ctx.bitdir_path().join("sync"),
             "demo".to_string(), // TODO! Implement UID
@@ -116,44 +116,50 @@ impl IndexDb {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub struct DbInner {
+pub struct IndexInner {
     accounts: DocRefVec<Account, BitAction>,
     notes: DocRefVec<Note, BitAction>,
     ledger: Ledger,
     partners: DocRefVec<Partner, BitAction>,
 }
 
-impl repository::sync::Index for DbInner {
+impl repository::sync::IndexExt for IndexInner {
+    type ActionType = BitAction;
     fn reset_docrefs(&mut self) -> Result<(), String> {
-        todo!()
+        self.accounts.reset();
+        self.notes.reset();
+        self.partners.reset();
+        Ok(())
     }
 
-    fn add_aob<A: repository::sync::ActionExt>(
+    fn add_aob(
         &mut self,
-        aob: repository::sync::ActionObject<A>,
+        aob: repository::sync::ActionObject<Self::ActionType>,
     ) -> Result<(), String> {
         match aob.storage_id.as_str() {
             "accounts" => self.accounts.add_aob(&aob),
+            "notes" => self.notes.add_aob(&aob),
+            "partners" => self.partners.add_aob(&aob),
             _ => panic!("No storage found by id"),
         }
         Ok(())
     }
 }
 
-impl CliDisplay for DbInner {
+impl CliDisplay for IndexInner {
     fn display(&self, f: &mut impl std::io::Write) -> Result<(), std::io::Error> {
         write!(f, "{:?}", self)
     }
 }
 
-impl DbInner {
+impl IndexInner {
     fn init() -> Result<Self, IndexError> {
         if is_project_cwd() {
             return Err(IndexError::AlreadyInited);
         }
         let ctx = Context::new_cwd();
         // Init index file
-        binary_init(path_helper::index(&ctx), DbInner::default())?;
+        binary_init(path_helper::index(&ctx), IndexInner::default())?;
         // Init blob file
         binary_init_empty(path_helper::blob_database(&ctx))?;
         // Load self after init

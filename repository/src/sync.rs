@@ -288,11 +288,12 @@ where
   }
 }
 
-pub trait Index {
+pub trait IndexExt {
+  type ActionType: ActionExt;
   fn reset_docrefs(&mut self) -> Result<(), String>;
-  fn add_aob<A: ActionExt>(
+  fn add_aob(
     &mut self,
-    aob: ActionObject<A>,
+    aob: ActionObject<Self::ActionType>,
   ) -> Result<(), String>;
 }
 
@@ -729,7 +730,10 @@ impl Repository {
     Ok(res)
   }
   // Clone remote repository to local
-  fn clone(remote_url: &str, index: &mut impl Index) -> Result<Self, String> {
+  fn clone(
+    remote_url: &str,
+    index: &mut impl IndexExt,
+  ) -> Result<Self, String> {
     // TODO! Fix path and UID
     let ctx = Context::init(PathBuf::from("./data"), "mezeipetister".into());
     // Check if repository inited
@@ -767,7 +771,7 @@ impl Repository {
   }
 
   /// Pull remote repository
-  pub fn proceed_pull(&self, index: &mut impl Index) -> Result<(), String> {
+  pub fn proceed_pull(&self, index: &mut impl IndexExt) -> Result<(), String> {
     let remote_addr = match &self.repo_details.mode {
       Mode::Remote { remote_url } => remote_url.to_string(),
       _ => {
@@ -817,7 +821,7 @@ impl Repository {
     Ok(())
   }
   /// Push repository local commits to remote
-  pub fn proceed_push(&self, index: &mut impl Index) -> Result<(), String> {
+  pub fn proceed_push(&self, index: &mut impl IndexExt) -> Result<(), String> {
     let remote_addr = match &self.repo_details.mode {
       Mode::Remote { remote_url } => remote_url.to_string(),
       _ => {
@@ -866,7 +870,7 @@ impl Repository {
   }
   /// Clean local repository, clear local changes
   /// And performs remote pull
-  pub fn proceed_clean(&self, index: &mut impl Index) -> Result<(), String> {
+  pub fn proceed_clean(&self, index: &mut impl IndexExt) -> Result<(), String> {
     unimplemented!()
   }
   pub fn local_commits(&self) -> Result<Vec<Commit>, String> {
