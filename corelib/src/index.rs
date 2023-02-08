@@ -124,21 +124,18 @@ pub struct DbInner {
 }
 
 impl repository::sync::Index for DbInner {
-    fn reset(&mut self) -> Result<(), String> {
-        println!("Reset called");
-        Ok(())
+    fn reset_docrefs(&mut self) -> Result<(), String> {
+        todo!()
     }
 
     fn add_aob<A: repository::sync::ActionExt>(
         &mut self,
         aob: repository::sync::ActionObject<A>,
     ) -> Result<(), String> {
-        println!("Add AOB called");
-        Ok(())
-    }
-
-    fn index(&mut self) -> Result<(), String> {
-        println!("Index called");
+        match aob.storage_id.as_str() {
+            "accounts" => self.accounts.add_aob(&aob),
+            _ => panic!("No storage found by id"),
+        }
         Ok(())
     }
 }

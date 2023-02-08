@@ -42,7 +42,7 @@ pub trait ActionExt: Clone + Send {
 /// Atomic action kinds with the following states:
 /// Create, Patch, Remove, Recover
 #[derive(Serialize, Deserialize, Clone, Debug)]
-enum ActionKind<A>
+pub enum ActionKind<A>
 where
   A: ActionExt,
 {
@@ -63,23 +63,23 @@ where
   id: Uuid,
   // Referred Storage ID
   // Object must be located under it
-  storage_id: String,
+  pub storage_id: String,
   // Referred ObjectId
   // must be applied on it
-  object_id: Uuid,
+  pub object_id: Uuid,
   // UserID
-  uid: String,
+  pub uid: String,
   // Applied date and time in Utc
-  dtime: DateTime<Utc>,
+  pub dtime: DateTime<Utc>,
   // Related commit id
-  commit_id: Option<Uuid>,
+  pub commit_id: Option<Uuid>,
   // Object actions parent action id
   // We can use this attribute to check action chain per storage object
-  parent_action_id: Option<Uuid>,
+  pub parent_action_id: Option<Uuid>,
   // Create(T) or Patch(A)
-  action: ActionKind<A>,
+  pub action: ActionKind<A>,
   // Remote signature
-  remote_signature: Option<String>,
+  pub remote_signature: Option<String>,
 }
 
 impl<A> ActionObject<A>
@@ -186,7 +186,7 @@ where
   A: ActionExt,
   T: ActionPatch<A>,
 {
-  doc_id: Uuid,
+  object_id: Uuid,
   data: T,
   last_aob_id: Uuid,
   action: PhantomData<A>,
@@ -224,6 +224,35 @@ where
   action: PhantomData<A>,
 }
 
+impl<T, A> DocRefVec<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  pub fn reset(&mut self) {
+    self.doc_refs = vec![];
+  }
+  pub fn get(&self, object_id: Uuid) -> Result<&T, String> {
+    let res = self
+      .doc_refs
+      .iter()
+      .find(|d| d.object_id == object_id)
+      .ok_or("Cannot find docref by objectid".to_string())?;
+    Ok(res)
+  }
+  pub fn get_mut(&mut self, object_id: Uuid) -> Result<&mut T, String> {
+    let res = self
+      .doc_refs
+      .iter_mut()
+      .find(|d| d.object_id == object_id)
+      .ok_or("Cannot find docref by objectid".to_string())?;
+    Ok(res)
+  }
+  pub fn add_aob(&mut self, aob: &ActionObject<A>) {
+    unimplemented!()
+  }
+}
+
 impl<T, A> Deref for DocRefVec<T, A>
 where
   A: ActionExt,
@@ -257,6 +286,14 @@ where
       action: PhantomData,
     }
   }
+}
+
+pub trait Index {
+  fn reset_docrefs(&mut self) -> Result<(), String>;
+  fn add_aob<A: ActionExt>(
+    &mut self,
+    aob: ActionObject<A>,
+  ) -> Result<(), String>;
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -655,15 +692,6 @@ impl RepoDetails {
     // Return repo details
     Ok(repo_details)
   }
-}
-
-pub trait Index {
-  fn reset(&mut self) -> Result<(), String>;
-  fn add_aob<A: ActionExt>(
-    &mut self,
-    aob: ActionObject<A>,
-  ) -> Result<(), String>;
-  fn index(&mut self) -> Result<(), String>;
 }
 
 #[derive(Debug)]
