@@ -175,7 +175,7 @@ enum Status {
   Conflict,
 }
 
-pub trait ActionPatch<A: ActionExt> {
+pub trait ActionPatch<A: ActionExt>: Default {
   fn patch(&mut self, action: A, dtime: DateTime<Utc>, uid: &str);
 }
 
@@ -184,12 +184,29 @@ pub trait ActionPatch<A: ActionExt> {
 pub struct DocRef<T, A>
 where
   A: ActionExt,
-  T: ActionPatch<A>,
+  T: ActionPatch<A> + Default,
 {
   object_id: Uuid,
+  storage_id: String,
   data: T,
   last_aob_id: Uuid,
   action: PhantomData<A>,
+}
+
+impl<T, A> DocRef<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A> + Default,
+{
+  pub fn init_from_aob(aob: &ActionObject<A>) -> Self {
+    Self {
+      object_id: aob.object_id,
+      storage_id: aob.storage_id.to_owned(),
+      data: T::default(),
+      last_aob_id: aob.id,
+      action: PhantomData,
+    }
+  }
 }
 
 impl<T, A> Deref for DocRef<T, A>
@@ -232,7 +249,7 @@ where
   pub fn reset(&mut self) {
     self.doc_refs = vec![];
   }
-  pub fn get(&self, object_id: Uuid) -> Result<&T, String> {
+  pub fn get(&self, object_id: Uuid) -> Result<&DocRef<T, A>, String> {
     let res = self
       .doc_refs
       .iter()
@@ -240,7 +257,10 @@ where
       .ok_or("Cannot find docref by objectid".to_string())?;
     Ok(res)
   }
-  pub fn get_mut(&mut self, object_id: Uuid) -> Result<&mut T, String> {
+  pub fn get_mut(
+    &mut self,
+    object_id: Uuid,
+  ) -> Result<&mut DocRef<T, A>, String> {
     let res = self
       .doc_refs
       .iter_mut()
@@ -248,8 +268,19 @@ where
       .ok_or("Cannot find docref by objectid".to_string())?;
     Ok(res)
   }
-  pub fn add_aob(&mut self, aob: &ActionObject<A>) {
-    unimplemented!()
+  pub fn add_aob(&mut self, aob: &ActionObject<A>) -> Result<(), String> {
+    match &aob.action {
+      ActionKind::Create => {
+        let res = DocRef::init_from_aob(aob);
+        self.push(res);
+      }
+      ActionKind::Patch(p) => self.get_mut(aob.object_id)?.patch(
+        p.to_owned(),
+        aob.dtime,
+        &aob.uid.to_owned(),
+      ),
+    }
+    Ok(())
   }
 }
 

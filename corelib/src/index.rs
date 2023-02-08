@@ -136,12 +136,12 @@ impl repository::sync::IndexExt for IndexInner {
         &mut self,
         aob: repository::sync::ActionObject<Self::ActionType>,
     ) -> Result<(), String> {
-        match aob.storage_id.as_str() {
+        let res = match aob.storage_id.as_str() {
             "accounts" => self.accounts.add_aob(&aob),
             "notes" => self.notes.add_aob(&aob),
             "partners" => self.partners.add_aob(&aob),
             _ => panic!("No storage found by id"),
-        }
+        };
         Ok(())
     }
 }
