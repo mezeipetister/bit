@@ -14,6 +14,13 @@ fn main() -> Result<(), CliError> {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match cli.command {
+        Some(Commands::Db { command }) => match command {
+            DbCommand::Reindex => {
+                let mut db = IndexDb::load()?;
+                db.db_reindex()?;
+                println!("Ok");
+            }
+        },
         Some(Commands::InitLocal) => {
             let _ = IndexDb::init(repository::sync::Mode::Local)?;
             println!("Repo inited");

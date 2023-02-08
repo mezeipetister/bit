@@ -113,6 +113,11 @@ impl IndexDb {
         binary_update(path_helper::index(&self.ctx), &self.inner)
             .expect("Error writing bit db to fs");
     }
+    pub fn db_reindex(&mut self) -> Result<(), CliError> {
+        self.repository
+            .reset_index(&mut self.inner)
+            .map_err(|e| CliError::Error(e))
+    }
     pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
         match self.account_get(&id) {
             Ok(_) => return Err(CliError::Error("Account id is taken".to_string())),

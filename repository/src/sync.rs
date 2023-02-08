@@ -276,6 +276,7 @@ where
   }
   /// Sync docref by a document
   pub fn sync_with_doc(&mut self, doc: &Document<A>) -> Result<(), String> {
+    println!("{:?}", &doc);
     // Check if index obj exist
     if self.get(doc.id).is_err() {
       // Create index obj if has not existed yet
@@ -828,6 +829,21 @@ impl Repository {
     let ctx = self.ctx();
     self.repo_details.document_get(ctx, document_id)
   }
+  pub fn reset_index<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &mut self,
+    index: &mut impl IndexExt<ActionType = A>,
+  ) -> Result<(), String> {
+    let ctx = self.ctx();
+    index.reset_docrefs()?;
+    for document_id in &self.repo_details.document_ids {
+      let doc = self.repo_details.document_get::<A>(ctx, *document_id)?;
+      index.sync_doc(&doc)?;
+    }
+
+    Ok(())
+  }
   pub fn get_staging_aobs<A: ActionExt>(&self) -> Vec<ActionObject<A>> {
     let mut res = vec![];
     res
@@ -850,6 +866,7 @@ impl Repository {
       }
     };
     index.sync_doc(&doc)?;
+    doc.save_to_fs(self.ctx())?;
     Ok(())
   }
   fn ctx(&self) -> &Context {

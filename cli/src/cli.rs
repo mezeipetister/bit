@@ -21,6 +21,10 @@ pub enum Commands {
     Push,
     LocalChanges,
     ClearLocalChanges,
+    Db {
+        #[command(subcommand)]
+        command: DbCommand,
+    },
     Commit {
         #[arg(short, long)]
         message: String,
@@ -48,6 +52,11 @@ pub enum Commands {
         #[arg(value_parser = parse_month)]
         month: Option<u32>,
     },
+}
+
+#[derive(Subcommand)]
+pub enum DbCommand {
+    Reindex,
 }
 
 #[derive(Subcommand)]
