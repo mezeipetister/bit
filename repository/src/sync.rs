@@ -2,6 +2,7 @@ use std::{
   collections::HashMap,
   default,
   fmt::{Debug, Display},
+  marker::PhantomData,
   ops::{Deref, DerefMut},
   path::PathBuf,
   sync::{Arc, Mutex, MutexGuard},
@@ -174,13 +175,44 @@ enum Status {
   Conflict,
 }
 
+pub trait ActionPatch<A: ActionExt> {
+  fn patch(&mut self, action: A);
+}
+
 // Data layer to sync with storage documents
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DocRef<T> {
-  // Storage Object unique ID
+pub struct DocRef<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
   doc_id: Uuid,
   data: T,
   last_aob_id: Uuid,
+  action: PhantomData<A>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DocRefVec<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  doc_refs: Vec<DocRef<T, A>>,
+  action: PhantomData<A>,
+}
+
+impl<T, A> Default for DocRefVec<T, A>
+where
+  A: ActionExt,
+  T: ActionPatch<A>,
+{
+  fn default() -> Self {
+    Self {
+      doc_refs: Default::default(),
+      action: PhantomData,
+    }
+  }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

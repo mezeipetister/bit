@@ -1,4 +1,5 @@
 pub mod account;
+pub mod actions;
 pub mod blob;
 pub mod context;
 mod fs;

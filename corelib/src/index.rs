@@ -1,5 +1,6 @@
 use crate::{
     account::Account,
+    actions::BitAction,
     blob::Blob,
     context::{Context, CtxError},
     fs::{binary_init, binary_init_empty, binary_read, binary_update, is_project_cwd, FsError},
@@ -10,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use cli_table::{Table, WithTitle};
-use repository::sync::{Mode, Repository};
+use repository::sync::{DocRefVec, Mode, Repository};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
@@ -116,7 +117,7 @@ impl IndexDb {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct DbInner {
-    accounts: Vec<Account>,
+    accounts: DocRefVec<Account, BitAction>,
     notes: Vec<Note>,
     ledger: Ledger,
     partners: Vec<Partner>,
