@@ -19,6 +19,10 @@ pub enum Commands {
         #[arg(short, long)]
         port: String,
     },
+    Clone {
+        #[arg(short, long)]
+        remote_url: String,
+    },
     StartServer,
     Pull,
     Push,
@@ -32,9 +36,6 @@ pub enum Commands {
     Commit {
         #[arg(short, long)]
         message: String,
-    },
-    Clone {
-        remote_address: String,
     },
     Check,
     Account {

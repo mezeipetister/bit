@@ -103,11 +103,11 @@ impl IndexDb {
         })
     }
     pub fn pull(&mut self) -> Result<(), IndexError> {
-        let _ = self.repository.proceed_pull(&mut self.inner)?;
+        let _ = self.repository.proceed_pull::<BitAction>(&mut self.inner)?;
         Ok(())
     }
     pub fn push(&mut self) -> Result<(), IndexError> {
-        let _ = self.repository.proceed_push(&mut self.inner)?;
+        let _ = self.repository.proceed_push::<BitAction>(&mut self.inner)?;
         Ok(())
     }
     pub fn commit(&mut self, comment: String) -> Result<(), String> {

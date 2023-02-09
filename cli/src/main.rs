@@ -122,8 +122,10 @@ fn main() -> Result<(), CliError> {
             println!("All OK");
         }
 
-        Some(Commands::Clone { remote_address }) => {
-            let db = IndexDb::init(repository::sync::Mode::Server { remote_address })?;
+        Some(Commands::Clone { remote_url }) => {
+            let mut db = IndexDb::init(repository::sync::Mode::Remote { remote_url })?;
+            db.pull()?;
+            println!("Repo cloned");
         }
 
         Some(Commands::Account { id, command }) => match (id, command) {

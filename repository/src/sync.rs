@@ -451,6 +451,8 @@ where
     match new_aob.is_local() {
       true => self.actions.push(new_aob),
       false => {
+        // Remove itself as local aob
+        self.actions.retain(|aob| aob.id != new_aob.id);
         // find parent position
         let position = self.actions.iter().position(|aob| {
           if let Some(parent_action_id) = new_aob.parent_action_id {
@@ -1081,7 +1083,13 @@ impl Repository {
   }
 
   /// Pull remote repository
-  pub fn proceed_pull(&self, index: &mut impl IndexExt) -> Result<(), String> {
+  pub fn proceed_pull<A>(
+    &mut self,
+    index: &mut impl IndexExt<ActionType = A>,
+  ) -> Result<(), String>
+  where
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  {
     let remote_addr = match &self.repo_details.mode {
       Mode::Remote { remote_url } => remote_url.to_string(),
       _ => {
@@ -1096,14 +1104,14 @@ impl Repository {
       .build()
       .unwrap();
 
-    let ctx = self.ctx();
-
-    // Get last local remote commit id
-    let after_commit_id = CommitIndex::latest_remote_commit_id(&ctx)
-      .map(|i| i.to_string())
-      .unwrap_or("".to_string());
-
     runtime.block_on(async {
+      let ctx = self.ctx().to_owned();
+
+      // Get last local remote commit id
+      let after_commit_id = CommitIndex::latest_remote_commit_id(&ctx)
+        .map(|i| i.to_string())
+        .unwrap_or("".to_string());
+
       let mut remote_client = ApiClient::connect(remote_addr)
         .await
         .expect("Could not connect to UPL service");
@@ -1123,15 +1131,31 @@ impl Repository {
       for commit_obj in commits {
         let commit: Commit = serde_json::from_str(&commit_obj.obj_json_string)
           .expect("Commit deser error");
-        // let ctx = self.merge_commit_ctx(commit);
-        drop(ctx)
+        // Save commit as remote commit
+        CommitLog::add_remote_commit(&ctx, commit.clone())
+          .expect("Failed to add remote commit");
+
+        // Process commit
+        for aob_str in &commit.serialized_actions {
+          let aob: ActionObject<A> = serde_json::from_str(aob_str).unwrap();
+          self.add_aob(aob, index).unwrap();
+        }
+
+        // Process aobs
+        // for aob_str =
       }
     });
 
     Ok(())
   }
   /// Push repository local commits to remote
-  pub fn proceed_push(&self, index: &mut impl IndexExt) -> Result<(), String> {
+  pub fn proceed_push<A>(
+    &mut self,
+    index: &mut impl IndexExt<ActionType = A>,
+  ) -> Result<(), String>
+  where
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  {
     let remote_addr = match &self.repo_details.mode {
       Mode::Remote { remote_url } => remote_url.to_string(),
       _ => {
@@ -1160,21 +1184,18 @@ impl Repository {
         })
         .collect::<Vec<CommitObj>>();
 
-      let mut commits = vec![];
-
       for commit in local_commits {
         info!("Sending commit obj");
         let mut commit = remote_client.push(commit).await.unwrap().into_inner();
         info!("Commit received back");
-        commits.push(commit);
+        // Deserialize commit obj
+        let c: Commit = serde_json::from_str(&commit.obj_json_string)
+          .expect("Error deserializing response commit obj");
       }
-
-      info!("Pushed {} items", commits.len());
     });
 
-    // After push operation
-    // Proceed pull to update local storages
-    self.proceed_pull(index)?;
+    // Proceed pull operation
+    self.proceed_pull::<A>(index)?;
 
     Ok(())
   }
