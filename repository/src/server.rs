@@ -77,6 +77,8 @@ where
     // Lock self
     let mut _self = self.inner.lock().unwrap();
 
+    println!("{}", &commit_obj.obj_json_string);
+
     let res = _self
       .merge_push_request(&commit_obj.obj_json_string)
       .map_err(|e| Status::internal(e))?;

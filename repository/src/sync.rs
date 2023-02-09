@@ -776,6 +776,13 @@ impl CommitLog {
     // Save remote commit
     binary_continuous_append(path_helper::commit_remote_log(ctx), remote_commit)
   }
+  fn reset_local_commits(ctx: &Context) -> Result<(), String> {
+    // Set local commit log as empty
+    binary_update(path_helper::commit_local_log(ctx), "")?;
+    // Set latest local id
+    CommitIndex::set_latest_local_id(ctx, None)?;
+    Ok(())
+  }
 }
 
 // Repository Mode
@@ -1107,7 +1114,7 @@ impl Repository {
     runtime.block_on(async {
       let ctx = self.ctx().to_owned();
 
-      // Get last local remote commit id
+      // Get last local REMOTE commit id
       let after_commit_id = CommitIndex::latest_remote_commit_id(&ctx)
         .map(|i| i.to_string())
         .unwrap_or("".to_string());
@@ -1131,6 +1138,7 @@ impl Repository {
       for commit_obj in commits {
         let commit: Commit = serde_json::from_str(&commit_obj.obj_json_string)
           .expect("Commit deser error");
+
         // Save commit as remote commit
         CommitLog::add_remote_commit(&ctx, commit.clone())
           .expect("Failed to add remote commit");
@@ -1140,9 +1148,6 @@ impl Repository {
           let aob: ActionObject<A> = serde_json::from_str(aob_str).unwrap();
           self.add_aob(aob, index).unwrap();
         }
-
-        // Process aobs
-        // for aob_str =
       }
     });
 
@@ -1192,6 +1197,11 @@ impl Repository {
         let c: Commit = serde_json::from_str(&commit.obj_json_string)
           .expect("Error deserializing response commit obj");
       }
+
+      let ctx = self.ctx();
+      // Reset local commits
+      CommitLog::reset_local_commits(ctx)
+        .expect("Error reseting local commits");
     });
 
     // Proceed pull operation

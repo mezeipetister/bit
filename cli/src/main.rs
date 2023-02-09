@@ -48,59 +48,64 @@ fn main() -> Result<(), CliError> {
             println!("Ok");
         }
         Some(Commands::Pull) => {
-            use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
-            use std::thread;
-            // Provide a custom bar style
-            let pb = ProgressBar::new(400);
-            pb.set_style(
-        ProgressStyle::with_template(
-            "Pulling {spinner:.green} [{elapsed_precise}] [{bar:40.white/red}] ({pos}/{len}, ETA {eta})",
-        )
-        .unwrap(),
-    );
-            for _ in (0..1000).progress_with(pb) {
-                // ...
-                thread::sleep(Duration::from_millis(1));
-            }
+            //         use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+            //         use std::thread;
+            //         // Provide a custom bar style
+            //         let pb = ProgressBar::new(400);
+            //         pb.set_style(
+            //     ProgressStyle::with_template(
+            //         "Pulling {spinner:.green} [{elapsed_precise}] [{bar:40.white/red}] ({pos}/{len}, ETA {eta})",
+            //     )
+            //     .unwrap(),
+            // );
+            //         for _ in (0..1000).progress_with(pb) {
+            //             // ...
+            //             thread::sleep(Duration::from_millis(1));
+            //         }
+
+            //         let mut db = IndexDb::load()?;
+            //         db.pull()?;
+
+            //         println!("Pull OK");
+
+            //         let pb = ProgressBar::new(1000);
+            //         pb.set_style(
+            //     ProgressStyle::with_template(
+            //         "Indexing {spinner:.green} [{elapsed_precise}] [{bar:40.white/red}] ({pos}/{len}, ETA {eta})",
+            //     )
+            //     .unwrap(),
+            // );
+
+            //         for _ in (0..1000).progress_with(pb) {
+            //             // ...
+            //             thread::sleep(Duration::from_millis(1));
+            //         }
 
             let mut db = IndexDb::load()?;
             db.pull()?;
 
-            println!("Pull OK");
-
-            let pb = ProgressBar::new(1000);
-            pb.set_style(
-        ProgressStyle::with_template(
-            "Indexing {spinner:.green} [{elapsed_precise}] [{bar:40.white/red}] ({pos}/{len}, ETA {eta})",
-        )
-        .unwrap(),
-    );
-
-            for _ in (0..1000).progress_with(pb) {
-                // ...
-                thread::sleep(Duration::from_millis(1));
-            }
-
             println!("Indexing OK");
         }
         Some(Commands::Push) => {
-            use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
-            use std::thread;
-            // Provide a custom bar style
-            let pb = ProgressBar::new(400);
-            pb.set_style(
-        ProgressStyle::with_template(
-            "Pushing {spinner:.green} [{elapsed_precise}] [{bar:40.white/red}] ({pos}/{len}, ETA {eta})",
-        )
-        .unwrap(),
-    );
-            for _ in (0..400).progress_with(pb) {
-                thread::sleep(Duration::from_millis(1));
-            }
+            //         use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+            //         use std::thread;
+            //         // Provide a custom bar style
+            //         let pb = ProgressBar::new(400);
+            //         pb.set_style(
+            //     ProgressStyle::with_template(
+            //         "Pushing {spinner:.green} [{elapsed_precise}] [{bar:40.white/red}] ({pos}/{len}, ETA {eta})",
+            //     )
+            //     .unwrap(),
+            // );
+            //         for _ in (0..400).progress_with(pb) {
+            //             thread::sleep(Duration::from_millis(1));
+            //         }
+
+            //         let mut db = IndexDb::load()?;
+            //         db.push()?;
 
             let mut db = IndexDb::load()?;
             db.push()?;
-
             println!("Pushed OK");
         }
 

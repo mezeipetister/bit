@@ -20,7 +20,6 @@ pub enum Commands {
         port: String,
     },
     Clone {
-        #[arg(short, long)]
         remote_url: String,
     },
     StartServer,
