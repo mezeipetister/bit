@@ -11,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use cli_table::{Table, WithTitle};
-use repository::sync::{DocRefVec, Document, IndexExt, Mode, Repository};
+use repository::sync::{Commit, DocRefVec, Document, IndexExt, Mode, Repository};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
@@ -132,6 +132,22 @@ impl IndexDb {
         self.repository
             .reset_index(&mut self.inner)
             .map_err(|e| CliError::Error(e))
+    }
+    pub fn db_local_commits(&mut self) -> Result<Vec<Commit>, CliError> {
+        self.repository
+            .local_commits()
+            .map_err(|e| CliError::Error(e))
+    }
+    pub fn db_remote_commits(&mut self) -> Result<Vec<Commit>, CliError> {
+        self.repository
+            .remote_commits()
+            .map_err(|e| CliError::Error(e))
+    }
+    pub fn db_print_commit_index(&mut self) -> Result<(), CliError> {
+        self.repository
+            .print_commit_index()
+            .map_err(|e| CliError::Error(e))?;
+        Ok(())
     }
     pub fn account_add(&mut self, id: String, name: String) -> Result<(), CliError> {
         match self.account_get(&id) {

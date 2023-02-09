@@ -24,6 +24,22 @@ fn main() -> Result<(), CliError> {
                 db.db_emptyindex()?;
                 println!("Ok");
             }
+            DbCommand::LocalCommits => {
+                let mut db = IndexDb::load()?;
+                let res = db.db_local_commits()?;
+                res.iter()
+                    .for_each(|commit| println!("{commit}\n---------"));
+            }
+            DbCommand::RemoteCommits => {
+                let mut db = IndexDb::load()?;
+                let res = db.db_remote_commits()?;
+                res.iter()
+                    .for_each(|commit| println!("{commit}\n---------"));
+            }
+            DbCommand::CommitIndex => {
+                let mut db = IndexDb::load()?;
+                db.db_print_commit_index()?;
+            }
         },
         Some(Commands::Staging) => (),
         Some(Commands::ClearStaging) => (),

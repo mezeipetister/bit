@@ -62,6 +62,9 @@ pub enum Commands {
 pub enum DbCommand {
     Reindex,
     EmptyIndex,
+    LocalCommits,
+    RemoteCommits,
+    CommitIndex,
 }
 
 #[derive(Subcommand)]

@@ -625,7 +625,7 @@ impl CommitIndex {
   }
   fn latest_remote_commit_id(ctx: &Context) -> Option<Uuid> {
     let s = Self::load(ctx);
-    s.latest_local_commit_id
+    s.latest_remote_commit_id
   }
   fn set_latest_local_id(
     ctx: &Context,
@@ -654,6 +654,12 @@ pub struct Commit {
   ancestor_id: Option<Uuid>,
   serialized_actions: Vec<String>, // ActionObject JSONs in Vec
   remote_signature: Option<String>, // Remote signature
+}
+
+impl Display for Commit {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "id: {id}\nparent_id: {parent_id}\naction_count: {action_count}\nsignature: {signature}",id = &self.id, action_count = self.serialized_actions.len(),  parent_id = &self.ancestor_id.map(|id| id.as_simple().to_string()).unwrap_or("-".to_string()), signature=self.remote_signature.as_ref().map(|sig| sig.to_owned()).unwrap_or("-".to_string()))
+  }
 }
 
 impl Commit {
@@ -778,7 +784,7 @@ impl CommitLog {
   }
   fn reset_local_commits(ctx: &Context) -> Result<(), String> {
     // Set local commit log as empty
-    binary_update(path_helper::commit_local_log(ctx), "")?;
+    binary_init_empty(path_helper::commit_local_log(ctx))?;
     // Set latest local id
     CommitIndex::set_latest_local_id(ctx, None)?;
     Ok(())
@@ -1180,16 +1186,22 @@ impl Repository {
         .await
         .expect("Could not connect to UPL service");
 
-      let local_commits = self
-        .local_commits()
-        .unwrap()
+      let mut local_commits = self.local_commits().unwrap();
+
+      // Update first local commit with tha latest remote commit id
+      if let Some(mut commit) = local_commits.first_mut() {
+        let ctx = self.ctx().to_owned();
+        commit.ancestor_id = CommitIndex::latest_remote_commit_id(&ctx);
+      }
+
+      let local_commit_objects = local_commits
         .into_iter()
         .map(|c| CommitObj {
           obj_json_string: serde_json::to_string(&c).unwrap(),
         })
         .collect::<Vec<CommitObj>>();
 
-      for commit in local_commits {
+      for commit in local_commit_objects {
         info!("Sending commit obj");
         let mut commit = remote_client.push(commit).await.unwrap().into_inner();
         info!("Commit received back");
@@ -1213,6 +1225,14 @@ impl Repository {
   /// And performs remote pull
   pub fn proceed_clean(&self, index: &mut impl IndexExt) -> Result<(), String> {
     unimplemented!()
+  }
+  pub fn print_commit_index(&self) -> Result<(), String> {
+    let ctx = self.ctx();
+    let local = CommitIndex::latest_local_commit_id(ctx);
+    let remote = CommitIndex::latest_remote_commit_id(ctx);
+    println!("Latest local commit id: {:?}", local);
+    println!("Latest remote commit id: {:?}", remote);
+    Ok(())
   }
   pub fn local_commits(&self) -> Result<Vec<Commit>, String> {
     CommitLog::load_locals(self.ctx())
