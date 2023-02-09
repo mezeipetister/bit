@@ -498,3 +498,24 @@ impl Drop for IndexDb {
         self.save_fs()
     }
 }
+
+#[derive(Debug)]
+pub struct ServerDb {
+    repository: Repository,
+}
+
+impl ServerDb {
+    pub fn load() -> Result<Self, String> {
+        let ctx = Context::new().map_err(|e| e.to_string())?;
+        let repository = Repository::load(repository::sync::Context::init(
+            ctx.bitdir_path().join("sync"),
+            "demo".to_string(), // TODO! Implement UID
+        ))?;
+        Ok(Self { repository })
+    }
+    pub fn start_server(self) -> Result<(), String> {
+        println!("Server started.");
+        let _ = self.repository.start_server::<BitAction>().serve()?;
+        Ok(())
+    }
+}

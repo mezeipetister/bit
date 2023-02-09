@@ -19,6 +19,7 @@ pub enum Commands {
         #[arg(short, long)]
         port: String,
     },
+    StartServer,
     Pull,
     Push,
     Staging,

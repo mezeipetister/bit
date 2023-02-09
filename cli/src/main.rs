@@ -1,3 +1,4 @@
+use corelib::index::ServerDb;
 use corelib::{index::IndexDb, prelude::CliError};
 use std::thread::sleep;
 use std::time::Duration;
@@ -36,6 +37,10 @@ fn main() -> Result<(), CliError> {
                 remote_address: format!("[::1]:{port}"),
             })?;
             println!("Repo inited as SERVER");
+        }
+        Some(Commands::StartServer) => {
+            let db = ServerDb::load().map_err(|e| CliError::Error(e))?;
+            db.start_server().map_err(|e| CliError::Error(e))?;
         }
         Some(Commands::Commit { message }) => {
             let mut db = IndexDb::load()?;
