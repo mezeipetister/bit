@@ -473,6 +473,30 @@ where
     Ok(self)
   }
 
+  // Append aob after parent check
+  fn add_aob_server_side(
+    mut self,
+    new_aob: ActionObject<A>,
+  ) -> Result<Self, String> {
+    match new_aob.is_local() {
+      true => {
+        return Err(
+          "Only remote aob can be append as remote procedure".to_string(),
+        )
+      }
+      false => {
+        let last_aob_id = self.actions.last().map(|aob| aob.id);
+        if new_aob.parent_action_id == last_aob_id {
+          self.actions.push(new_aob);
+          // self.check_status();
+        } else {
+          return Err("Cannot insert aob; parent aob not found".to_string());
+        }
+      }
+    }
+    Ok(self)
+  }
+
   // Check wether StorageObject is only local
   // True if no remote document
   fn is_local_document(&self) -> bool {
@@ -625,7 +649,7 @@ pub struct Commit {
   uid: String,
   dtime: DateTime<Utc>,
   comment: String,
-  ancestor_id: Uuid,
+  ancestor_id: Option<Uuid>,
   serialized_actions: Vec<String>, // ActionObject JSONs in Vec
   remote_signature: Option<String>, // Remote signature
 }
@@ -637,7 +661,7 @@ impl Commit {
       uid,
       dtime: Utc::now(),
       comment,
-      ancestor_id: Uuid::default(),
+      ancestor_id: None,
       serialized_actions: vec![],
       remote_signature: None,
     }
@@ -653,7 +677,7 @@ impl Commit {
   fn set_dtime(&mut self) {
     self.dtime = Utc::now()
   }
-  fn set_ancestor_id(&mut self, ancestor_id: Uuid) {
+  fn set_ancestor_id(&mut self, ancestor_id: Option<Uuid>) {
     self.ancestor_id = ancestor_id;
   }
   fn is_remote(&self) -> bool {
@@ -727,10 +751,9 @@ impl CommitLog {
     mut local_commit: Commit,
   ) -> Result<(), String> {
     // Set ancestor ID
-    if let Some(last_local_commit_id) = CommitIndex::latest_local_commit_id(ctx)
-    {
-      local_commit.set_ancestor_id(last_local_commit_id);
-    }
+    let last_local_commit_id = CommitIndex::latest_local_commit_id(ctx);
+    local_commit.set_ancestor_id(last_local_commit_id);
+
     // Set commit index
     CommitIndex::set_latest_local_id(ctx, Some(local_commit.id))?;
     // Save local commit
@@ -740,13 +763,12 @@ impl CommitLog {
     ctx: &Context,
     remote_commit: Commit,
   ) -> Result<(), String> {
-    let mut commit_index = CommitIndex::load(ctx);
     // check ancestor ID
-    if let Some(last_remote_commit_id) = commit_index.latest_remote_commit_id {
-      if remote_commit.ancestor_id != last_remote_commit_id {
-        return Err("Remote commit ancestor ID error! Please pull".into());
-      }
+    let last_remote_commit_id = CommitIndex::latest_remote_commit_id(ctx);
+    if remote_commit.ancestor_id != last_remote_commit_id {
+      return Err("Remote commit ancestor ID error! Please pull".into());
     }
+
     // Set commit index
     CommitIndex::set_latest_remote_id(ctx, Some(remote_commit.id))?;
     // Save remote commit
@@ -965,8 +987,34 @@ impl Repository {
     doc.save_to_fs(self.ctx())?;
     Ok(())
   }
+  /// Add AOB as a server side method
+  /// This method does not save the updated doc to the FS
+  /// Please handle the FS save later
+  pub fn add_aob_server_side<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &mut self,
+    new_aob: ActionObject<A>,
+  ) -> Result<Document<A>, String> {
+    let doc = match &new_aob.action {
+      ActionKind::Create(_) => {
+        let ctx = self.ctx().to_owned();
+        self.repo_details.document_create(&ctx, new_aob)?
+      }
+      ActionKind::Patch(_) => {
+        let doc: Document<A> = self.get_doc(new_aob.object_id)?;
+        // Add aob as server side procedure
+        // Just append after parent id check!
+        doc.add_aob_server_side(new_aob)?
+      }
+    };
+    Ok(doc)
+  }
   fn ctx(&self) -> &Context {
     &self.ctx
+  }
+  fn ctx_mut(&mut self) -> &mut Context {
+    &mut self.ctx
   }
   /// Load repository
   pub fn load(ctx: Context) -> Result<Self, String> {
@@ -1013,8 +1061,10 @@ impl Repository {
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   {
     BitServer {
-      repository: self,
-      action_kind: PhantomData,
+      inner: Arc::new(Mutex::new(ServerInner {
+        repository: self,
+        action_kind: PhantomData,
+      })),
     }
   }
 
@@ -1136,8 +1186,7 @@ impl Repository {
 }
 
 pub struct BitServer<A> {
-  repository: Repository,
-  action_kind: PhantomData<A>,
+  pub inner: Arc<Mutex<ServerInner<A>>>,
 }
 
 // Server implementation
@@ -1148,14 +1197,15 @@ where
   /// Start remote server
   /// Consumes self into server
   pub fn serve(self) -> Result<(), String> {
-    let server_addr = match &self.repository.repo_details.mode {
-      Mode::Server {
-        remote_address: server_addr,
-      } => server_addr.to_string(),
-      _ => {
-        panic!("Cannot start server, as the repository is not in server mode")
-      }
-    };
+    let server_addr =
+      match &self.inner.lock().unwrap().repository.repo_details.mode {
+        Mode::Server {
+          remote_address: server_addr,
+        } => server_addr.to_string(),
+        _ => {
+          panic!("Cannot start server, as the repository is not in server mode")
+        }
+      };
     let runtime = tokio::runtime::Builder::new_current_thread()
       .enable_all()
       .worker_threads(1)
@@ -1171,7 +1221,64 @@ where
     });
     Ok(())
   }
-  pub fn merge_push_request(&self, commit_str: &str) -> Result<Commit, String> {
-    unimplemented!()
+}
+
+pub struct ServerInner<A> {
+  pub repository: Repository,
+  action_kind: PhantomData<A>,
+}
+
+impl<A> ServerInner<A>
+where
+  A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug + 'static,
+{
+  pub fn merge_push_request(
+    &mut self,
+    commit_str: &str,
+  ) -> Result<Commit, String> {
+    // First deserialize commit from str
+    let mut commit: Commit = serde_json::from_str(commit_str)
+      .map_err(|_| "Error during deserialize commit json object".to_string())?;
+
+    // Let create ctx for file operations
+    let ctx = self.repository.ctx().to_owned();
+
+    // Check if commit parent id is ok
+    let last_remote_commit_id = CommitIndex::latest_remote_commit_id(&ctx);
+    if last_remote_commit_id != commit.ancestor_id {
+      return Err(
+        "Commit parent id error. Please pull before commit.".to_string(),
+      );
+    }
+
+    let mut updated_docs: Vec<Document<A>> = vec![];
+
+    // Process aobs
+    for aob_str in &commit.serialized_actions {
+      // Deserialize aob
+      let mut aob: ActionObject<A> = serde_json::from_str(aob_str)
+        .map_err(|_| "Error during aob deserialization".to_string())?;
+      // Sign AOB to be a remote one!
+      aob.remote_sign();
+      // Try to add aob
+      let doc = self.repository.add_aob_server_side(aob)?;
+      // Add unsaved new docs to the result vector
+      // FS save later
+      updated_docs.push(doc);
+    }
+
+    // Sign commit
+    commit.add_remote_signature()?;
+
+    // Save commit to FS
+    CommitLog::add_remote_commit(&ctx, commit.clone())?;
+
+    // Save updated docs to the FS
+    for doc in updated_docs {
+      doc.save_to_fs(&ctx)?;
+    }
+
+    // Return commit as signed
+    Ok(commit)
   }
 }

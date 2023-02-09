@@ -68,10 +68,13 @@ where
   ) -> Result<Response<CommitObj>, Status> {
     let commit_obj = request.into_inner();
 
-    let res = self
+    let mut _self = self.inner.lock().unwrap();
+
+    let res = _self
       .merge_push_request(&commit_obj.obj_json_string)
       .map_err(|e| Status::internal(e))?;
 
+    // Pack back commit as json serialized reply
     let res = CommitObj {
       obj_json_string: serde_json::to_string(&res).unwrap(),
     };
