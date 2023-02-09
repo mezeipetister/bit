@@ -70,6 +70,7 @@ pub enum AccountCommands {
         name: Option<String>,
     },
     Remove,
+    History,
     Restore,
     Set {
         #[arg(long)]

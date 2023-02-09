@@ -1,3 +1,7 @@
+use chrono::{DateTime, Utc};
+use futures_util::stream;
+use serde::{Deserialize, Serialize};
+use std::fmt::Write;
 use std::{
   collections::{HashMap, HashSet},
   fmt::{Debug, Display},
@@ -7,10 +11,6 @@ use std::{
   path::PathBuf,
   sync::{Arc, Mutex, MutexGuard},
 };
-
-use chrono::{DateTime, Utc};
-use futures_util::stream;
-use serde::{Deserialize, Serialize};
 use tonic::{transport::Server, Request};
 use uuid::Uuid;
 
@@ -49,6 +49,15 @@ where
   Create(A),
   /// Patch object with action A
   Patch(A),
+}
+
+impl<A: ActionExt> Display for ActionKind<A> {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      ActionKind::Create(a) => write!(f, "CREATE: {}", a.display()),
+      ActionKind::Patch(a) => write!(f, "PATCH: {}", a.display()),
+    }
+  }
 }
 
 /// ActionObject must be produced by a StorageObject
@@ -179,7 +188,7 @@ where
   A: ActionExt,
   T: ActionPatch<A> + Default,
 {
-  object_id: Uuid,
+  pub object_id: Uuid,
   storage_id: String,
   data: T,
   last_aob_id: Uuid,
@@ -386,6 +395,27 @@ impl<A> Document<A>
 where
   A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
 {
+  pub fn print(&self) -> String {
+    let mut res = String::new();
+    writeln!(res, "ID: {id}", id = self.id);
+    writeln!(
+      res,
+      "Storage ID: {storage_id}",
+      storage_id = self.storage_id
+    );
+    writeln!(res, "Status: {:?}\n", self.status);
+    writeln!(res, "History:\n----------------------\n");
+    self.actions.iter().for_each(|action| {
+      writeln!(
+        res,
+        "{msg}\n    {dtime} - {uid}\n",
+        dtime = action.dtime.naive_local().to_string(),
+        uid = action.uid,
+        msg = action.action
+      );
+    });
+    res
+  }
   // Find AOB place in actions
   // and insert it
   fn add_aob(mut self, new_aob: ActionObject<A>) -> Result<Self, String> {
@@ -825,7 +855,9 @@ pub struct Repository {
 }
 
 impl Repository {
-  fn get_doc<A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug>(
+  pub fn get_doc<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
     &self,
     document_id: Uuid,
   ) -> Result<Document<A>, String> {

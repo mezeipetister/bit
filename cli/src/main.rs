@@ -128,6 +128,11 @@ fn main() -> Result<(), CliError> {
                     let mut db = IndexDb::load()?;
                     db.account_restore(&id)?;
                 }
+                AccountCommands::History => {
+                    let db = IndexDb::load()?;
+                    let res = db.account_history(&id)?;
+                    println!("{res}");
+                }
                 AccountCommands::Set { name } => {
                     let mut db = IndexDb::load()?;
                     let name = name.unwrap_or_else(|| read_input("New name:"));
@@ -137,7 +142,7 @@ fn main() -> Result<(), CliError> {
             },
             (None, Some(command)) => match command {
                 AccountCommands::All => {
-                    let db = IndexDb::load()?;
+                    let mut db = IndexDb::load()?;
                     println!("{}", db.account_get_all());
                 }
                 AccountCommands::Add { id, name } => {

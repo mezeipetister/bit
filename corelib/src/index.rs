@@ -18,6 +18,7 @@ use std::{
     ops::{Deref, DerefMut},
     rc::Rc,
 };
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum IndexError {
@@ -113,6 +114,13 @@ impl IndexDb {
         binary_update(path_helper::index(&self.ctx), &self.inner)
             .expect("Error writing bit db to fs");
     }
+    pub fn print_document(&self, doc_id: Uuid) -> Result<String, CliError> {
+        let res = self
+            .repository
+            .get_doc::<BitAction>(doc_id)
+            .map_err(|e| CliError::Error(e))?;
+        Ok(res.print())
+    }
     pub fn db_emptyindex(&mut self) -> Result<(), CliError> {
         self.inner.reset_docrefs().map_err(|e| CliError::Error(e))
     }
@@ -134,6 +142,14 @@ impl IndexDb {
                 Ok(())
             }
         }
+    }
+    pub fn account_history(&self, id: &str) -> Result<String, CliError> {
+        let account = self
+            .accounts
+            .iter()
+            .find(|a| a.deref().id() == id)
+            .ok_or(CliError::Error("Account not found".to_string()))?;
+        self.print_document(account.object_id)
     }
     fn account_patch(&mut self, id: &str, patch: BitAction) -> Result<(), CliError> {
         let account = self
@@ -378,7 +394,8 @@ impl IndexInner {
             .map(|i| i.deref_mut())
             .ok_or(CliError::Error("Account not found".to_string()))
     }
-    pub fn account_get_all(&self) -> impl Display {
+    pub fn account_get_all(&mut self) -> impl Display {
+        self.account_sort();
         self.accounts
             .deref()
             .iter()
