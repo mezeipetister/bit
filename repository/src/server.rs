@@ -1,7 +1,9 @@
-use crate::sync::Repository;
+use crate::sync::{ActionExt, BitServer, Commit, CommitLog, Repository};
 use async_stream::stream;
 use futures::pin_mut;
 use futures_util::stream::StreamExt;
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use std::pin::Pin;
 use sync_api::api_server::{Api, ApiServer};
 use sync_api::{CommitObj, PullRequest};
@@ -15,7 +17,10 @@ pub mod sync_api {
 }
 
 #[tonic::async_trait]
-impl Api for Repository {
+impl<A> Api for BitServer<A>
+where
+  A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug + 'static,
+{
   type PullStream = ReceiverStream<Result<CommitObj, Status>>;
 
   async fn pull(
@@ -64,11 +69,10 @@ impl Api for Repository {
     let commit_obj = request.into_inner();
 
     // let res = self
-    //   .inner()
-    //   .merge_pushed_commit(&commit_obj.obj_json_string)
+    //   .merge_push_request(&commit_obj.obj_json_string)
     //   .unwrap();
 
-    // // let (mut tx, rx) = tokio::sync::mpsc::channel(100);
+    // let (mut tx, rx) = tokio::sync::mpsc::channel(100);
 
     // let res = CommitObj {
     //   obj_json_string: serde_json::to_string(&res).unwrap(),

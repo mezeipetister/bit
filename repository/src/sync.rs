@@ -30,7 +30,7 @@ use crate::{
 
 /// Action trait for Actionable types
 /// Implemented types can be used as storage patch objects.
-pub trait ActionExt: Clone + Send {
+pub trait ActionExt: Clone + Send + Sync {
   /// Human readable display msg
   /// This can be used in UI to display
   /// Patch actions
@@ -1006,31 +1006,16 @@ impl Repository {
 
     unimplemented!()
   }
-  /// Start remote server
-  /// Consumes self into server
-  pub fn serve(self) -> Result<(), String> {
-    let server_addr = match &self.repo_details.mode {
-      Mode::Server {
-        remote_address: server_addr,
-      } => server_addr.to_string(),
-      _ => {
-        panic!("Cannot start server, as the repository is not in server mode")
-      }
-    };
-    let runtime = tokio::runtime::Builder::new_current_thread()
-      .enable_all()
-      .worker_threads(1)
-      .thread_name("sync_server")
-      .build()
-      .unwrap();
-    runtime.block_on(async {
-      Server::builder()
-        .add_service(ApiServer::new(self))
-        .serve(server_addr.parse().unwrap())
-        .await
-        .expect("Error starting server");
-    });
-    Ok(())
+
+  // Start server
+  pub fn start_server<A>(self) -> BitServer<A>
+  where
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  {
+    BitServer {
+      repository: self,
+      action_kind: PhantomData,
+    }
   }
 
   /// Pull remote repository
@@ -1147,5 +1132,42 @@ impl Repository {
     after_id: Uuid,
   ) -> Result<Vec<Commit>, String> {
     CommitLog::load_remotes_after(self.ctx(), after_id)
+  }
+}
+
+pub struct BitServer<A> {
+  repository: Repository,
+  action_kind: PhantomData<A>,
+}
+
+impl<A> BitServer<A>
+where
+  A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug + 'static,
+{
+  /// Start remote server
+  /// Consumes self into server
+  pub fn serve(self) -> Result<(), String> {
+    let server_addr = match &self.repository.repo_details.mode {
+      Mode::Server {
+        remote_address: server_addr,
+      } => server_addr.to_string(),
+      _ => {
+        panic!("Cannot start server, as the repository is not in server mode")
+      }
+    };
+    let runtime = tokio::runtime::Builder::new_current_thread()
+      .enable_all()
+      .worker_threads(1)
+      .thread_name("sync_server")
+      .build()
+      .unwrap();
+    runtime.block_on(async {
+      Server::builder()
+        .add_service(ApiServer::new(self))
+        .serve(server_addr.parse().unwrap())
+        .await
+        .expect("Error starting server");
+    });
+    Ok(())
   }
 }
