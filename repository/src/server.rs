@@ -68,18 +68,15 @@ where
   ) -> Result<Response<CommitObj>, Status> {
     let commit_obj = request.into_inner();
 
-    // let res = self
-    //   .merge_push_request(&commit_obj.obj_json_string)
-    //   .unwrap();
+    let res = self
+      .merge_push_request(&commit_obj.obj_json_string)
+      .map_err(|e| Status::internal(e))?;
 
-    // let (mut tx, rx) = tokio::sync::mpsc::channel(100);
-
-    // let res = CommitObj {
-    //   obj_json_string: serde_json::to_string(&res).unwrap(),
-    // };
-    // tx.send(Ok(res)).await.unwrap();
+    let res = CommitObj {
+      obj_json_string: serde_json::to_string(&res).unwrap(),
+    };
 
     // Send back the receiver
-    Ok(Response::new(todo!()))
+    Ok(Response::new(res))
   }
 }

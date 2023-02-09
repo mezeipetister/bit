@@ -1140,6 +1140,7 @@ pub struct BitServer<A> {
   action_kind: PhantomData<A>,
 }
 
+// Server implementation
 impl<A> BitServer<A>
 where
   A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug + 'static,
@@ -1169,5 +1170,8 @@ where
         .expect("Error starting server");
     });
     Ok(())
+  }
+  pub fn merge_push_request(&self, commit_str: &str) -> Result<Commit, String> {
+    unimplemented!()
   }
 }
