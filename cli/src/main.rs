@@ -29,7 +29,13 @@ fn main() -> Result<(), CliError> {
         Some(Commands::Log) => (),
         Some(Commands::InitLocal) => {
             let _ = IndexDb::init(repository::sync::Mode::Local)?;
-            println!("Repo inited");
+            println!("Repo inited as LOCAL");
+        }
+        Some(Commands::InitServer { port }) => {
+            let _ = IndexDb::init(repository::sync::Mode::Server {
+                remote_address: format!("[::1]:{port}"),
+            })?;
+            println!("Repo inited as SERVER");
         }
         Some(Commands::Commit { message }) => {
             let mut db = IndexDb::load()?;

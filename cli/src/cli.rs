@@ -15,6 +15,10 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     InitLocal,
+    InitServer {
+        #[arg(short, long)]
+        port: String,
+    },
     Pull,
     Push,
     Staging,
