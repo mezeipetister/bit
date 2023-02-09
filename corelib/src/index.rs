@@ -110,6 +110,10 @@ impl IndexDb {
         let _ = self.repository.proceed_push(&mut self.inner)?;
         Ok(())
     }
+    pub fn commit(&mut self, comment: String) -> Result<(), String> {
+        let res = self.repository.commit::<BitAction>(comment)?;
+        Ok(())
+    }
     fn save_fs(&self) {
         binary_update(path_helper::index(&self.ctx), &self.inner)
             .expect("Error writing bit db to fs");

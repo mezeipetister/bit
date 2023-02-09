@@ -117,9 +117,11 @@ where
   fn is_staging(&self) -> bool {
     self.commit_id.is_none()
   }
-  fn be_commited(&mut self, commit_id: Uuid) {
+  // Add aob to local commit
+  fn be_commited(&mut self, commit: &mut Commit) {
     if self.is_staging() {
-      self.commit_id = Some(commit_id);
+      self.commit_id = Some(commit.id);
+      commit.add_action_object(self);
     }
   }
   fn has_valid_signature(&self) -> bool {
@@ -409,9 +411,12 @@ where
       writeln!(
         res,
         "[{local}] {msg}\n    {dtime} - {uid}\n",
-        local = match action.is_local() {
-          true => "L",
-          false => "R",
+        local = match action.is_staging() {
+          true => "S",
+          false => match action.is_local() {
+            true => "L",
+            false => "R",
+          },
         },
         dtime = action.dtime.naive_local().to_string(),
         uid = action.uid,
@@ -419,6 +424,26 @@ where
       );
     });
     res
+  }
+  // Return staging aobs
+  // using to collect all repo staging aobs
+  fn get_staging_aobs(&self) -> Vec<&ActionObject<A>> {
+    self
+      .actions
+      .iter()
+      .filter(|aob| aob.is_staging())
+      .collect::<Vec<&ActionObject<A>>>()
+  }
+  // Return staging aobs
+  // using to collect all repo staging aobs
+  pub fn commit(&mut self, commit: &mut Commit) {
+    self
+      .actions
+      .iter_mut()
+      .filter(|aob| aob.is_staging())
+      .for_each(|aob| {
+        aob.be_commited(commit);
+      });
   }
   // Find AOB place in actions
   // and insert it
@@ -516,15 +541,6 @@ where
       }
     });
     res
-  }
-  fn close_staging(&mut self, commit_id: Uuid) {
-    if self.check_has_staging_aob() {
-      for aob in &mut self.actions {
-        if aob.is_staging() {
-          aob.be_commited(commit_id);
-        }
-      }
-    }
   }
   // Perform status check
   fn check_status(&mut self) {
@@ -626,13 +642,13 @@ impl Commit {
       remote_signature: None,
     }
   }
-  fn add_action_object<A>(&mut self, aob: ActionObject<A>)
+  fn add_action_object<A>(&mut self, aob: &ActionObject<A>)
   where
     A: ActionExt + Serialize,
   {
     self
       .serialized_actions
-      .push(serde_json::to_string(&aob).unwrap());
+      .push(serde_json::to_string(aob).unwrap());
   }
   fn set_dtime(&mut self) {
     self.dtime = Utc::now()
@@ -859,6 +875,35 @@ pub struct Repository {
 }
 
 impl Repository {
+  pub fn commit<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &mut self,
+    comment: String,
+  ) -> Result<(), String> {
+    let mut docs_to_commit = vec![];
+    let ctx = self.ctx();
+    for document_id in &self.repo_details.document_ids {
+      let doc = self.repo_details.document_get::<A>(ctx, *document_id)?;
+      if doc.check_has_staging_aob() {
+        docs_to_commit.push(doc);
+      }
+    }
+    if docs_to_commit.is_empty() {
+      return Err("Nothing to commit.".to_string());
+    }
+    // Create empty commit
+    let mut commit = Commit::new(ctx.uid.to_string(), comment);
+    // Add all docs to commit
+    docs_to_commit.into_iter().for_each(|mut d| {
+      d.commit(&mut commit);
+      let _ = d.save_to_fs(ctx);
+    });
+    // Add commit as local commit
+    CommitLog::add_local_commit(ctx, commit)?;
+    // Return ok
+    Ok(())
+  }
   pub fn get_doc<
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   >(
@@ -883,9 +928,21 @@ impl Repository {
 
     Ok(())
   }
-  pub fn get_staging_aobs<A: ActionExt>(&self) -> Vec<ActionObject<A>> {
+  pub fn get_staging_aobs<
+    A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  >(
+    &self,
+  ) -> Result<Vec<ActionObject<A>>, String> {
     let mut res = vec![];
-    res
+    for document_id in &self.repo_details.document_ids {
+      if let Ok(doc) = self.get_doc::<A>(*document_id) {
+        let aobs = doc.get_staging_aobs();
+        if !aobs.is_empty() {
+          aobs.into_iter().for_each(|aob| res.push((*aob).clone()));
+        }
+      }
+    }
+    Ok(res)
   }
   pub fn add_aob<
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,

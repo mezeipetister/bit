@@ -9,8 +9,6 @@ use clap::Parser;
 fn main() -> Result<(), CliError> {
     let cli = Cli::parse();
 
-    let sudo = cli.y;
-
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match cli.command {
@@ -26,13 +24,18 @@ fn main() -> Result<(), CliError> {
                 println!("Ok");
             }
         },
+        Some(Commands::Staging) => (),
+        Some(Commands::ClearStaging) => (),
+        Some(Commands::Log) => (),
         Some(Commands::InitLocal) => {
             let _ = IndexDb::init(repository::sync::Mode::Local)?;
             println!("Repo inited");
         }
-        Some(Commands::Commit { message }) => println!("Commit with message {message}"),
-        Some(Commands::LocalChanges) => println!("Local changes.."),
-        Some(Commands::ClearLocalChanges) => println!("Clear local changes.."),
+        Some(Commands::Commit { message }) => {
+            let mut db = IndexDb::load()?;
+            db.commit(message).map_err(|e| CliError::Error(e))?;
+            println!("Ok");
+        }
         Some(Commands::Pull) => {
             use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
             use std::thread;
@@ -118,9 +121,9 @@ fn main() -> Result<(), CliError> {
                 println!("{}", db.account_get(&id)?)
             }
             (Some(id), Some(command)) => match command {
-                AccountCommands::Remove => {
+                AccountCommands::Remove { y } => {
                     let mut db = IndexDb::load()?;
-                    if read_confirm(sudo) {
+                    if read_confirm(y) {
                         db.account_remove(&id)?;
                     }
                 }
@@ -162,9 +165,9 @@ fn main() -> Result<(), CliError> {
                 println!("{}", db.partner_get(&id)?)
             }
             (Some(id), Some(command)) => match command {
-                PartnerCommands::Remove => {
+                PartnerCommands::Remove { y } => {
                     let mut db = IndexDb::load()?;
-                    if read_confirm(sudo) {
+                    if read_confirm(y) {
                         db.partner_remove(&id)?;
                     }
                 }

@@ -8,8 +8,6 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     pub debug: u8,
-    #[arg(short, long, action, global = true)]
-    pub y: bool,
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
@@ -19,8 +17,9 @@ pub enum Commands {
     InitLocal,
     Pull,
     Push,
-    LocalChanges,
-    ClearLocalChanges,
+    Staging,
+    ClearStaging,
+    Log,
     Db {
         #[command(subcommand)]
         command: DbCommand,
@@ -69,7 +68,10 @@ pub enum AccountCommands {
         #[arg(long)]
         name: Option<String>,
     },
-    Remove,
+    Remove {
+        #[arg(short, long, action)]
+        y: bool,
+    },
     History,
     Restore,
     Set {
@@ -87,7 +89,10 @@ pub enum PartnerCommands {
         #[arg(long)]
         name: Option<String>,
     },
-    Remove,
+    Remove {
+        #[arg(short, long, action)]
+        y: bool,
+    },
     Set {
         #[arg(long)]
         name: Option<String>,
