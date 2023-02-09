@@ -514,8 +514,18 @@ impl ServerDb {
         Ok(Self { repository })
     }
     pub fn start_server(self) -> Result<(), String> {
-        println!("Server started.");
-        let _ = self.repository.start_server::<BitAction>().serve()?;
+        match self.repository.is_server_mode() {
+            true => {
+                println!(
+                    "Server started at address: {}",
+                    self.repository
+                        .get_server_address()
+                        .unwrap_or(&"-".to_string())
+                );
+                let _ = self.repository.start_server::<BitAction>().serve()?;
+            }
+            false => return Err("Repository is not in server mode!".to_string()),
+        }
         Ok(())
     }
 }

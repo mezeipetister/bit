@@ -897,6 +897,18 @@ pub struct Repository {
 }
 
 impl Repository {
+  pub fn get_server_address(&self) -> Option<&String> {
+    match &self.repo_details.mode {
+      Mode::Server { remote_address } => Some(remote_address),
+      _ => None,
+    }
+  }
+  pub fn is_server_mode(&self) -> bool {
+    match &self.repo_details.mode {
+      Mode::Server { .. } => true,
+      _ => false,
+    }
+  }
   pub fn commit<
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   >(
