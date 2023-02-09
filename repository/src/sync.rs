@@ -408,7 +408,11 @@ where
     self.actions.iter().for_each(|action| {
       writeln!(
         res,
-        "{msg}\n    {dtime} - {uid}\n",
+        "[{local}] {msg}\n    {dtime} - {uid}\n",
+        local = match action.is_local() {
+          true => "L",
+          false => "R",
+        },
         dtime = action.dtime.naive_local().to_string(),
         uid = action.uid,
         msg = action.action
