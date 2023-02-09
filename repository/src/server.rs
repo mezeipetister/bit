@@ -27,33 +27,39 @@ where
     &self,
     request: Request<PullRequest>, // Accept request of type HelloRequest
   ) -> Result<Response<Self::PullStream>, Status> {
+    // Lock self
+    let mut _self = self.inner.lock().unwrap();
+
     // Return an instance of type HelloReply
     let (mut tx, rx) = tokio::sync::mpsc::channel(100);
 
     // Get resources as Vec<SourceObject>
     let commit_id_str = &request.into_inner().after_commit_id;
 
-    // let res = match commit_id_str.len() > 0 {
-    //   true => {
-    //     let after_id = Uuid::parse_str(commit_id_str)
-    //       .map_err(|_| Status::invalid_argument("Wrong commit_id format"))?;
-    //     self.inner().remote_commits_after(after_id).map_err(|_| {
-    //       Status::invalid_argument("Error collection remote logs")
-    //     })?
-    //   }
-    //   false => self.inner().remote_commits().map_err(|_| {
-    //     Status::invalid_argument("Error collecting remote logs")
-    //   })?,
-    // };
+    let res = match commit_id_str.len() > 0 {
+      true => {
+        let after_id = Uuid::parse_str(commit_id_str)
+          .map_err(|_| Status::invalid_argument("Wrong commit_id format"))?;
+        _self
+          .repository
+          .remote_commits_after(after_id)
+          .map_err(|_| {
+            Status::invalid_argument("Error collection remote logs")
+          })?
+      }
+      false => _self.repository.remote_commits().map_err(|_| {
+        Status::invalid_argument("Error collecting remote logs")
+      })?,
+    };
 
     // Send the result items through the channel
     tokio::spawn(async move {
-      // for commit in res.into_iter() {
-      //   let r: CommitObj = CommitObj {
-      //     obj_json_string: serde_json::to_string(&commit).unwrap(),
-      //   };
-      //   tx.send(Ok(r)).await.unwrap();
-      // }
+      for commit in res.into_iter() {
+        let r: CommitObj = CommitObj {
+          obj_json_string: serde_json::to_string(&commit).unwrap(),
+        };
+        tx.send(Ok(r)).await.unwrap();
+      }
     });
 
     // Send back the receiver
@@ -68,6 +74,7 @@ where
   ) -> Result<Response<CommitObj>, Status> {
     let commit_obj = request.into_inner();
 
+    // Lock self
     let mut _self = self.inner.lock().unwrap();
 
     let res = _self
