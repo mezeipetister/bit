@@ -20,6 +20,11 @@ fn main() -> Result<(), CliError> {
                 db.db_reindex()?;
                 println!("Ok");
             }
+            DbCommand::EmptyIndex => {
+                let mut db = IndexDb::load()?;
+                db.db_emptyindex()?;
+                println!("Ok");
+            }
         },
         Some(Commands::InitLocal) => {
             let _ = IndexDb::init(repository::sync::Mode::Local)?;

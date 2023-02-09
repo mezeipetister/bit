@@ -11,7 +11,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use cli_table::{Table, WithTitle};
-use repository::sync::{DocRefVec, Document, Mode, Repository};
+use repository::sync::{DocRefVec, Document, IndexExt, Mode, Repository};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
@@ -112,6 +112,9 @@ impl IndexDb {
     fn save_fs(&self) {
         binary_update(path_helper::index(&self.ctx), &self.inner)
             .expect("Error writing bit db to fs");
+    }
+    pub fn db_emptyindex(&mut self) -> Result<(), CliError> {
+        self.inner.reset_docrefs().map_err(|e| CliError::Error(e))
     }
     pub fn db_reindex(&mut self) -> Result<(), CliError> {
         self.repository
@@ -316,6 +319,7 @@ impl repository::sync::IndexExt for IndexInner {
         self.accounts.reset();
         self.notes.reset();
         self.partners.reset();
+        self.ledger = Ledger::default();
         Ok(())
     }
 
@@ -453,6 +457,7 @@ impl IndexInner {
             .collect::<Vec<String>>()
     }
     pub fn get_ledger(&mut self, month: Option<u32>) -> Result<MonthlySummary, CliError> {
+        self.account_sort();
         self.ledger.get(
             self.accounts
                 .iter()

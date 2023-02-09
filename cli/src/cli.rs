@@ -57,6 +57,7 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum DbCommand {
     Reindex,
+    EmptyIndex,
 }
 
 #[derive(Subcommand)]
