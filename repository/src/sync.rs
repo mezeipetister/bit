@@ -1192,7 +1192,7 @@ impl Repository {
         commits.push(commit);
       }
 
-      for commit_obj in commits {
+      for commit_obj in &commits {
         let commit: Commit = serde_json::from_str(&commit_obj.obj_json_string)
           .expect("Commit deser error");
 
@@ -1206,6 +1206,8 @@ impl Repository {
           self.add_aob(aob, index).unwrap();
         }
       }
+
+      println!("Pulled {} commits.", commits.len());
     });
 
     Ok(())
@@ -1252,9 +1254,11 @@ impl Repository {
         })
         .collect::<Vec<CommitObj>>();
 
+      let mut i = 0;
       for commit in local_commit_objects {
+        i += 1;
         info!("Sending commit obj");
-        let mut commit = remote_client.push(commit).await.unwrap().into_inner();
+        let commit = remote_client.push(commit).await.unwrap().into_inner();
         info!("Commit received back");
         // Deserialize commit obj
         let c: Commit = serde_json::from_str(&commit.obj_json_string)
@@ -1265,6 +1269,8 @@ impl Repository {
       // Reset local commits
       CommitLog::reset_local_commits(ctx)
         .expect("Error reseting local commits");
+
+      println!("Pushed {i} commits.");
     });
 
     // Proceed pull operation
