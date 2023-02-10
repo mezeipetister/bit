@@ -448,30 +448,54 @@ where
   // Find AOB place in actions
   // and insert it
   fn add_aob(mut self, new_aob: ActionObject<A>) -> Result<Self, String> {
-    match new_aob.is_local() {
-      true => self.actions.push(new_aob),
-      false => {
-        // Remove itself as local aob
-        self.actions.retain(|aob| aob.id != new_aob.id);
-        // find parent position
-        let position = self.actions.iter().position(|aob| {
-          if let Some(parent_action_id) = new_aob.parent_action_id {
-            aob.id == parent_action_id
-          } else {
-            false
-          }
-        });
-        match position {
-          Some(index) => {
-            self.actions.insert(index + 1, new_aob);
-            self.check_status();
-          }
-          None => {
-            return Err("Cannot insert aob; parent aob not found".to_string())
-          }
-        }
-      }
+    // 1) Update itself
+    if let Some(aob) = &mut self.actions.iter().find(|aob| aob.id == new_aob.id)
+    {
+      // If aob is in the acionts;
+      // update it
+      // TODO! We should check to replace only width remote AOB
+      std::mem::swap(aob, &mut &new_aob);
+      return Ok(self);
     }
+    // 2) Insert after position
+    if let Some(position) = self.actions.iter().position(|aob| {
+      if let Some(parent_action_id) = new_aob.parent_action_id {
+        aob.id == parent_action_id
+      } else {
+        false
+      }
+    }) {
+      self.actions.insert(position + 1, new_aob);
+      self.check_status();
+      return Ok(self);
+    }
+
+    return Err("Cannot insert aob; parent aob not found".to_string());
+
+    // match new_aob.is_local() {
+    //   true => self.actions.push(new_aob),
+    //   false => {
+    //     // Remove itself as local aob
+    //     self.actions.retain(|aob| aob.id != new_aob.id);
+    //     // find parent position
+    //     let position = self.actions.iter().position(|aob| {
+    //       if let Some(parent_action_id) = new_aob.parent_action_id {
+    //         aob.id == parent_action_id
+    //       } else {
+    //         false
+    //       }
+    //     });
+    //     match position {
+    //       Some(index) => {
+    //         self.actions.insert(index + 1, new_aob);
+    //         self.check_status();
+    //       }
+    //       None => {
+    //         return Err("Cannot insert aob; parent aob not found".to_string())
+    //       }
+    //     }
+    //   }
+    // }
     Ok(self)
   }
 
@@ -491,7 +515,7 @@ where
         if new_aob.parent_action_id == last_aob_id {
           self.actions.push(new_aob);
           // self.check_status();
-        } else {
+        } else {  
           return Err("Cannot insert aob; parent aob not found".to_string());
         }
       }
@@ -903,6 +927,20 @@ impl RepoDetails {
       }
     }
   }
+  // Update aob signature after push
+  // fn update_aob_signature<
+  //   A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
+  // >(
+  //   &mut self,
+  //   ctx: &Context,
+  //   aob: ActionObject<A>,
+  // ) -> Result<Document<A>, String> {
+  //   if let Ok(doc) = self.document_get::<A>(ctx, aob.object_id) {
+  //     for aob in &mut doc.actions {}
+  //     return Err("Cannot find AOB to update signature".to_string());
+  //   }
+  //   return Err("Unknown document".to_string());
+  // }
 }
 
 #[derive(Debug)]
@@ -1000,18 +1038,30 @@ impl Repository {
     new_aob: ActionObject<A>,
     index: &mut impl IndexExt<ActionType = A>,
   ) -> Result<(), String> {
-    let doc = match &new_aob.action {
-      ActionKind::Create(_) => {
-        let ctx = self.ctx().to_owned();
-        self.repo_details.document_create(&ctx, new_aob)?
-      }
-      ActionKind::Patch(_) => {
-        let doc: Document<A> = self.get_doc(new_aob.object_id)?;
-        doc.add_aob(new_aob)?
+    // 1) Check if document exist
+    let doc = match self.get_doc(new_aob.object_id) {
+      // If document exist, add aob to it
+      Ok(doc) => doc.add_aob(new_aob)?,
+      // If document does not exit
+      Err(_) => {
+        // Check if action create
+        match &new_aob.action {
+          // If create action, then create it
+          ActionKind::Create(_) => {
+            let ctx = self.ctx().to_owned();
+            self.repo_details.document_create(&ctx, new_aob)?
+          }
+          ActionKind::Patch(_) => {
+            return Err("Patch aob cannot be added to a not existing document. Pull first.".to_string());
+          }
+        }
       }
     };
+    // Update index with the updated doc
     index.sync_doc(&doc)?;
+    // Save updated doc to the FS
     doc.save_to_fs(self.ctx())?;
+    // Return Ok
     Ok(())
   }
   /// Add AOB as a server side method
@@ -1315,6 +1365,7 @@ where
     }
 
     let mut updated_docs: Vec<Document<A>> = vec![];
+    let mut signed_aobs: Vec<ActionObject<A>> = vec![];
 
     // Process aobs
     for aob_str in &commit.serialized_actions {
@@ -1324,14 +1375,21 @@ where
       // Sign AOB to be a remote one!
       aob.remote_sign();
       // Try to add aob
-      let doc = self.repository.add_aob_server_side(aob)?;
+      let doc = self.repository.add_aob_server_side(aob.clone())?;
       // Add unsaved new docs to the result vector
       // FS save later
       updated_docs.push(doc);
+      // Add signed aob to Signed aobs
+      signed_aobs.push(aob);
     }
 
     // Sign commit
     commit.add_remote_signature()?;
+    // Change aobs to signed ones
+    commit.serialized_actions = signed_aobs
+      .into_iter()
+      .map(|aob| serde_json::to_string(&aob).unwrap())
+      .collect::<Vec<String>>();
 
     // Save commit to FS
     CommitLog::add_remote_commit(&ctx, commit.clone())?;
