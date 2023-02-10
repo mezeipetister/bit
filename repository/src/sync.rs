@@ -515,7 +515,7 @@ where
         if new_aob.parent_action_id == last_aob_id {
           self.actions.push(new_aob);
           // self.check_status();
-        } else {  
+        } else {
           return Err("Cannot insert aob; parent aob not found".to_string());
         }
       }
@@ -1378,6 +1378,7 @@ where
       let doc = self.repository.add_aob_server_side(aob.clone())?;
       // Add unsaved new docs to the result vector
       // FS save later
+      doc.save_to_fs(&ctx)?;
       updated_docs.push(doc);
       // Add signed aob to Signed aobs
       signed_aobs.push(aob);
@@ -1396,7 +1397,7 @@ where
 
     // Save updated docs to the FS
     for doc in updated_docs {
-      doc.save_to_fs(&ctx)?;
+      // doc.save_to_fs(&ctx)?;
     }
 
     // Return commit as signed
