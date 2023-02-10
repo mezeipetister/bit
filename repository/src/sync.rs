@@ -447,14 +447,15 @@ where
   }
   // Find AOB place in actions
   // and insert it
-  fn add_aob(mut self, new_aob: ActionObject<A>) -> Result<Self, String> {
+  fn add_aob(mut self, mut new_aob: ActionObject<A>) -> Result<Self, String> {
     // 1) Update itself
-    if let Some(aob) = &mut self.actions.iter().find(|aob| aob.id == new_aob.id)
+    if let Some(aob) = self.actions.iter_mut().find(|aob| aob.id == new_aob.id)
     {
       // If aob is in the acionts;
       // update it
       // TODO! We should check to replace only width remote AOB
-      std::mem::swap(aob, &mut &new_aob);
+      std::mem::swap(aob, &mut new_aob);
+      // aob.remote_signature = new_aob.remote_signature;
       return Ok(self);
     }
     // 2) Insert after position
@@ -1376,9 +1377,12 @@ where
       aob.remote_sign();
       // Try to add aob
       let doc = self.repository.add_aob_server_side(aob.clone())?;
+      // TODO! Implement somehow failure tolerance
+      // TODO! the original way produce errors, as the fs doc version does not contain
+      // TODO! the updated versions
+      doc.save_to_fs(&ctx)?;
       // Add unsaved new docs to the result vector
       // FS save later
-      doc.save_to_fs(&ctx)?;
       updated_docs.push(doc);
       // Add signed aob to Signed aobs
       signed_aobs.push(aob);
