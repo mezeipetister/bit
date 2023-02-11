@@ -17,12 +17,15 @@ pub enum Commands {
     InitLocal,
     InitServer {
         #[arg(short, long)]
-        port: String,
+        address: String,
     },
     Clone {
         remote_url: String,
     },
-    StartServer,
+    StartServer {
+        #[arg(short, long)]
+        address: String,
+    },
     Pull,
     Push,
     Staging,

@@ -1134,7 +1134,7 @@ impl Repository {
   }
 
   // Start server
-  pub fn start_server<A>(self) -> BitServer<A>
+  pub fn start_server<A>(self, remote_address: String) -> BitServer<A>
   where
     A: ActionExt + Serialize + for<'de> Deserialize<'de> + Debug,
   {
@@ -1142,6 +1142,7 @@ impl Repository {
       inner: Arc::new(Mutex::new(ServerInner {
         repository: self,
         action_kind: PhantomData,
+        remote_address,
       })),
     }
   }
@@ -1317,15 +1318,16 @@ where
   /// Start remote server
   /// Consumes self into server
   pub fn serve(self) -> Result<(), String> {
-    let server_addr =
-      match &self.inner.lock().unwrap().repository.repo_details.mode {
-        Mode::Server {
-          remote_address: server_addr,
-        } => server_addr.to_string(),
-        _ => {
-          panic!("Cannot start server, as the repository is not in server mode")
-        }
-      };
+    // let server_addr =
+    //   match &self.inner.lock().unwrap().repository.repo_details.mode {
+    //     Mode::Server {
+    //       remote_address: server_addr,
+    //     } => server_addr.to_string(),
+    //     _ => {
+    //       panic!("Cannot start server, as the repository is not in server mode")
+    //     }
+    //   };
+    let server_addr = self.inner.lock().unwrap().remote_address.to_owned();
     let runtime = tokio::runtime::Builder::new_current_thread()
       .enable_all()
       .worker_threads(1)
@@ -1346,6 +1348,7 @@ where
 pub struct ServerInner<A> {
   pub repository: Repository,
   action_kind: PhantomData<A>,
+  remote_address: String,
 }
 
 impl<A> ServerInner<A>

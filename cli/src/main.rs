@@ -48,15 +48,15 @@ fn main() -> Result<(), CliError> {
             let _ = IndexDb::init(repository::sync::Mode::Local)?;
             println!("Repo inited as LOCAL");
         }
-        Some(Commands::InitServer { port }) => {
+        Some(Commands::InitServer { address }) => {
             let _ = IndexDb::init(repository::sync::Mode::Server {
-                remote_address: format!("[::1]:{port}"),
+                remote_address: format!("{address}"),
             })?;
             println!("Repo inited as SERVER");
         }
-        Some(Commands::StartServer) => {
+        Some(Commands::StartServer { address }) => {
             let db = ServerDb::load().map_err(|e| CliError::Error(e))?;
-            db.start_server().map_err(|e| CliError::Error(e))?;
+            db.start_server(address).map_err(|e| CliError::Error(e))?;
         }
         Some(Commands::Commit { message }) => {
             let mut db = IndexDb::load()?;
