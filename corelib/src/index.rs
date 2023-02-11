@@ -533,10 +533,10 @@ impl ServerDb {
         match self.repository.is_server_mode() {
             true => {
                 println!(
-                    "Server started at address: {}",
-                    self.repository
-                        .get_server_address()
-                        .unwrap_or(&"-".to_string())
+                    "Server started at address: {address}",
+                    // self.repository
+                    //     .get_server_address()
+                    //     .unwrap_or(&"-".to_string())
                 );
                 let _ = self.repository.start_server::<BitAction>(address).serve()?;
             }
