@@ -1,19 +1,32 @@
-use bytes::Buf;
-use std::{fmt, io::Cursor, num::TryFromIntError, string::FromUtf8Error};
+use std::{fmt, io::Cursor, num::TryFromIntError, ops::Deref, string::FromUtf8Error};
 
 #[derive(Debug)]
-pub enum Token {
-    Key(String),
-    Value(String),
+pub struct Token {
+    token: Vec<u8>,
 }
 
 impl Token {
-    fn from_bytes(src: &[u8]) -> Result<Token, Error> {
-        let raw_token = String::from_utf8(src.to_vec())?;
-        match raw_token.chars().all(char::is_uppercase) {
-            true => Ok(Token::Key(raw_token)),
-            false => Ok(Token::Value(raw_token)),
-        }
+    fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        Ok(Self {
+            token: bytes.to_vec(),
+        })
+    }
+    pub fn to_bytes(self) -> Vec<u8> {
+        self.token
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct TokenStream {
+    tokens: Vec<Token>,
+}
+
+impl TokenStream {
+    pub fn add_token(&mut self, token: Token) {
+        self.tokens.push(token);
+    }
+    pub fn tokens(self) -> Vec<Token> {
+        self.tokens
     }
 }
 
@@ -27,7 +40,7 @@ pub enum Error {
     Other(String),
 }
 
-pub fn parse(src: &str) -> Result<Vec<Vec<Token>>, Error> {
+pub fn parse(src: &str) -> Result<Vec<TokenStream>, Error> {
     let mut src = Cursor::new(src.as_bytes());
 
     let mut blocks = Vec::new();
@@ -45,16 +58,15 @@ pub fn parse(src: &str) -> Result<Vec<Vec<Token>>, Error> {
     Ok(res)
 }
 
-fn tokenize_block<'a>(src: &'a [u8]) -> Result<Vec<Token>, Error> {
+fn tokenize_block<'a>(src: &'a [u8]) -> Result<TokenStream, Error> {
     let mut src = Cursor::new(src);
-    let mut tokens = Vec::new();
+    let mut token_stream = TokenStream::default();
 
     while let Ok(token) = get_token(&mut src) {
-        println!("{:?}", &token);
-        tokens.push(token);
+        token_stream.add_token(token);
     }
 
-    Ok(tokens)
+    Ok(token_stream)
 }
 
 /// Find a block of code
@@ -78,7 +90,7 @@ fn get_block<'a>(src: &mut Cursor<&'a [u8]>) -> Result<&'a [u8], Error> {
 }
 
 fn get_token(src: &mut Cursor<&[u8]>) -> Result<Token, Error> {
-    Token::from_bytes(next_token_bytes(src)?)
+    Ok(Token::from_bytes(next_token_bytes(src)?)?)
 }
 
 fn next_token_bytes<'a>(src: &'a mut Cursor<&[u8]>) -> Result<&'a [u8], Error> {

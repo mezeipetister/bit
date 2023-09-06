@@ -1,6 +1,8 @@
 {
     "rust-analyzer.linkedProjects": [
         "./parser/Cargo.toml",
+        "./parser/Cargo.toml",
+        "./parser/Cargo.toml",
         "./parser/Cargo.toml"
     ]
 }

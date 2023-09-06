@@ -23,7 +23,9 @@ NOTE
     K V
     K V"#;
 
-    let token_stream = parser::frame::parse(input)?;
-    println!("{:?}", token_stream);
+    // let token_stream = parser::token::parse(input)?;
+    // println!("{:?}", token_stream);
+
+    parser::expression::from_str(input).unwrap();
     Ok(())
 }
