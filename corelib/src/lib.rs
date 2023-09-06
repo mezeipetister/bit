@@ -8,3 +8,4 @@ pub mod ledger;
 pub mod note;
 pub mod partner;
 pub mod prelude;
+pub mod parser;
