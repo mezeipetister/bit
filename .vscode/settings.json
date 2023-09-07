@@ -3,6 +3,7 @@
         "./parser/Cargo.toml",
         "./parser/Cargo.toml",
         "./parser/Cargo.toml",
+        "./parser/Cargo.toml",
         "./parser/Cargo.toml"
     ]
 }

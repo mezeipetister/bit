@@ -11,6 +11,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 # comment2
 
+ACCOUNT
+    ID 38
+    NAME Bank
+
+ACCOUNT
+    ID 3842
+    NAME Kriszti bank
+
+ACCOUNT
+    ID 3841
+    NAME Peti bank
+
+
 NOTE
     ID 12
     PARTNER farmmix kereskedelmi kft

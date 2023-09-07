@@ -1,5 +1,6 @@
 use crate::{token::TokenStream, Result};
 
+pub mod account;
 pub mod comment;
 pub mod note;
 pub mod transaction;
@@ -12,6 +13,7 @@ pub fn from_str(src: &str) -> Result<()> {
             match cmd.as_str() {
                 "NOTE" => note::Note::parse(&mut parse)?.apply()?,
                 "TRANSACTION" => transaction::Transaction::parse(&mut parse)?.apply()?,
+                "ACCOUNT" => account::Account::parse(&mut parse)?.apply()?,
                 "#" | "//" => comment::Comment::parse(&mut parse)?.apply()?,
                 _ => (),
             }
