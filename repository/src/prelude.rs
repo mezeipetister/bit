@@ -14,7 +14,7 @@ pub fn sha1_signature<T: Serialize>(object: &T) -> Result<String, String> {
 }
 
 pub mod path_helper {
-  use std::path::{Path, PathBuf};
+  use std::path::{PathBuf};
 
   use uuid::Uuid;
 

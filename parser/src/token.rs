@@ -1,4 +1,4 @@
-use std::{fmt, io::Cursor, num::TryFromIntError, ops::Deref, string::FromUtf8Error};
+use std::{fmt, io::Cursor, num::TryFromIntError, string::FromUtf8Error};
 
 #[derive(Debug)]
 pub enum Token {

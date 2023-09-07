@@ -1,9 +1,9 @@
-use std::path::PathBuf;
+
 
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
-use crate::prelude::CliError;
+
+
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Blob {

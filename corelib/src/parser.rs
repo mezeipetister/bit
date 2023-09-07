@@ -32,7 +32,7 @@ mod v2 {
         Date(DateTime<Utc>)
     }
 
-    fn demo(s: String) {
+    fn demo(_s: String) {
         
     }
 }

@@ -1,17 +1,16 @@
-use chrono::{Datelike, NaiveDate, Utc};
-use cli_table::{format::Justify, Cell, Style, Table};
+use chrono::{Datelike, Utc};
+use cli_table::{Cell, Style, Table};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap},
     fmt::Display,
     ops::Add,
-    rc::Rc,
 };
 use thousands::Separable;
 
 use crate::{
     account::Account,
-    note::{Note, Transaction},
+    note::{Note},
     prelude::CliError,
 };
 
@@ -154,7 +153,7 @@ impl Ledger {
             (0..12).into_iter().for_each(|month0| {
                 if month0 == 0 {
                     data[0].iter().for_each(|a| {
-                        let first_account_summary = AccountSummary {
+                        let _first_account_summary = AccountSummary {
                             balance_opening: a.balance_opening,
                             turnover_debit: a.turnover_debit,
                             turnover_credit: a.turnover_credit,
@@ -211,7 +210,7 @@ impl Ledger {
             // Check if we can process it
             // If has cdate and ID
             match (n.cdate.map(|d| d.month0()), &n.id) {
-                (Some(month0_index), Some(id)) => {
+                (Some(month0_index), Some(_id)) => {
                     n.transactions.iter().for_each(|tr| {
                         let debit_account_index: usize =
                             *account_lookup.get(&tr.debit).expect("Unkown account id");

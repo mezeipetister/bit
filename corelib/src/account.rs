@@ -17,7 +17,7 @@ pub struct Account {
 
 impl ActionPatch<BitAction> for Account {
     const storage_id: &'static str = "account";
-    fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
+    fn patch(&mut self, action: BitAction, _dtime: chrono::DateTime<chrono::Utc>, _uid: &str) {
         match action {
             BitAction::AccountCreate { id, name } => {
                 self.id = id;

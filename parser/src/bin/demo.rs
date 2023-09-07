@@ -55,13 +55,21 @@ TRANSACTION
 NOTE ID 13 NET 100 GROSS 127 VAT 27 CDATE 2023-01-01 DDATE 2023-05-01 PARTNER Farmmix Kft.
 
 NOTE
-    ID      13
+    ID      2023/NYH-0000129/AB
     NET     100
     GROSS   127
     VAT     27
     CDATE   2023-01-01
     DDATE   2023-05-01
-    PARTNER Farmmix Kft."#;
+    PARTNER Farmmix Kft.
+
+TRANSACTION
+    CREDIT 1
+    DEBIT 2
+    CDATE 2023-01-01
+    DDATE 2023-01-01
+    IDATE 2023-01-01
+    AMOUNT 150"#;
 
     parser::expression::from_str(input).unwrap();
     Ok(())

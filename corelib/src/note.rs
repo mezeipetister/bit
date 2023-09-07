@@ -4,7 +4,7 @@ use repository::sync::ActionPatch;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-use crate::{account::Account, actions::BitAction, partner::Partner, prelude::CliError};
+use crate::{actions::BitAction};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Transaction {
@@ -30,7 +30,7 @@ pub struct Note {
 
 impl ActionPatch<BitAction> for Note {
     const storage_id: &'static str = "note";
-    fn patch(&mut self, action: BitAction, dtime: chrono::DateTime<chrono::Utc>, uid: &str) {
+    fn patch(&mut self, action: BitAction, _dtime: chrono::DateTime<chrono::Utc>, _uid: &str) {
         match action {
             BitAction::NoteCreate { id } => {
                 self.id = Some(id);

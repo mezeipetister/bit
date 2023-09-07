@@ -1,17 +1,16 @@
 use chrono::{DateTime, Utc};
-use futures_util::stream;
+
 use serde::{Deserialize, Serialize};
 use std::fmt::Write;
 use std::{
-  collections::{HashMap, HashSet},
+  collections::{HashSet},
   fmt::{Debug, Display},
-  hash::Hash,
   marker::PhantomData,
   ops::{Deref, DerefMut},
   path::PathBuf,
-  sync::{Arc, Mutex, MutexGuard},
+  sync::{Arc, Mutex},
 };
-use tonic::{transport::Server, Request};
+use tonic::{transport::Server};
 use uuid::Uuid;
 
 use crate::{
@@ -905,7 +904,7 @@ impl RepoDetails {
       return Err("Document already exist".to_string());
     }
     match &aob.action {
-      ActionKind::Create(init_action) => {
+      ActionKind::Create(_init_action) => {
         let new_doc: Document<A> = Document {
           id: aob.object_id,
           storage_id: aob.storage_id.to_string(),
@@ -1120,8 +1119,8 @@ impl Repository {
   }
   // Clone remote repository to local
   fn clone(
-    remote_url: &str,
-    index: &mut impl IndexExt,
+    _remote_url: &str,
+    _index: &mut impl IndexExt,
   ) -> Result<Self, String> {
     // TODO! Fix path and UID
     let ctx = Context::init(PathBuf::from("./data"), "mezeipetister".into());
@@ -1262,7 +1261,7 @@ impl Repository {
         let commit = remote_client.push(commit).await.unwrap().into_inner();
         info!("Commit received back");
         // Deserialize commit obj
-        let c: Commit = serde_json::from_str(&commit.obj_json_string)
+        let _c: Commit = serde_json::from_str(&commit.obj_json_string)
           .expect("Error deserializing response commit obj");
       }
 
@@ -1281,7 +1280,7 @@ impl Repository {
   }
   /// Clean local repository, clear local changes
   /// And performs remote pull
-  pub fn proceed_clean(&self, index: &mut impl IndexExt) -> Result<(), String> {
+  pub fn proceed_clean(&self, _index: &mut impl IndexExt) -> Result<(), String> {
     unimplemented!()
   }
   pub fn print_commit_index(&self) -> Result<(), String> {
@@ -1409,7 +1408,7 @@ where
     CommitLog::add_remote_commit(&ctx, commit.clone())?;
 
     // Save updated docs to the FS
-    for doc in updated_docs {
+    for _doc in updated_docs {
       // doc.save_to_fs(&ctx)?;
     }
 

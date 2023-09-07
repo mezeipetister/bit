@@ -1,6 +1,6 @@
 use corelib::index::ServerDb;
 use corelib::{index::IndexDb, prelude::CliError};
-use std::thread::sleep;
+
 use std::time::Duration;
 
 use bit::cli::*;

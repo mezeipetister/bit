@@ -1,15 +1,15 @@
-use crate::sync::{ActionExt, BitServer, Commit, CommitLog, Repository};
-use async_stream::stream;
-use futures::pin_mut;
-use futures_util::stream::StreamExt;
+use crate::sync::{ActionExt, BitServer};
+
+
+
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use std::pin::Pin;
-use sync_api::api_server::{Api, ApiServer};
+
+use sync_api::api_server::{Api};
 use sync_api::{CommitObj, PullRequest};
 use tokio_stream::wrappers::ReceiverStream;
-use tonic::codegen::futures_core::Stream;
-use tonic::{transport::Server, Request, Response, Status};
+
+use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
 pub mod sync_api {
@@ -31,7 +31,7 @@ where
     let mut _self = self.inner.lock().unwrap();
 
     // Return an instance of type HelloReply
-    let (mut tx, rx) = tokio::sync::mpsc::channel(100);
+    let (tx, rx) = tokio::sync::mpsc::channel(100);
 
     // Get resources as Vec<SourceObject>
     let commit_id_str = &request.into_inner().after_commit_id;

@@ -1,7 +1,6 @@
 use crate::{
     account::Account,
     actions::BitAction,
-    blob::Blob,
     context::{Context, CtxError},
     fs::{binary_init, binary_init_empty, binary_read, binary_update, is_project_cwd, FsError},
     ledger::{Ledger, MonthlySummary},
@@ -16,7 +15,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
-    rc::Rc,
 };
 use uuid::Uuid;
 
@@ -82,7 +80,7 @@ impl IndexDb {
             repository::sync::Context::init(ctx.bitdir_path().join("sync"), "demo".to_string()), // TODO! Implement UID
             mode,
         )?;
-        let mut index = Self {
+        let index = Self {
             ctx,
             inner,
             repository,
@@ -111,7 +109,7 @@ impl IndexDb {
         Ok(())
     }
     pub fn commit(&mut self, comment: String) -> Result<(), String> {
-        let res = self.repository.commit::<BitAction>(comment)?;
+        let _res = self.repository.commit::<BitAction>(comment)?;
         Ok(())
     }
     fn save_fs(&self) {
@@ -360,7 +358,7 @@ impl repository::sync::IndexExt for IndexInner {
     }
 
     fn sync_doc(&mut self, doc: &Document<Self::ActionType>) -> Result<(), String> {
-        let res = match doc.storage_id.as_str() {
+        let _res = match doc.storage_id.as_str() {
             "account" => self.accounts.sync_with_doc(doc),
             "note" => self.notes.sync_with_doc(doc),
             "partner" => self.partners.sync_with_doc(doc),
