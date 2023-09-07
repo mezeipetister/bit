@@ -126,9 +126,18 @@ fn next_token_bytes<'a>(src: &'a mut Cursor<&[u8]>) -> Result<&'a [u8], Error> {
         }
     }
 
+    // Process the last token of token stream
+    let mut _start = start;
     if start < end {
-        src.set_position((end + 1) as u64);
-        return Ok(&src.get_ref()[start..end + 1]);
+        for i in start..end {
+            let current_byte = src.get_ref()[i];
+            if current_byte == b' ' {
+                _start = i + 1;
+                continue;
+            }
+            src.set_position((end + 1) as u64);
+            return Ok(&src.get_ref()[_start..end + 1]);
+        }
     }
 
     Err(Error::Done)

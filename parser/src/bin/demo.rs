@@ -52,7 +52,16 @@ TRANSACTION
 
 // comment4
 
-NOTE ID 13 NET 100 GROSS 127 VAT 27 CDATE 2023-01-01 DDATE 2023-05-01 PARTNER Farmmix Kft."#;
+NOTE ID 13 NET 100 GROSS 127 VAT 27 CDATE 2023-01-01 DDATE 2023-05-01 PARTNER Farmmix    Kft.
+
+NOTE
+    ID      13
+    NET     100
+    GROSS   127
+    VAT     27
+    CDATE   2023-01-01
+    DDATE   2023-05-01
+    PARTNER Farmmix Kft."#;
 
     parser::expression::from_str(input).unwrap();
     Ok(())
