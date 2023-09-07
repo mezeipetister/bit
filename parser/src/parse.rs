@@ -83,10 +83,10 @@ impl Parse {
     ///
     /// If the next entry cannot be represented as an integer, then an error is
     /// returned.
-    pub(crate) fn next_int(&mut self) -> Result<i64, ParseError> {
+    pub(crate) fn next_int(&mut self) -> Result<f64, ParseError> {
         self.next_string()?
-            .parse::<i64>()
-            .map_err(|_| ParseError::Other("Not an integer".into()))
+            .parse::<f64>()
+            .map_err(|_| ParseError::Other("Not a number".into()))
     }
 
     pub(crate) fn next_date(&mut self) -> Result<NaiveDate, ParseError> {

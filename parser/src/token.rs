@@ -10,7 +10,7 @@ impl Token {
     fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
         match String::from_utf8(bytes.to_vec()) {
             Ok(t) => match t.chars().all(|c| c.is_alphanumeric() && c.is_uppercase())
-                || ((t.len() == 1) && t.chars().all(|c| !c.is_alphanumeric()))
+                || t.chars().all(|c| !c.is_alphanumeric())
             {
                 true => Ok(Self::Key(t)),
                 false => Ok(Self::Value(t)),
@@ -90,7 +90,12 @@ fn get_block<'a>(src: &mut Cursor<&'a [u8]>) -> Result<&'a [u8], Error> {
         }
     }
 
-    Err(Error::Done)
+    if start < end {
+        src.set_position((end + 1) as u64);
+        return Ok(&src.get_ref()[start..end + 1]);
+    }
+
+    return Err(Error::Done);
 }
 
 fn get_token(src: &mut Cursor<&[u8]>) -> Result<Token, Error> {
@@ -119,6 +124,11 @@ fn next_token_bytes<'a>(src: &'a mut Cursor<&[u8]>) -> Result<&'a [u8], Error> {
             src.set_position(i as u64 + 1);
             return Ok(&src.get_ref()[_start..i + 1]);
         }
+    }
+
+    if start < end {
+        src.set_position((end + 1) as u64);
+        return Ok(&src.get_ref()[start..end + 1]);
     }
 
     Err(Error::Done)
