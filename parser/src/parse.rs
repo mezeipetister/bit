@@ -1,12 +1,13 @@
-use bytes::Bytes;
-use std::{fmt, str, vec};
+use std::{fmt, iter::Peekable, vec};
+
+use chrono::NaiveDate;
 
 use crate::token::{Token, TokenStream};
 
 #[derive(Debug)]
 pub(crate) struct Parse {
     /// Array frame iterator.
-    parts: vec::IntoIter<Token>,
+    parts: Peekable<vec::IntoIter<Token>>,
 }
 
 #[derive(Debug)]
@@ -19,7 +20,7 @@ pub(crate) enum ParseError {
 impl Parse {
     pub(crate) fn new(token_stream: TokenStream) -> Result<Parse, ParseError> {
         Ok(Parse {
-            parts: token_stream.tokens().into_iter(),
+            parts: token_stream.tokens().into_iter().peekable(),
         })
     }
 
@@ -28,22 +29,51 @@ impl Parse {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
+    pub(crate) fn next_token(&mut self) -> Result<Token, ParseError> {
+        self.next()
+    }
+
     /// Return the next entry as a string.
     ///
     /// If the next entry cannot be represented as a String, then an error is returned.
     pub(crate) fn next_string(&mut self) -> Result<String, ParseError> {
-        match String::from_utf8(self.next()?.to_bytes()) {
-            Ok(text) => Ok(text),
-            Err(e) => Err(ParseError::Other("UTF8 error".into())),
+        match self.next()? {
+            Token::Key(t) => Ok(t),
+            Token::Value(t) => Ok(t),
         }
     }
 
-    /// Return the next entry as raw bytes.
-    ///
-    /// If the next entry cannot be represented as raw bytes, an error is
-    /// returned.
-    pub(crate) fn next_bytes(&mut self) -> Result<Vec<u8>, ParseError> {
-        Ok(self.next()?.to_bytes())
+    pub(crate) fn next_key(&mut self) -> Result<String, ParseError> {
+        match self.next()? {
+            Token::Key(t) => Ok(t),
+            Token::Value(_) => Err(ParseError::Other("invalid argument. must be a key!".into())),
+        }
+    }
+
+    pub(crate) fn next_value(&mut self) -> Result<String, ParseError> {
+        match self.next()? {
+            Token::Key(_) => Err(ParseError::Other(
+                "invalid argument. must be a value!".into(),
+            )),
+            Token::Value(t) => Ok(t),
+        }
+    }
+
+    pub(crate) fn next_value_bulk(&mut self) -> Result<String, ParseError> {
+        let mut res: Vec<String> = vec![];
+
+        loop {
+            res.push(self.next_value()?);
+            match self.parts.peek() {
+                Some(token) => match token {
+                    Token::Key(_) => break,
+                    Token::Value(_) => (),
+                },
+                None => break,
+            }
+        }
+
+        Ok(res.join(" "))
     }
 
     /// Return the next entry as an integer.
@@ -57,6 +87,12 @@ impl Parse {
         self.next_string()?
             .parse::<i64>()
             .map_err(|_| ParseError::Other("Not an integer".into()))
+    }
+
+    pub(crate) fn next_date(&mut self) -> Result<NaiveDate, ParseError> {
+        self.next_string()?
+            .parse::<NaiveDate>()
+            .map_err(|_| ParseError::Other("Not a date".into()))
     }
 
     /// Ensure there are no more entries in the array

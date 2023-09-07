@@ -1,18 +1,22 @@
 use std::{fmt, io::Cursor, num::TryFromIntError, ops::Deref, string::FromUtf8Error};
 
 #[derive(Debug)]
-pub struct Token {
-    token: Vec<u8>,
+pub enum Token {
+    Key(String),
+    Value(String),
 }
 
 impl Token {
     fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
-        Ok(Self {
-            token: bytes.to_vec(),
-        })
-    }
-    pub fn to_bytes(self) -> Vec<u8> {
-        self.token
+        match String::from_utf8(bytes.to_vec()) {
+            Ok(t) => match t.chars().all(|c| c.is_alphanumeric() && c.is_uppercase())
+                || ((t.len() == 1) && t.chars().all(|c| !c.is_alphanumeric()))
+            {
+                true => Ok(Self::Key(t)),
+                false => Ok(Self::Value(t)),
+            },
+            Err(_) => Err(Error::Other("UTF8 error".into())),
+        }
     }
 }
 

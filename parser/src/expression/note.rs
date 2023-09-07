@@ -18,14 +18,17 @@ impl Note {
     pub(crate) fn parse(parse: &mut Parse) -> Result<Self, Error> {
         let mut note = Note::default();
 
-        loop {
-            match &parse.next_bytes()?[..] {
-                b"ID" => note.id = Some(parse.next_string()?),
-                b"PARTNER" => note.partner = Some(parse.next_string()?),
-                b"DESCRIPTION" => note.description = Some(parse.next_string()?),
-                b"NET" => note.net = Some(parse.next_int()?),
-                b"VAT" => note.vat = Some(parse.next_int()?),
-                b"GROSS" => note.gross = Some(parse.next_int()?),
+        while let Ok(key) = &parse.next_key() {
+            match key.as_str() {
+                "ID" => note.id = Some(parse.next_value_bulk()?),
+                "PARTNER" => note.partner = Some(parse.next_value_bulk()?),
+                "DESCRIPTION" => note.description = Some(parse.next_value()?),
+                "NET" => note.net = Some(parse.next_int()?),
+                "VAT" => note.vat = Some(parse.next_int()?),
+                "GROSS" => note.gross = Some(parse.next_int()?),
+                "CDATE" => note.cdate = Some(parse.next_date()?),
+                "DDATE" => note.ddate = Some(parse.next_date()?),
+                "IDATE" => note.idate = Some(parse.next_date()?),
                 _ => return Err("Unknown parameter".into()),
             }
         }
