@@ -4,6 +4,7 @@ use crate::{parse::Parse, Error};
 
 #[derive(Default, Debug)]
 pub struct Transaction {
+    note_id: Option<String>,
     cdate: Option<NaiveDate>,
     ddate: Option<NaiveDate>,
     idate: Option<NaiveDate>,
@@ -18,6 +19,7 @@ impl Transaction {
 
         while let Ok(key) = &parse.next_key() {
             match key.as_str() {
+                "REF" => target.note_id = Some(parse.next_value_bulk()?),
                 "CREDIT" => target.credit = Some(parse.next_value_bulk()?),
                 "DEBIT" => target.debit = Some(parse.next_value_bulk()?),
                 "AMOUNT" => target.amount = Some(parse.next_int()?),

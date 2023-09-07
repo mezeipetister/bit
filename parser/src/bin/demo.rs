@@ -65,10 +65,20 @@ NOTE
 
 TRANSACTION
     CREDIT 1
-    DEBIT 2
-    CDATE 2023-01-01
-    DDATE 2023-01-01
-    IDATE 2023-01-01
+    DEBIT  2
+    AMOUNT 150
+
+# Transaction demo
+  as a last test
+  by Peter Mezei
+
+TRANSACTION
+    REF    2023/NYH-0000129/AB
+    CREDIT 1
+    DEBIT  2
+    CDATE  2023-01-01
+    DDATE  2023-01-01
+    IDATE  2023-01-01
     AMOUNT 150"#;
 
     parser::expression::from_str(input).unwrap();
