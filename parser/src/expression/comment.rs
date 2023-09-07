@@ -1,5 +1,4 @@
-use crate::{parse::Parse, token::TokenStream, Error};
-use chrono::NaiveDate;
+use crate::{parse::Parse, Error};
 
 #[derive(Default, Debug)]
 pub struct Comment {
