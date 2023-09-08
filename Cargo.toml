@@ -3,6 +3,6 @@ members = [
   "repository",
   "corelib",
   "cli",
-  "token",
+  "_cli",
   "parser"
 ]
