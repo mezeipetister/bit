@@ -12,16 +12,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Ls,
-    Init {
-        #[arg(short, long)]
-        name: String,
-    },
-    Remove {
-        #[arg(short, long)]
-        name: String,
-    },
-    Open {
-        #[arg(short, long)]
-        name: String,
-    },
+    Init { name: String },
+    Remove { name: String },
+    Open { name: String },
 }
