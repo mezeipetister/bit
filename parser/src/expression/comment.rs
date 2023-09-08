@@ -8,7 +8,7 @@ pub struct Comment {
 impl Comment {
     pub(crate) fn parse(parse: &mut Parse) -> Result<Self, Error> {
         let mut target = Self::default();
-        target.message = parse.next_value_bulk()?;
+        target.message = parse.remaining()?;
 
         Ok(target)
     }

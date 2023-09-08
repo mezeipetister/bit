@@ -5,6 +5,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 # Demo Demo
   Hello Bello
+  KEY # //
   Lorem ipsum dolorem
 
 // Comment slash
@@ -25,9 +26,9 @@ ACCOUNT
 
 
 NOTE
-    ID 12
+    ID 12 // Demo comment
     PARTNER farmmix kereskedelmi kft
-    NET 100
+    NET 100 # Example inline comment
     VAT 27
     GROSS 127
     CDATE 2023-01-01
@@ -56,6 +57,9 @@ NOTE ID 13 NET 100 GROSS 127 VAT 27 CDATE 2023-01-01 DDATE 2023-05-01 PARTNER Fa
 
 NOTE
     ID      2023/NYH-0000129/AB
+    DESCRIPTION
+            Lorem ipsum dolorem
+            set ami mi an more
     NET     100
     GROSS   127
     VAT     27

@@ -14,6 +14,9 @@ impl Account {
             match key.as_str() {
                 "ID" => target.id = Some(parse.next_value_bulk()?),
                 "NAME" => target.name = Some(parse.next_value_bulk()?),
+                "#" | "//" => {
+                    let _ = parse.next_value_bulk()?;
+                }
                 _ => return Err("Unknown parameter".into()),
             }
         }

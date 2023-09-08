@@ -76,6 +76,20 @@ impl Parse {
         Ok(res.join(" "))
     }
 
+    pub(crate) fn remaining(&mut self) -> Result<String, ParseError> {
+        let mut res: Vec<String> = vec![];
+
+        loop {
+            res.push(self.next()?.to_string());
+            match self.parts.peek() {
+                Some(token) => (),
+                None => break,
+            }
+        }
+
+        Ok(res.join(" "))
+    }
+
     /// Return the next entry as an integer.
     ///
     /// This includes `Simple`, `Bulk`, and `Integer` frame types. `Simple` and

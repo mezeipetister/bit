@@ -18,6 +18,12 @@ impl Token {
             Err(_) => Err(Error::Other("UTF8 error".into())),
         }
     }
+    pub(crate) fn to_string(self) -> String {
+        match self {
+            Token::Key(t) => t,
+            Token::Value(t) => t,
+        }
+    }
 }
 
 #[derive(Debug, Default)]
