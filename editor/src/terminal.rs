@@ -1,7 +1,7 @@
 use std::io::{self, stdout, Write};
 use termion::color;
 use termion::event::{Event, Key};
-use termion::input::TermRead;
+use termion::input::{MouseTerminal, TermRead};
 use termion::raw::{IntoRawMode, RawTerminal};
 
 use crate::editor::Position;
@@ -13,7 +13,7 @@ pub struct Size {
 
 pub struct Terminal {
     size: Size,
-    _stdout: RawTerminal<std::io::Stdout>,
+    _stdout: MouseTerminal<RawTerminal<std::io::Stdout>>,
 }
 
 impl Terminal {
@@ -23,7 +23,7 @@ impl Terminal {
                 width: 0,
                 height: 0,
             },
-            _stdout: stdout().into_raw_mode()?,
+            _stdout: MouseTerminal::from(stdout().into_raw_mode()?),
         };
         res.set_size()?;
         Ok(res)

@@ -65,8 +65,31 @@ impl Editor {
             if self.should_quit {
                 break;
             }
-            if let Err(error) = self.process_keypress() {
-                die(error);
+            if let Ok(event) = Terminal::read_event() {
+                match event {
+                    termion::event::Event::Key(k) => {
+                        if let Err(error) = self.process_keypress(k) {
+                            die(error);
+                        }
+                    }
+                    termion::event::Event::Mouse(m) => match m {
+                        termion::event::MouseEvent::Press(me, _, _) => match me {
+                            termion::event::MouseButton::WheelUp => {
+                                if let Err(error) = self.process_keypress(Key::Up) {
+                                    die(error);
+                                }
+                            }
+                            termion::event::MouseButton::WheelDown => {
+                                if let Err(error) = self.process_keypress(Key::Down) {
+                                    die(error);
+                                }
+                            }
+                            _ => (),
+                        },
+                        _ => (),
+                    },
+                    termion::event::Event::Unsupported(_) => (),
+                }
             }
         }
 
@@ -80,8 +103,8 @@ impl Editor {
     fn set_status(&mut self, msg: String) {
         self.status_message = StatusMessage::from(msg);
     }
-    fn process_keypress(&mut self) -> Result<(), std::io::Error> {
-        let pressed_key = Terminal::read_key()?;
+    fn process_keypress(&mut self, pressed_key: Key) -> Result<(), std::io::Error> {
+        // let pressed_key = Terminal::read_key()?;
         match pressed_key {
             Key::Ctrl('q') => self.should_quit = true,
             Key::Ctrl('s') => self.save().unwrap(),
@@ -268,8 +291,8 @@ impl Editor {
         let line_indicator = format!(
             "{},{}",
             // self.cursor_position.y.saturating_add(1),
-            self.document.len(),
-            self.cursor_position.x
+            self.cursor_position.y + 1,
+            self.cursor_position.x + 1
         );
         #[allow(clippy::integer_arithmetic)]
         let len = status.len() + line_indicator.len();
