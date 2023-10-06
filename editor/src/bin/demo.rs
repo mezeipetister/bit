@@ -5,6 +5,7 @@ fn main() {
         println!("Saved!");
         Ok(())
     });
-    let doc = Document::new("Demo".into(), "abc".into(), clbk);
-    editor::Editor::new(doc).unwrap().run().unwrap();
+    let doc = Document::new("Demo".into(), "".into(), clbk);
+    let res = editor::Editor::new(doc).unwrap().run().unwrap();
+    println!("{}", res);
 }

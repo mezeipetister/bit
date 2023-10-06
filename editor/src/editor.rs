@@ -9,7 +9,7 @@ use crate::{document::Document, row::Row, terminal::Terminal};
 const STATUS_FG_COLOR: color::Rgb = color::Rgb(63, 63, 63);
 const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -51,13 +51,13 @@ impl Editor {
             should_quit: false,
             document,
             terminal: Terminal::default()?,
-            offset: Position::default(),
+            offset: Position { x: 0, y: 0 },
             status_message: StatusMessage::from(msg),
             cursor_position: Position::default(),
         };
         Ok(res)
     }
-    pub fn run(&mut self) -> Result<(), String> {
+    pub fn run(&mut self) -> Result<String, String> {
         loop {
             if let Err(error) = self.render() {
                 die(error);
@@ -70,12 +70,15 @@ impl Editor {
             }
         }
 
-        Ok(())
+        Ok(self.document.as_string())
     }
     fn save(&mut self) -> Result<(), String> {
         self.document.save()?;
         self.status_message = StatusMessage::from("Saved!".into());
         Ok(())
+    }
+    fn set_status(&mut self, msg: String) {
+        self.status_message = StatusMessage::from(msg);
     }
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
         let pressed_key = Terminal::read_key()?;
@@ -123,6 +126,7 @@ impl Editor {
         }
     }
     fn render(&mut self) -> Result<(), std::io::Error> {
+        Terminal::clear_screen();
         Terminal::cursor_hide();
         Terminal::cursor_position(&Position { x: 0, y: 0 });
 
@@ -207,7 +211,7 @@ impl Editor {
         self.cursor_position = Position { x, y }
     }
     fn draw_welcome_message(&self) {
-        let mut welcome_message = format!("Hecto editor -- version {}", 1);
+        let mut welcome_message = format!("BIT editor");
         let width = self.terminal.size().width as usize;
         let len = welcome_message.len();
         #[allow(clippy::integer_arithmetic, clippy::integer_division)]
@@ -260,9 +264,10 @@ impl Editor {
         );
 
         let line_indicator = format!(
-            "{} | ../{}",
-            self.cursor_position.y.saturating_add(1),
-            self.document.len()
+            "{},{}",
+            // self.cursor_position.y.saturating_add(1),
+            self.document.len(),
+            self.cursor_position.x
         );
         #[allow(clippy::integer_arithmetic)]
         let len = status.len() + line_indicator.len();

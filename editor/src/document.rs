@@ -29,12 +29,15 @@ impl Document {
         }
     }
     pub fn save(&mut self) -> Result<(), String> {
-        self.on_save.deref()(self.as_string())
+        self.on_save.deref()(self.as_string())?;
+        self.dirty = false;
+        Ok(())
     }
-    fn as_string(&self) -> String {
+    pub fn as_string(&self) -> String {
         let mut res = String::new();
         for row in &self.rows {
             res.push_str(row.as_str());
+            res.push_str("\r\n");
         }
         res
     }

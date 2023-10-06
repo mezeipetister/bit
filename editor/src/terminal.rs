@@ -30,7 +30,10 @@ impl Terminal {
     }
     pub fn set_size(&mut self) -> Result<(), std::io::Error> {
         let (width, height) = termion::terminal_size()?;
-        self.size = Size { width, height };
+        self.size = Size {
+            width,
+            height: height - 2,
+        };
         Ok(())
     }
     pub fn size(&self) -> &Size {
@@ -44,7 +47,7 @@ impl Terminal {
     pub fn cursor_position(position: &Position) {
         let Position { mut x, mut y } = position;
         x = x.saturating_add(1);
-        y = y.saturating_add(0);
+        y = y.saturating_add(1);
         let x = x as u16;
         let y = y as u16;
         print!("{}", termion::cursor::Goto(x, y));
