@@ -1,6 +1,6 @@
 use std::io::{self, stdout, Write};
 use termion::color;
-use termion::event::Key;
+use termion::event::{Event, Key};
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
 
@@ -54,6 +54,13 @@ impl Terminal {
     }
     pub fn flush() -> Result<(), std::io::Error> {
         io::stdout().flush()
+    }
+    pub fn read_event() -> Result<Event, std::io::Error> {
+        loop {
+            if let Some(event) = io::stdin().lock().events().next() {
+                return event;
+            }
+        }
     }
     pub fn read_key() -> Result<Key, std::io::Error> {
         loop {

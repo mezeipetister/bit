@@ -130,6 +130,8 @@ impl Editor {
         Terminal::cursor_hide();
         Terminal::cursor_position(&Position { x: 0, y: 0 });
 
+        self.terminal.set_size()?;
+
         if self.should_quit {
             Terminal::clear_screen();
             println!("Goodbye.\r");
