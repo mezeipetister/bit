@@ -4,5 +4,7 @@ members = [
   "corelib",
   "cli",
   "_cli",
-  "parser"
+  "parser",
+  "bitc",
+  "editor"
 ]
