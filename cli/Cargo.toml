@@ -1,19 +1,11 @@
 [package]
 description = "BIT double entry book keeping software.\nAll right reserved Peter Mezei 2023."
 edition = "2021"
-name = "bit"
+name = "cli"
 version = "0.1.0-pr1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = {version = "0.4.23", features = ["serde"]}
-clap = {version = "4.1.4", features = ["derive"]}
-corelib = {path = "../corelib"}
-indicatif = "0.17.3"
-repository = {path = "../repository"}
-
-[build-dependencies]
-chrono = {version = "0.4.23", features = ["serde"]}
-clap = "4.1.4"
-corelib = {path = "../corelib"}
+termion = "2.0.1"
+unicode-segmentation = "1.10.1"
