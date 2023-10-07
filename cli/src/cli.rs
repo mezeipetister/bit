@@ -7,6 +7,12 @@ use termion::input::MouseTerminal;
 use crate::row::Row;
 use crate::terminal::Terminal;
 
+pub struct Context {
+    pub path: String,
+    pub user: String,
+    pub repo: String,
+}
+
 pub struct Cli {
     should_quit: bool,
     enter_pressed: bool,
@@ -14,23 +20,24 @@ pub struct Cli {
     input: Row,
     input_history: Vec<String>,
     cursor_pos_x: usize,
-    path: String,
-    user: String,
-    repo: String,
+    ctx: Context,
 }
 
 impl Cli {
     pub fn new() -> Result<Self, std::io::Error> {
+        let ctx = Context {
+            path: "accounts".into(),
+            user: "mezeipeti".to_string(),
+            repo: "gz".into(),
+        };
         let res = Self {
             should_quit: false,
             enter_pressed: false,
             terminal: Terminal::default()?,
-            input: Row::from(""),
+            input: Row::new(&ctx, ""),
             input_history: Vec::new(),
             cursor_pos_x: 0,
-            path: String::new(),
-            user: "mezeipeti".to_string(),
-            repo: "gz".to_string(),
+            ctx,
         };
         Ok(res)
     }
@@ -38,7 +45,7 @@ impl Cli {
         loop {
             if self.enter_pressed {
                 print!("{}", '\n');
-                self.input = Row::default();
+                self.input = Row::new(&self.ctx, "");
                 self.cursor_pos_x = 0;
                 self.enter_pressed = false;
             }
@@ -113,11 +120,14 @@ impl Cli {
     }
     fn render(&mut self) -> Result<(), std::io::Error> {
         Terminal::clear_current_line();
-        Terminal::flush()?;
+        Terminal::cursor_hide();
         let (x, y) = self.terminal._stdout.cursor_pos()?;
         print!("{}", termion::cursor::Goto(1, y));
-        print!("{}-{}: {}", &self.user, &self.repo, self.input.as_str());
-        print!("{}", termion::cursor::Goto(self.cursor_pos_x as u16, y));
+        print!("{}", self.input.display());
+        print!(
+            "{}",
+            termion::cursor::Goto((self.input.prefix_len() + self.cursor_pos_x + 1) as u16, y)
+        );
         Terminal::cursor_show();
         Terminal::flush()?;
         Ok(())
