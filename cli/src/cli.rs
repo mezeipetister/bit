@@ -45,7 +45,10 @@ impl Cli {
         loop {
             if self.enter_pressed {
                 print!("{}", '\n');
+                let res = self.input.as_str().to_string();
                 self.input = Row::new(&self.ctx, "");
+                self.cursor_pos_x = 0;
+                println!("{}", res);
                 self.cursor_pos_x = 0;
                 self.enter_pressed = false;
             }
