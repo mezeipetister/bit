@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Read, Write},
+    ops::Div,
     time::{self, SystemTime},
 };
 const MAGIC: [u8; 7] = *b"*bitfs*";
@@ -123,4 +124,10 @@ pub enum Block {
         data: Vec<u8>,
         next: (u32, u32),
     },
+}
+
+pub fn alloator(data: &[u8]) -> Vec<(u32, u32)> {
+    let x = data.len();
+    let block_needed = (x / BLOCK_SIZE as usize + usize::from(x % BLOCK_SIZE as usize != 0)) as u32;
+    vec![]
 }
