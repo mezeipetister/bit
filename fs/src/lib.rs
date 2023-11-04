@@ -427,7 +427,7 @@ mod tests {
         group.block_bitmap.set(2000, true);
         group.block_bitmap.set(2002, true);
 
-        let res = group.allocate(0, 7000, 500);
+        let res = group.allocate(3, 32764, 500);
         println!("{:?}", res);
         assert_eq!(res.0.len(), 1);
         assert_eq!(res.1, 0);
