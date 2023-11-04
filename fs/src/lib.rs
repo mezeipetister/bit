@@ -175,8 +175,8 @@ impl Group {
     }
 
     fn init() -> Self {
-        let mut block_bitmap = BitVec::<u8, Lsb0>::with_capacity(BLOCK_SIZE as usize);
-        block_bitmap.resize(BLOCK_SIZE as usize, false);
+        let mut block_bitmap = BitVec::<u8, Lsb0>::with_capacity(BLOCK_SIZE as usize * 8);
+        block_bitmap.resize(BLOCK_SIZE as usize * 8, false);
         Self { block_bitmap }
     }
 
@@ -268,6 +268,10 @@ impl Group {
             // Break loop if we dont need more blocks
             // to allocate
             if blocks_to_allocate == 0 {
+                // Add opened region to regions if we have one opened
+                if let Some(r) = region.take() {
+                    regions.push(r);
+                }
                 break;
             }
 
@@ -417,9 +421,13 @@ mod tests {
         let mut group = Group::init();
 
         // group.block_bitmap.set(0, true);
-        group.block_bitmap.set(5, true);
+        group.block_bitmap.set(2, true);
+        group.block_bitmap.set(20, true);
+        group.block_bitmap.set(1500, true);
+        group.block_bitmap.set(2000, true);
+        group.block_bitmap.set(2002, true);
 
-        let res = group.allocate(0, 7, 5);
+        let res = group.allocate(0, 7000, 500);
         println!("{:?}", res);
         assert_eq!(res.0.len(), 1);
         assert_eq!(res.1, 0);
