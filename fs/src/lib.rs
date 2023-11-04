@@ -170,7 +170,13 @@ pub struct Group {
 }
 
 impl Group {
-    fn new(id: u32, block_bitmap: BitVec<u8, Lsb0>) -> Self {
+    fn new(block_bitmap: BitVec<u8, Lsb0>) -> Self {
+        Self { block_bitmap }
+    }
+
+    fn init() -> Self {
+        let mut block_bitmap = BitVec::<u8, Lsb0>::with_capacity(BLOCK_SIZE as usize);
+        block_bitmap.resize(BLOCK_SIZE as usize, false);
         Self { block_bitmap }
     }
 
@@ -183,7 +189,7 @@ impl Group {
 
     #[inline]
     fn public_address(group_index: u32, block_inner_index: u32) -> u32 {
-        Self::seek_position(group_index) + block_inner_index + 1
+        Self::seek_position(group_index) / BLOCK_SIZE + block_inner_index + 1
     }
 
     #[inline]
@@ -211,7 +217,7 @@ impl Group {
         r.read_exact(&mut buf)?;
         let data_bitmap = BitVec::<u8, Lsb0>::from_slice(&buf);
 
-        Ok(Group::new(id, data_bitmap))
+        Ok(Group::new(data_bitmap))
     }
 
     #[inline]
@@ -266,7 +272,7 @@ impl Group {
             }
 
             // If current block index is free
-            if *i {
+            if !*i {
                 // If we have opened region
                 if let Some((block_index, region_length)) = region.as_mut() {
                     // Then increment region_length
@@ -404,5 +410,18 @@ mod tests {
 
         // let group = Group::new(1);
         // assert_eq!(group.bitmap_seek_position(), 134_221_824);
+    }
+
+    #[test]
+    fn test_block_allocation() {
+        let mut group = Group::init();
+
+        // group.block_bitmap.set(0, true);
+        group.block_bitmap.set(5, true);
+
+        let res = group.allocate(0, 7, 5);
+        println!("{:?}", res);
+        assert_eq!(res.0.len(), 1);
+        assert_eq!(res.1, 0);
     }
 }
