@@ -1,8 +1,14 @@
 use anyhow::anyhow;
+use bitvec::access::BitSafeU8;
+use bitvec::ptr::{BitRef, Mut};
+use bitvec::slice::IterMut;
 use bitvec::{order::Lsb0, vec::BitVec};
 use memmap2::MmapMut;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::default;
 use std::io::{Cursor, Seek, SeekFrom};
+use std::iter::Enumerate;
 use std::{
     collections::BTreeMap,
     ffi::OsString,
@@ -10,20 +16,24 @@ use std::{
     path::Path,
     time::{self, SystemTime},
 };
+
 // const M: u32 = 0xb1a9;
 const MAGIC: [u8; 7] = *b"*bitfs*";
+const FS_VERSION: u32 = 1;
 const ROOT_INODE: u32 = 1;
 const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
+const INODE_CAPACITY: usize = 4047;
+const CHUNK_CAPACITY: usize = 4076;
+
+pub mod util;
 
 #[inline]
 pub fn calculate_checksum<S>(s: &S) -> u32
 where
     S: serde::Serialize,
 {
-    let mut hasher = crc32fast::Hasher::new();
-    hasher.update(&bincode::serialize(&s).unwrap());
-    hasher.finalize()
+    0
 }
 
 #[inline]
@@ -65,36 +75,40 @@ impl FS {
 
     //     Ok(fs)
     // }
+    pub fn read_dir(&mut self, path: &Path) {}
+    pub fn create_dir(&mut self, path: &Path) {}
+    pub fn remove_dir(&mut self, path: &Path) {}
+    pub fn create_file(&mut self, path: &Path) {}
+    pub fn write_file(&mut self, path: &Path, data: &[u8]) {}
+    pub fn remove_file(&mut self, path: &Path) {}
+    pub fn read_fs_stat(&mut self) {}
+    pub fn read_path_stat(&mut self, path: &Path) {}
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Superblock {
-    magic: [u8; 7],        // Magic number to check
-    block_size: u32,       // Block size in bytes
-    blocks_per_group: u32, // max data block per group
-    total_groups: u32,     // Total groups count
-    total_blocks: u32,     // Total blocks count
-    allocated_blocks: u32, // Allocated blocks
-    free_blocks: u32,      // Available blocks
-    total_folders: u32,    // Folder count in fs
-    total_files: u32,      // File count in fs
-    created: u64,          // FS creation time
-    modified: u64,         // FS last modification time
-    checksum: u32,         // Superblock checksum
+    magic: [u8; 7],   // Magic number to check
+    fs_version: u32,  // FS Version
+    block_size: u32,  // Block size in bytes
+    group_count: u32, // Total groups count
+    block_count: u32, // Total blocks count
+    free_blocks: u32, // Available blocks
+    file_count: u32,  // File count in fs
+    created: u64,     // FS creation time
+    modified: u64,    // FS last modification time
+    checksum: u32,    // Superblock checksum
 }
 
 impl Superblock {
     fn new() -> Self {
         Self {
             magic: MAGIC,
+            fs_version: FS_VERSION,
             block_size: BLOCK_SIZE,
-            blocks_per_group: BLOCKS_PER_GROUP,
-            total_groups: 0,
-            total_blocks: 1,
-            allocated_blocks: 1,
+            group_count: 0,
+            block_count: 1,
             free_blocks: 0,
-            total_folders: 0,
-            total_files: 0,
+            file_count: 0,
             created: now(),
             modified: now(),
             checksum: 0,
@@ -111,6 +125,7 @@ impl Superblock {
         bincode::serialize(self).map_err(|e| e.into())
     }
 
+    #[inline]
     pub fn serialize_into<W>(&mut self, w: W) -> anyhow::Result<()>
     where
         W: Write,
@@ -119,6 +134,7 @@ impl Superblock {
         bincode::serialize_into(w, self).map_err(|e| e.into())
     }
 
+    #[inline]
     pub fn deserialize_from<R>(r: R) -> anyhow::Result<Self>
     where
         R: Read,
@@ -131,11 +147,13 @@ impl Superblock {
         Ok(sb)
     }
 
+    #[inline]
     fn checksum(&mut self) {
         self.checksum = 0;
         self.checksum = calculate_checksum(&self);
     }
 
+    #[inline]
     fn verify_checksum(&mut self) -> bool {
         let checksum = self.checksum;
         self.checksum = 0;
@@ -149,29 +167,26 @@ impl Superblock {
 #[derive(Debug, Default)]
 pub struct Group {
     pub block_bitmap: BitVec<u8, Lsb0>,
-    next_block: Option<usize>,
 }
 
 impl Group {
     fn new(id: u32, block_bitmap: BitVec<u8, Lsb0>) -> Self {
-        let mut group = Self {
-            block_bitmap,
-            next_block: None,
-        };
-        group.next_block = group.next_free_data_block();
-        group
+        Self { block_bitmap }
     }
 
-    fn seek_position(id: u32) -> u32 {
+    #[inline]
+    fn seek_position(group_index: u32) -> u32 {
         // Superblock BLOCK_SIZE (4kib)
         // + Group ID * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE)
-        BLOCK_SIZE + id * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE)
+        BLOCK_SIZE + group_index * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE)
     }
 
-    fn bitmap_seek_position(&self, id: u32) -> u32 {
-        Self::seek_position(id)
+    #[inline]
+    fn public_address(group_index: u32, block_inner_index: u32) -> u32 {
+        Self::seek_position(group_index) + block_inner_index + 1
     }
 
+    #[inline]
     pub fn serialize_into<W>(&self, mut w: W) -> anyhow::Result<()>
     where
         W: Write + Seek,
@@ -181,6 +196,7 @@ impl Group {
         Ok(())
     }
 
+    #[inline]
     pub fn deserialize_from<R>(mut r: R, id: u32) -> anyhow::Result<Group>
     where
         R: Read + Seek,
@@ -214,96 +230,113 @@ impl Group {
     }
 
     #[inline]
-    pub fn allocate_data_block(&mut self) -> Option<usize> {
-        self.next_block.and_then(|index| {
-            self.add_data_block(index);
-            self.next_block = self.next_free_data_block();
-            Some(index)
-        })
+    pub fn release_data_region(&mut self, first_index: usize, count: usize) {
+        for i in 0..count {
+            self.block_bitmap.set(first_index + i - 1, false);
+        }
+    }
+
+    // #[inline]
+    // fn add_data_region(&mut self, first_index: usize, count: usize) {
+    //     for i in 0..count {
+    //         self.block_bitmap.set(first_index + i - 1, true);
+    //     }
+    // }
+
+    #[inline]
+    fn allocate(
+        &mut self,
+        // to translate internal ID into public address
+        group_index: u32,
+        // Blocks to allocate
+        mut blocks_to_allocate: usize,
+        // Maximum number of region to allocate
+        max_regions: usize,
+    ) -> (Vec<(u32, u32)>, usize) {
+        let mut regions = Vec::new();
+        let mut region: Option<(u32, u32)> = None;
+
+        let mut iter = self.block_bitmap.iter_mut().enumerate().peekable();
+
+        while let Some((index, i)) = iter.next() {
+            // Break loop if we dont need more blocks
+            // to allocate
+            if blocks_to_allocate == 0 {
+                break;
+            }
+
+            // If current block index is free
+            if *i {
+                // If we have opened region
+                if let Some((block_index, region_length)) = region.as_mut() {
+                    // Then increment region_length
+                    *region_length += 1;
+                } else {
+                    // Else we need to create a new opened region
+                    region = Some((Self::public_address(group_index, index as u32), 1));
+                }
+
+                // Decrease blocks number to allocate by one
+                // As we allocate on in this if block
+                blocks_to_allocate -= 1;
+
+                // If i is taken
+            } else {
+                // Check if we have opened region
+                // and close it
+                if let Some(r) = region.take() {
+                    regions.push(r);
+
+                    // Break loop if we reached the maximum region number
+                    // we dont have room to allocate more regions
+                    if regions.len() == max_regions {
+                        break;
+                    }
+                }
+            }
+
+            // If last item, then clean up
+            if let None = iter.peek() {
+                // If we have opened region
+                // then close it
+                if let Some(r) = region.take() {
+                    regions.push(r);
+                }
+            }
+        }
+
+        (regions, blocks_to_allocate)
     }
 
     #[inline]
-    pub fn release_data_block(&mut self, index: usize) {
-        self.block_bitmap.set(index - 1, false);
-        self.next_block = self.next_free_data_block();
-    }
-
-    #[inline]
-    fn add_data_block(&mut self, i: usize) {
-        self.block_bitmap.set(i - 1, true);
-    }
-
-    #[inline]
-    fn next_free_data_block(&self) -> Option<usize> {
+    fn next_free_data_region(&self, size: u32) -> Option<(usize, usize)> {
         self.block_bitmap
-            .iter()
-            .position(|bit| !*bit)
-            .map(|p| p + 1)
+            .windows(size as usize)
+            .position(|p| p.not_any())
+            .map(|p| (p + 1, p + size as usize + 1))
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Inode {
-    id: u32,
-    folder: bool,
-    created: u64,
-    last_accesed: u64,
-    size: u64,
-    checksum: u32,
-    block_count: u32,
-    data: Vec<u8>,
-    next: (u32, u32),
+    pub folder: bool,
+    pub created: u64,
+    pub last_accesed: u64,
+    pub size: u64,
+    pub checksum: u32,
+    pub data: Data,
+    pub next: (u32, u32),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Chunk {
-    inode_id: u32,
-    position: u32,
-    data: Vec<u8>,
-    next: (u32, u32),
+pub enum Data {
+    Raw(Vec<u8>),
+    Direct(Vec<(u32, u32)>),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum Block {
-    Empty,
-    Inode(Inode),
-    Chunk(Chunk),
-}
-
-impl Block {
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Block::Empty => true,
-            _ => false,
-        }
-    }
-
-    pub fn as_inode(self) -> anyhow::Result<Inode> {
-        match self {
-            Block::Inode(inode) => Ok(inode),
-            _ => Err(anyhow!("Not an inode!")),
-        }
-    }
-
-    pub fn as_data(self) -> anyhow::Result<Chunk> {
-        match self {
-            Block::Chunk(data) => Ok(data),
-            _ => Err(anyhow!("Not a data")),
-        }
-    }
-
-    pub fn serialize_into<W>(&self, w: W) -> anyhow::Result<()>
-    where
-        W: Write + Seek,
-    {
-        bincode::serialize_into(w, self).map_err(|e| e.into())
-    }
-
-    pub fn deserialize_from<R>(r: R) -> anyhow::Result<Block>
-    where
-        R: Read + Seek,
-    {
-        bincode::deserialize_from(r).map_err(|_| anyhow!("Block deser error. Not a valid block"))
+impl Default for Data {
+    fn default() -> Self {
+        Self::Raw(vec![])
     }
 }
 
@@ -356,12 +389,6 @@ impl Directory {
 
         ok
     }
-}
-
-pub fn allocator(data: &[u8]) -> Vec<(u32, u32)> {
-    let x = data.len();
-    let block_needed = (x / BLOCK_SIZE as usize + usize::from(x % BLOCK_SIZE as usize != 0)) as u32;
-    vec![]
 }
 
 #[cfg(test)]
