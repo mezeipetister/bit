@@ -246,8 +246,8 @@ impl Group {
     }
 
     #[inline]
-    fn release_one(&mut self, block_index: u32) {
-        self.block_bitmap.set(block_index as usize, false);
+    fn release_one(&mut self, bitmap_index: u32) {
+        self.block_bitmap.set(bitmap_index as usize, false);
     }
 
     #[inline]
@@ -256,13 +256,6 @@ impl Group {
             self.block_bitmap.set(i as usize, false);
         }
     }
-
-    // #[inline]
-    // fn add_data_region(&mut self, first_index: usize, count: usize) {
-    //     for i in 0..count {
-    //         self.block_bitmap.set(first_index + i - 1, true);
-    //     }
-    // }
 
     /// Allocate one block
     #[inline]
