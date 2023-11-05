@@ -188,8 +188,18 @@ impl Group {
     }
 
     #[inline]
-    fn public_address(group_index: u32, block_inner_index: u32) -> u32 {
-        Self::seek_position(group_index) / BLOCK_SIZE + block_inner_index + 1
+    fn create_public_address(group_index: u32, bitmap_index: u32) -> u32 {
+        // Maybe +1?
+        Self::seek_position(group_index) / BLOCK_SIZE + bitmap_index
+    }
+
+    // Returns (group_index, inner_block_index)
+    #[inline]
+    fn translate_public_address(block_index: u32) -> (u32, u32) {
+        let inodes_per_group = BLOCKS_PER_GROUP;
+        let inode_bg = (block_index as u32 - 1) / inodes_per_group;
+        let bitmap_index = (block_index as u32 - 1) & (inodes_per_group - 1);
+        (inode_bg, bitmap_index)
     }
 
     #[inline]
@@ -236,9 +246,14 @@ impl Group {
     }
 
     #[inline]
-    pub fn release_data_region(&mut self, first_index: usize, count: usize) {
-        for i in 0..count {
-            self.block_bitmap.set(first_index + i - 1, false);
+    fn release_one(&mut self, block_index: u32) {
+        self.block_bitmap.set(block_index as usize, false);
+    }
+
+    #[inline]
+    pub fn release_data_region(&mut self, bitmap_index: u32, length: u32) {
+        for i in bitmap_index..(bitmap_index + length) {
+            self.block_bitmap.set(i as usize, false);
         }
     }
 
@@ -249,8 +264,22 @@ impl Group {
     //     }
     // }
 
+    /// Allocate one block
     #[inline]
-    fn allocate(
+    fn allocate_one(&mut self, group_index: u32) -> Option<u32> {
+        // If we have at least one free block index
+        if let Some(i) = self.block_bitmap.iter_zeros().next() {
+            // Set it to be taken
+            self.block_bitmap.set(i, true);
+            // Return index as public address
+            return Some(Self::create_public_address(group_index, i as u32));
+        }
+        None
+    }
+
+    /// Allocate data region
+    #[inline]
+    fn allocate_region(
         &mut self,
         // to translate internal ID into public address
         group_index: u32,
@@ -264,7 +293,7 @@ impl Group {
 
         let mut iter = self.block_bitmap.iter_mut().enumerate().peekable();
 
-        while let Some((index, i)) = iter.next() {
+        while let Some((bitmap_index, mut i)) = iter.next() {
             // Break loop if we dont need more blocks
             // to allocate
             if blocks_to_allocate == 0 {
@@ -283,12 +312,18 @@ impl Group {
                     *region_length += 1;
                 } else {
                     // Else we need to create a new opened region
-                    region = Some((Self::public_address(group_index, index as u32), 1));
+                    region = Some((
+                        Self::create_public_address(group_index, bitmap_index as u32),
+                        1,
+                    ));
                 }
 
                 // Decrease blocks number to allocate by one
                 // As we allocate on in this if block
                 blocks_to_allocate -= 1;
+
+                // Set block index as taken
+                i.set(true);
 
                 // If i is taken
             } else {
@@ -417,19 +452,49 @@ mod tests {
     }
 
     #[test]
+    fn test_block_address() {
+        let group_index = 0;
+        let bitmap_index = 3;
+        let block_index = Group::create_public_address(group_index, bitmap_index);
+        let (_group_index, _bitmap_index) = Group::translate_public_address(block_index);
+        assert_eq!(group_index, _group_index);
+        assert_eq!(bitmap_index, _bitmap_index);
+    }
+
+    #[test]
     fn test_block_allocation() {
         let mut group = Group::init();
 
-        // group.block_bitmap.set(0, true);
-        group.block_bitmap.set(2, true);
-        group.block_bitmap.set(20, true);
-        group.block_bitmap.set(1500, true);
-        group.block_bitmap.set(2000, true);
-        group.block_bitmap.set(2002, true);
+        for i in [2, 20, 1500, 2000, 2002] {
+            group.block_bitmap.set(i, true);
+        }
 
-        let res = group.allocate(3, 32764, 500);
+        let res = group.allocate_region(0, 1000, 500);
         println!("{:?}", res);
-        assert_eq!(res.0.len(), 1);
+        assert_eq!(res.0.len(), 3);
         assert_eq!(res.1, 0);
+
+        // Test to release allocated regions
+        for (address, length) in res.0 {
+            let (block_index, bitmap_index) = Group::translate_public_address(address);
+            println!("{}", bitmap_index);
+            group.release_data_region(bitmap_index, length);
+        }
+
+        for i in [2, 20, 1500, 2000, 2002] {
+            group.block_bitmap.set(i, false);
+        }
+
+        assert_eq!(group.free_data_blocks() as u32, BLOCKS_PER_GROUP);
+
+        let res = group.allocate_region(0, 40000, 200);
+
+        // Test to release allocated regions
+        for (address, length) in res.0 {
+            let (block_index, bitmap_index) = Group::translate_public_address(address);
+            group.release_data_region(bitmap_index, length);
+        }
+
+        assert_eq!(group.free_data_blocks() as u32, BLOCKS_PER_GROUP);
     }
 }
