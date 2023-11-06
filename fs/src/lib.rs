@@ -2,8 +2,10 @@ use anyhow::anyhow;
 use bitvec::{order::Lsb0, vec::BitVec};
 use memmap2::MmapMut;
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
-use std::io::{Cursor, Seek, SeekFrom};
+use std::any;
+use std::fs::{File, OpenOptions};
+use std::io::{BufWriter, Cursor, Seek, SeekFrom};
+use std::ops::Deref;
 use std::{
     collections::BTreeMap,
     ffi::OsString,
@@ -27,13 +29,14 @@ pub mod util;
 #[derive(Debug)]
 pub struct FS {
     pub superblock: Superblock,
+    pub file: File,
     pub mmap: MmapMut,
     pub groups: Vec<Group>,
 }
 
 impl FS {
     /// Init FS to a given path
-    pub fn init<P>(path: P) -> anyhow::Result<Self>
+    pub fn init<P>(path: P, group_count: u32) -> anyhow::Result<Self>
     where
         P: AsRef<Path>,
     {
@@ -50,15 +53,25 @@ impl FS {
 
         let superblock = Superblock::new();
 
-        let groups = vec![];
+        let groups = (0..group_count)
+            .into_iter()
+            .map(|_| Group::init())
+            .collect();
 
-        let mut res = Self {
+        let mut fs = Self {
             superblock,
+            file,
             mmap,
             groups,
         };
 
-        Ok(res)
+        // Add first group
+        // fs.add_group()?;
+
+        // Create root staff
+        fs.create_root()?;
+
+        Ok(fs)
     }
 
     /// Open FS from a given path
@@ -92,11 +105,85 @@ impl FS {
         let fs = Self {
             superblock,
             groups,
+            file,
             mmap,
         };
 
         // Return FS
         Ok(fs)
+    }
+
+    // Create root FS
+    fn create_root(&mut self) -> anyhow::Result<()> {
+        // let dir = Directory::
+        Ok(())
+    }
+
+    #[inline]
+    fn find_inode_by_path<P>(&self, p: P) -> anyhow::Result<Inode>
+    where
+        P: AsRef<Path>,
+    {
+        let mut r = Cursor::new(self.mmap());
+
+        // Read root inode
+        let root_inode = Inode::deserialize_from(r, ROOT_INODE)?;
+
+        // Check if its a folder
+        assert!(root_inode.folder);
+
+        let mut raw_data = vec![];
+        let mut w = BufWriter::new(&mut raw_data);
+
+        // Read raw data
+        let checksum = self.read_inode_data(&root_inode, &mut w)?;
+
+        // Check checksum
+        assert_eq!(checksum, root_inode.data_checksum);
+
+        // Deserialize folders
+        let dir: DirectoryIndex = bincode::deserialize(&raw_data)?;
+
+        dir.
+    }
+
+    #[inline]
+    fn read_inode_data<R, W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
+    where
+        R: Read + Seek,
+        W: Write,
+    {
+        let mut checksum = Checksum::new();
+
+        match inode.data {
+            Data::Raw(data) => {
+                checksum.update(&data);
+                w.write_all(&data)?;
+            }
+            Data::DirectPointers(pointers) => {}
+        }
+
+        Ok(checksum.finalize())
+    }
+
+    #[inline]
+    fn truncate(&self) -> anyhow::Result<()> {
+        // Superblock + GroupCount * (Group bitmap + group data inodes)
+        let size = BLOCK_SIZE + (self.groups.len() as u32) * (BLOCK_SIZE + BLOCKS_PER_GROUP);
+        // Set file size
+        self.file.set_len(size as u64)?;
+        // Return ok
+        Ok(())
+    }
+
+    #[inline]
+    fn add_group(&mut self) -> anyhow::Result<()> {
+        // Insert new group
+        self.groups.push(Group::init());
+        // Truncate itself
+        self.truncate()?;
+        // Return ok
+        Ok(())
     }
 
     #[inline]
@@ -127,16 +214,6 @@ impl FS {
     #[inline]
     fn mmap_mut(&mut self) -> &mut MmapMut {
         &mut self.mmap
-    }
-
-    #[inline]
-    fn save_inode(&mut self, mut inode: Inode, inode_block_index: u32) -> anyhow::Result<()> {
-        let offset = block_seek_position(inode_block_index) as u64;
-        let buf = self.mmap_mut().as_mut();
-        let mut cursor = Cursor::new(buf);
-        cursor.seek(SeekFrom::Start(offset))?;
-
-        Ok(inode.serialize_into(&mut cursor)?)
     }
 }
 
@@ -418,13 +495,12 @@ impl Group {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Inode {
-    pub folder: bool,
+    pub block_index: u32,
     pub created: u64,
     pub last_accesed: u64,
     pub size: u64,
-    pub checksum: u32,
+    pub data_checksum: u32,
     pub data: Data,
-    pub next: (u32, u32),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -439,31 +515,92 @@ impl Default for Data {
     }
 }
 
+impl Inode {
+    fn new(block_index: u32) -> Self {
+        Self {
+            block_index,
+            created: now(),
+            last_accesed: now(),
+            size: 0,
+            data_checksum: calculate_checksum(&()),
+            data: Data::Raw(vec![]),
+        }
+    }
+
+    #[inline]
+    pub fn serialize_into<W>(&self, mut w: W, block_index: u32) -> anyhow::Result<()>
+    where
+        W: Write + Seek,
+    {
+        // Set correct offset position
+        let offset = block_seek_position(block_index);
+        w.seek(SeekFrom::Start(offset as u64))?;
+
+        // Serialize inode bytes array
+        let serialized = bincode::serialize(&self)?;
+
+        // Check if serialized inode size is correct
+        assert!(serialized.len() as u32 <= BLOCK_SIZE);
+
+        // Write serialized inode
+        w.write_all(&serialized)?;
+
+        // Flush buffer
+        w.flush()?;
+
+        Ok(())
+    }
+
+    #[inline]
+    pub fn deserialize_from<R>(mut r: R, block_index: u32) -> anyhow::Result<Self>
+    where
+        R: Read + Seek,
+    {
+        let mut buf = Vec::with_capacity(BLOCK_SIZE as usize);
+        unsafe {
+            buf.set_len(BLOCK_SIZE as usize);
+        }
+
+        let offset = block_seek_position(block_index);
+        r.seek(SeekFrom::Start(offset as u64))?;
+        r.read_exact(&mut buf)?;
+
+        let inode: Inode = bincode::deserialize_from(&*buf)?;
+
+        Ok(inode)
+    }
+
+    #[inline]
+    fn set_last_accesed(&mut self) {
+        self.last_accesed = now();
+    }
+
+    #[inline]
+    fn set_data(&mut self, data: Data) {
+        self.data = data;
+        self.set_last_accesed();
+    }
+
+    #[inline]
+    fn data<R, W>(&self) -> &Data {
+        &self.data
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub struct Directory {
+pub struct DirectoryIndex {
     pub directories: BTreeMap<OsString, u32>,
     checksum: u32,
 }
 
-impl Directory {
-    pub fn serialize_into<W>(&mut self, w: W) -> anyhow::Result<()>
-    where
-        W: Write,
-    {
-        self.checksum();
-        bincode::serialize_into(w, self).map_err(|e| e.into())
-    }
-
-    pub fn deserialize_from<R>(r: R) -> anyhow::Result<Self>
-    where
-        R: Read,
-    {
-        let mut sb: Self = bincode::deserialize_from(r)?;
-        if !sb.verify_checksum() {
-            return Err(anyhow!("Directory checksum verification failed"));
-        }
-
-        Ok(sb)
+impl DirectoryIndex {
+    fn init() -> anyhow::Result<Self> {
+        let mut dir = DirectoryIndex {
+            directories: BTreeMap::new(),
+            checksum: 0,
+        };
+        dir.checksum();
+        Ok(dir)
     }
 
     pub fn entry<P>(&self, path: P) -> Option<u32>
@@ -473,6 +610,75 @@ impl Directory {
         self.directories
             .get(&path.as_ref().as_os_str().to_os_string())
             .map(|x| *x)
+    }
+
+    fn checksum(&mut self) {
+        self.checksum = 0;
+        self.checksum = calculate_checksum(&self);
+    }
+
+    fn verify_checksum(&mut self) -> bool {
+        let checksum = self.checksum;
+        self.checksum = 0;
+        let ok = checksum == calculate_checksum(&self);
+        self.checksum = checksum;
+
+        ok
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct Directory {
+    pub directories: BTreeMap<OsString, u32>,
+    pub files: BTreeMap<String, u32>,
+    checksum: u32,
+}
+
+impl Directory {
+    fn init() -> anyhow::Result<Self> {
+        let mut dir = Directory {
+            directories: BTreeMap::new(),
+            files: BTreeMap::new(),
+            checksum: 0,
+        };
+        dir.checksum();
+        Ok(dir)
+    }
+
+    pub fn get_file(&self, file_name: &str) -> Option<u32>
+    {
+        self.files
+            .get(file_name)
+            .map(|x| *x)
+    }
+
+    pub fn add_file(&mut self, file_name: &str, inode_block_index: u32) -> anyhow::Result<()> {
+        match self.get_file(file_name) {
+            Some(_) => Err(anyhow!("File already exist")),
+            None => {
+                self.files.insert(file_name.into(), inode_block_index);
+                Ok(())
+            },
+        }
+    }
+
+    pub fn get_folder<P>(&self, path: P) -> Option<u32>
+    where
+        P: AsRef<Path>,
+    {
+        self.directories
+            .get(&path.as_ref().as_os_str().to_os_string())
+            .map(|x| *x)
+    }
+
+    pub fn add_folder(&mut self, folder_name: &OsString, inode_block_index: u32) -> anyhow::Result<()> {
+        match self.get_folder(folder_name) {
+            Some(_) => Err(anyhow!("Folder already exist")),
+            None => {
+                self.directories.insert(folder_name.into(), inode_block_index);
+                Ok(())
+            },
+        }
     }
 
     fn checksum(&mut self) {
