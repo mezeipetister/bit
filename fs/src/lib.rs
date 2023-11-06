@@ -115,38 +115,38 @@ impl FS {
 
     // Create root FS
     fn create_root(&mut self) -> anyhow::Result<()> {
-        // let dir = Directory::
+        self.truncate()?;
         Ok(())
     }
 
+    // #[inline]
+    // fn find_inode_by_path<P>(&self, p: P) -> anyhow::Result<Inode>
+    // where
+    //     P: AsRef<Path>,
+    // {
+    //     let mut r = Cursor::new(self.mmap());
+
+    //     // Read root inode
+    //     let root_inode = Inode::deserialize_from(r, ROOT_INODE)?;
+
+    //     // Check if its a folder
+    //     assert!(root_inode.folder);
+
+    //     let mut raw_data = vec![];
+    //     let mut w = BufWriter::new(&mut raw_data);
+
+    //     // Read raw data
+    //     let checksum = self.read_inode_data(&root_inode, &mut w)?;
+
+    //     // Check checksum
+    //     assert_eq!(checksum, root_inode.data_checksum);
+
+    //     // Deserialize folders
+    //     let dir: DirectoryIndex = bincode::deserialize(&raw_data)?;
+    // }
+
     #[inline]
-    fn find_inode_by_path<P>(&self, p: P) -> anyhow::Result<Inode>
-    where
-        P: AsRef<Path>,
-    {
-        let mut r = Cursor::new(self.mmap());
-
-        // Read root inode
-        let root_inode = Inode::deserialize_from(r, ROOT_INODE)?;
-
-        // Check if its a folder
-        assert!(root_inode.folder);
-
-        let mut raw_data = vec![];
-        let mut w = BufWriter::new(&mut raw_data);
-
-        // Read raw data
-        let checksum = self.read_inode_data(&root_inode, &mut w)?;
-
-        // Check checksum
-        assert_eq!(checksum, root_inode.data_checksum);
-
-        // Deserialize folders
-        let dir: DirectoryIndex = bincode::deserialize(&raw_data)?;
-    }
-
-    #[inline]
-    fn get_inode<R>(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
+    pub fn get_inode<R>(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
         // Create cursor around memmap
         let mut r = Cursor::new(self.mmap());
 
@@ -162,17 +162,26 @@ impl FS {
     }
 
     #[inline]
-    fn save_inode(&self, inode: &Inode) -> anyhow::Result<()> {
+    pub fn save_inode(&mut self, inode: &mut Inode) -> anyhow::Result<()> {
         let mut w = Cursor::new(self.mmap_mut().as_mut());
         w.seek(SeekFrom::Start(
             block_seek_position(inode.block_index) as u64
         ));
+        inode.set_last_modified();
         inode.serialize_into(w)?;
         Ok(())
     }
 
     #[inline]
-    fn read_inode_data<W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
+    fn save_group(&mut self, group: &Group, group_index: u32) -> anyhow::Result<()> {
+        let mut w = Cursor::new(self.mmap_mut().as_mut());
+        w.seek(SeekFrom::Start(Group::seek_position(group_index) as u64));
+        group.serialize_into(w)?;
+        Ok(())
+    }
+
+    #[inline]
+    pub fn read_inode_data<W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
     where
         W: Write,
     {
@@ -180,7 +189,7 @@ impl FS {
 
         let mut r = Cursor::new(self.mmap());
 
-        match inode.data {
+        match &inode.data {
             Data::Raw(data) => {
                 checksum.update(&data);
                 w.write_all(&data)?;
@@ -191,7 +200,7 @@ impl FS {
 
                 for (block_index, range) in pointers {
                     // Seek start position
-                    r.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
+                    r.seek(SeekFrom::Start(block_seek_position(*block_index) as u64))?;
 
                     // Create buffer for range
                     let len = match data_left > BLOCK_SIZE as u64 {
@@ -220,19 +229,19 @@ impl FS {
     }
 
     #[inline]
-    fn write_inode_data<R>(
-        &self,
+    pub fn write_inode_data<R>(
+        &mut self,
         inode: &mut Inode,
         mut data: &mut R,
-        mut data_size: u64,
+        mut data_len: u64,
     ) -> anyhow::Result<()>
     where
         R: BufRead,
     {
         // If data length fits inside inode
-        if data_size as usize <= INODE_CAPACITY {
+        if data_len as usize <= INODE_CAPACITY {
             // Set data inside inode
-            inode.set_raw_data(&mut data, data_size)?;
+            inode.set_raw_data(&mut data, data_len)?;
 
             // Save inode
             self.save_inode(inode)?;
@@ -243,28 +252,87 @@ impl FS {
 
         // If data does not fit inside Inode as raw data
 
+        // Set inode data size
+        inode.size = data_len;
+        // And save it
+        self.save_inode(inode)?;
+
         // Define empty ranges
         let mut ranges: Vec<(u32, u32)> = vec![];
 
         // Define block_to_allocate
-        let blocks_to_allocate =
-            data_size / BLOCK_SIZE as u64 + u64::from(data_size % BLOCK_SIZE as u64 != 0);
+        let mut blocks_to_allocate = |data_size| {
+            data_size / BLOCK_SIZE as u64 + u64::from(data_size % BLOCK_SIZE as u64 != 0)
+        };
 
-        for (group_index, group) in self.groups().iter().enumerate() {
-            let (range, left) = group.allocate_region(
-                group_index as u32,
-                blocks_to_allocate as usize,
-                INODE_MAX_REGION,
-            );
+        // Determine how many block we need
+        let mut block_to_allocate = blocks_to_allocate(data_len);
+
+        let mut groups = self.groups.clone();
+
+        for (group_index, group) in groups.iter_mut().enumerate() {
+            // Check if we need any blocks?
+            if block_to_allocate > 0 {
+                // Allocate regions from group
+                let (mut range, left) = group.allocate_region(
+                    group_index as u32,
+                    block_to_allocate as usize,
+                    INODE_MAX_REGION,
+                );
+
+                // Save group
+                self.save_group(&group, group_index as u32)?;
+
+                ranges.append(&mut range);
+
+                // Decrease block wanted
+                block_to_allocate = left as u64;
+            }
         }
+
+        // Write data into ranges
+        let mut data_left = data_len;
+
+        let mut w = Cursor::new(self.mmap_mut().as_mut());
+
+        for (block_index, range) in ranges {
+            // Determine chunk size
+            let chunk_size = match data_left > BLOCK_SIZE as u64 {
+                true => (range * BLOCK_SIZE) as usize,
+                false => data_left as usize,
+            };
+
+            // Create buffer chunk
+            let mut buf = Vec::with_capacity(chunk_size);
+            unsafe { buf.set_len(chunk_size) };
+
+            // Read data into chunk buffer
+            data.read_exact(&mut buf)?;
+
+            // Seek position
+            w.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
+
+            // Write chunk buffer to disk
+            w.write_all(&mut buf)?;
+
+            // Decrease data left
+            data_left -= chunk_size as u64;
+        }
+
+        // Check all data has written
+        assert!(data_left == 0);
+
+        // Flush disk
+        w.flush()?;
 
         Ok(())
     }
 
     #[inline]
-    fn truncate(&self) -> anyhow::Result<()> {
+    fn truncate(&mut self) -> anyhow::Result<()> {
         // Superblock + GroupCount * (Group bitmap + group data inodes)
-        let size = BLOCK_SIZE + (self.groups.len() as u32) * (BLOCK_SIZE + BLOCKS_PER_GROUP);
+        let size =
+            BLOCK_SIZE + (self.groups.len() as u32) * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE);
         // Set file size
         self.file.set_len(size as u64)?;
         // Return ok
@@ -391,7 +459,7 @@ impl Superblock {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Group {
     pub block_bitmap: BitVec<u8, Lsb0>,
 }
@@ -592,7 +660,7 @@ impl Group {
 pub struct Inode {
     pub block_index: u32,
     pub created: u64,
-    pub last_accesed: u64,
+    pub last_modified: u64,
     pub size: u64,
     pub data_checksum: u32,
     pub data: Data,
@@ -615,7 +683,7 @@ impl Inode {
         Self {
             block_index,
             created: now(),
-            last_accesed: now(),
+            last_modified: now(),
             size: 0,
             data_checksum: calculate_checksum(&()),
             data: Data::Raw(vec![]),
@@ -632,6 +700,8 @@ impl Inode {
 
         // Check if serialized inode size is correct
         assert!(serialized.len() as u32 <= BLOCK_SIZE);
+
+        println!("{:?}", &serialized);
 
         // Write serialized inode
         w.write_all(&serialized)?;
@@ -652,8 +722,8 @@ impl Inode {
     }
 
     #[inline]
-    fn set_last_accesed(&mut self) {
-        self.last_accesed = now();
+    fn set_last_modified(&mut self) {
+        self.last_modified = now();
     }
 
     #[inline]
@@ -676,7 +746,6 @@ impl Inode {
 
         self.size = data_size;
         self.data = Data::Raw(buffer);
-        self.set_last_accesed();
         Ok(())
     }
 

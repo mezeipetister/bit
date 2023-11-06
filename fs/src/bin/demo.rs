@@ -1,13 +1,17 @@
+use std::path::Path;
+
 use fs::Inode;
-use sha2::{Digest, Sha256};
 
 fn main() {
-    let mut inode = Inode::default();
+    let path = Path::new("demo.db");
 
-    println!(
-        "empty inode size is: {}",
-        bincode::serialized_size(&inode).unwrap()
-    );
+    let mut fs = if path.exists() {
+        fs::FS::new(path).unwrap()
+    } else {
+        fs::FS::init(path, 1).unwrap()
+    };
+
+    fs.save_inode(&mut Inode::default()).unwrap();
 }
 
 // fn main() {
