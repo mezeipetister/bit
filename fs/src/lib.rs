@@ -30,13 +30,12 @@ pub mod util;
 pub struct FS {
     pub superblock: Superblock,
     pub file: File,
-    pub mmap: MmapMut,
     pub groups: Vec<Group>,
 }
 
 impl FS {
     /// Init FS to a given path
-    pub fn init<P>(path: P, group_count: u32) -> anyhow::Result<Self>
+    pub fn init<P>(path: P) -> anyhow::Result<Self>
     where
         P: AsRef<Path>,
     {
@@ -49,27 +48,24 @@ impl FS {
             .open(path.as_ref())?;
 
         // Create mmap from file
-        let mmap = unsafe { MmapMut::map_mut(&file)? };
+        // let mmap = unsafe { MmapMut::map_mut(&file)? };
 
         let superblock = Superblock::new();
-
-        let groups = (0..group_count)
-            .into_iter()
-            .map(|_| Group::init())
-            .collect();
 
         let mut fs = Self {
             superblock,
             file,
-            mmap,
-            groups,
+            groups: vec![],
         };
 
-        // Add first group
-        // fs.add_group()?;
+        // Create group
+        let group = Group::init();
 
-        // Create root staff
-        fs.create_root()?;
+        // Add to superblock
+        fs.add_group(group)?;
+
+        // Save superblock
+        fs.save_superblock()?;
 
         Ok(fs)
     }
@@ -80,25 +76,21 @@ impl FS {
         P: AsRef<Path>,
     {
         // Open image path as read & write
-        let file = OpenOptions::new()
+        let mut file = OpenOptions::new()
             .read(true)
             .write(true)
             .open(path.as_ref())?;
 
-        // Create mmap from file
-        let mmap = unsafe { MmapMut::map_mut(&file)? };
-
-        // Set cursor around mmap
-        let mut cursor = Cursor::new(&mmap);
+        let mut r = BufReader::new(&mut file);
 
         // Deserialize superblock from cursor
-        let superblock: Superblock = Superblock::deserialize_from(&mut cursor)?;
+        let superblock: Superblock = Superblock::deserialize_from(&mut r)?;
 
         let mut groups = vec![];
 
         // Deserialize groups based on superblock group count
         for group_index in 0..superblock.block_count {
-            let group = Group::deserialize_from(&mut cursor, group_index)?;
+            let group = Group::deserialize_from(&mut r, group_index)?;
             groups.push(group);
         }
 
@@ -106,17 +98,10 @@ impl FS {
             superblock,
             groups,
             file,
-            mmap,
         };
 
         // Return FS
         Ok(fs)
-    }
-
-    // Create root FS
-    fn create_root(&mut self) -> anyhow::Result<()> {
-        self.truncate()?;
-        Ok(())
     }
 
     // #[inline]
@@ -146,9 +131,18 @@ impl FS {
     // }
 
     #[inline]
-    pub fn get_inode<R>(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
-        // Create cursor around memmap
-        let mut r = Cursor::new(self.mmap());
+    fn save_superblock(&mut self) -> anyhow::Result<()> {
+        let mut w = BufWriter::new(&self.file);
+        self.superblock.checksum();
+        let mut data = bincode::serialize(&self.superblock)?;
+        w.seek(SeekFrom::Start(0))?;
+        w.write_all(&mut data)?;
+        Ok(())
+    }
+
+    #[inline]
+    pub fn get_inode(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
+        let mut r = BufReader::new(&self.file);
 
         r.seek(SeekFrom::Start(
             block_seek_position(inode_block_index) as u64
@@ -163,7 +157,8 @@ impl FS {
 
     #[inline]
     pub fn save_inode(&mut self, inode: &mut Inode) -> anyhow::Result<()> {
-        let mut w = Cursor::new(self.mmap_mut().as_mut());
+        let mut w = BufWriter::new(&self.file);
+
         w.seek(SeekFrom::Start(
             block_seek_position(inode.block_index) as u64
         ));
@@ -174,7 +169,8 @@ impl FS {
 
     #[inline]
     fn save_group(&mut self, group: &Group, group_index: u32) -> anyhow::Result<()> {
-        let mut w = Cursor::new(self.mmap_mut().as_mut());
+        let mut w = BufWriter::new(&self.file);
+
         w.seek(SeekFrom::Start(Group::seek_position(group_index) as u64));
         group.serialize_into(w)?;
         Ok(())
@@ -186,8 +182,7 @@ impl FS {
         W: Write,
     {
         let mut checksum = Checksum::new();
-
-        let mut r = Cursor::new(self.mmap());
+        let mut r = BufReader::new(&self.file);
 
         match &inode.data {
             Data::Raw(data) => {
@@ -211,7 +206,7 @@ impl FS {
                     unsafe { buf.set_len(len) };
 
                     // Read range bytes
-                    r.read_exact(&mut buf)?;
+                    r.get_mut().read_exact(&mut buf)?;
 
                     // Update checksum
                     checksum.update(&buf);
@@ -233,7 +228,7 @@ impl FS {
         &mut self,
         inode: &mut Inode,
         mut data: &mut R,
-        mut data_len: u64,
+        data_len: u64,
     ) -> anyhow::Result<()>
     where
         R: BufRead,
@@ -293,7 +288,7 @@ impl FS {
         // Write data into ranges
         let mut data_left = data_len;
 
-        let mut w = Cursor::new(self.mmap_mut().as_mut());
+        let mut w = BufWriter::new(&self.file);
 
         for (block_index, range) in ranges {
             // Determine chunk size
@@ -340,9 +335,11 @@ impl FS {
     }
 
     #[inline]
-    fn add_group(&mut self) -> anyhow::Result<()> {
-        // Insert new group
-        self.groups.push(Group::init());
+    fn add_group(&mut self, group: Group) -> anyhow::Result<()> {
+        // Save group to disk
+        self.save_group(&group, self.groups.len() as u32 + 1)?;
+        // Insert new group to FS groups
+        self.groups.push(group);
         // Truncate itself
         self.truncate()?;
         // Return ok
@@ -367,16 +364,6 @@ impl FS {
     #[inline]
     fn superblock_mut(&mut self) -> &mut Superblock {
         &mut self.superblock
-    }
-
-    #[inline]
-    fn mmap(&self) -> &MmapMut {
-        &self.mmap
-    }
-
-    #[inline]
-    fn mmap_mut(&mut self) -> &mut MmapMut {
-        &mut self.mmap
     }
 }
 
@@ -656,7 +643,7 @@ impl Group {
     // }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Inode {
     pub block_index: u32,
     pub created: u64,
@@ -679,7 +666,7 @@ impl Default for Data {
 }
 
 impl Inode {
-    fn new(block_index: u32) -> Self {
+    pub fn new(block_index: u32) -> Self {
         Self {
             block_index,
             created: now(),
@@ -700,8 +687,6 @@ impl Inode {
 
         // Check if serialized inode size is correct
         assert!(serialized.len() as u32 <= BLOCK_SIZE);
-
-        println!("{:?}", &serialized);
 
         // Write serialized inode
         w.write_all(&serialized)?;
@@ -727,7 +712,7 @@ impl Inode {
     }
 
     #[inline]
-    fn set_raw_data<R>(&mut self, mut data: &mut R, data_size: u64) -> anyhow::Result<()>
+    fn set_raw_data<R>(&mut self, data: &mut R, data_size: u64) -> anyhow::Result<()>
     where
         R: BufRead,
     {
