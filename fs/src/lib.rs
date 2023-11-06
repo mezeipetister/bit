@@ -1,21 +1,17 @@
 use anyhow::anyhow;
-use bitvec::access::BitSafeU8;
-use bitvec::ptr::{BitRef, Mut};
-use bitvec::slice::IterMut;
 use bitvec::{order::Lsb0, vec::BitVec};
 use memmap2::MmapMut;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
-use std::default;
+use std::fs::OpenOptions;
 use std::io::{Cursor, Seek, SeekFrom};
-use std::iter::Enumerate;
 use std::{
     collections::BTreeMap,
     ffi::OsString,
     io::{Read, Write},
     path::Path,
-    time::{self, SystemTime},
 };
+
+use util::*;
 
 // const M: u32 = 0xb1a9;
 const MAGIC: [u8; 7] = *b"*bitfs*";
@@ -28,61 +24,120 @@ const CHUNK_CAPACITY: usize = 4076;
 
 pub mod util;
 
-#[inline]
-pub fn calculate_checksum<S>(s: &S) -> u32
-where
-    S: serde::Serialize,
-{
-    0
-}
-
-#[inline]
-pub fn now() -> u64 {
-    SystemTime::now()
-        .duration_since(time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs()
-}
-
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FS {
-    pub superblock: Option<Superblock>,
-    pub mmap: Option<MmapMut>,
-    pub groups: Option<Vec<Group>>,
+    pub superblock: Superblock,
+    pub mmap: MmapMut,
+    pub groups: Vec<Group>,
 }
 
 impl FS {
-    // pub fn new<P>(image_path: P) -> anyhow::Result<Self>
-    // where
-    //     P: AsRef<Path>,
-    // {
-    //     let file = OpenOptions::new()
-    //         .read(true)
-    //         .write(true)
-    //         .open(image_path.as_ref())?;
-    //     let mmap = unsafe { MmapMut::map_mut(&file)? };
-    //     let mut cursor = Cursor::new(&mmap);
-    //     let sb: Superblock = Superblock::deserialize_from(&mut cursor)?;
-    //     let groups = Group::deserialize_from(&mut cursor, sb.block_size, sb.groups as usize)?;
+    /// Init FS to a given path
+    pub fn init<P>(path: P) -> anyhow::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        // Create path if it has not exist (yet)
+        // Fails if path does exist
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(path.as_ref())?;
 
-    //     let mut fs = Self {
-    //         sb: Some(sb),
-    //         groups: Some(groups),
-    //         mmap: Some(mmap),
-    //     };
+        // Create mmap from file
+        let mmap = unsafe { MmapMut::map_mut(&file)? };
 
-    //     fs.create_root()?;
+        let superblock = Superblock::new();
 
-    //     Ok(fs)
-    // }
-    pub fn read_dir(&mut self, path: &Path) {}
-    pub fn create_dir(&mut self, path: &Path) {}
-    pub fn remove_dir(&mut self, path: &Path) {}
-    pub fn create_file(&mut self, path: &Path) {}
-    pub fn write_file(&mut self, path: &Path, data: &[u8]) {}
-    pub fn remove_file(&mut self, path: &Path) {}
-    pub fn read_fs_stat(&mut self) {}
-    pub fn read_path_stat(&mut self, path: &Path) {}
+        let groups = vec![];
+
+        let mut res = Self {
+            superblock,
+            mmap,
+            groups,
+        };
+
+        Ok(res)
+    }
+
+    /// Open FS from a given path
+    pub fn new<P>(path: P) -> anyhow::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        // Open image path as read & write
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(path.as_ref())?;
+
+        // Create mmap from file
+        let mmap = unsafe { MmapMut::map_mut(&file)? };
+
+        // Set cursor around mmap
+        let mut cursor = Cursor::new(&mmap);
+
+        // Deserialize superblock from cursor
+        let superblock: Superblock = Superblock::deserialize_from(&mut cursor)?;
+
+        let mut groups = vec![];
+
+        // Deserialize groups based on superblock group count
+        for group_index in 0..superblock.block_count {
+            let group = Group::deserialize_from(&mut cursor, group_index)?;
+            groups.push(group);
+        }
+
+        let fs = Self {
+            superblock,
+            groups,
+            mmap,
+        };
+
+        // Return FS
+        Ok(fs)
+    }
+
+    #[inline]
+    fn groups(&self) -> &[Group] {
+        &self.groups
+    }
+
+    #[inline]
+    fn groups_mut(&mut self) -> &mut [Group] {
+        &mut self.groups
+    }
+
+    #[inline]
+    fn superblock(&self) -> &Superblock {
+        &self.superblock
+    }
+
+    #[inline]
+    fn superblock_mut(&mut self) -> &mut Superblock {
+        &mut self.superblock
+    }
+
+    #[inline]
+    fn mmap(&self) -> &MmapMut {
+        &self.mmap
+    }
+
+    #[inline]
+    fn mmap_mut(&mut self) -> &mut MmapMut {
+        &mut self.mmap
+    }
+
+    #[inline]
+    fn save_inode(&mut self, mut inode: Inode, inode_block_index: u32) -> anyhow::Result<()> {
+        let offset = block_seek_position(inode_block_index) as u64;
+        let buf = self.mmap_mut().as_mut();
+        let mut cursor = Cursor::new(buf);
+        cursor.seek(SeekFrom::Start(offset))?;
+
+        Ok(inode.serialize_into(&mut cursor)?)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -213,7 +268,7 @@ impl Group {
     }
 
     #[inline]
-    pub fn deserialize_from<R>(mut r: R, id: u32) -> anyhow::Result<Group>
+    pub fn deserialize_from<R>(mut r: R, group_index: u32) -> anyhow::Result<Group>
     where
         R: Read + Seek,
     {
@@ -222,7 +277,7 @@ impl Group {
             buf.set_len(BLOCK_SIZE as usize);
         }
 
-        let offset = Self::seek_position(id);
+        let offset = Self::seek_position(group_index);
         r.seek(SeekFrom::Start(offset as u64))?;
         r.read_exact(&mut buf)?;
         let data_bitmap = BitVec::<u8, Lsb0>::from_slice(&buf);
@@ -230,10 +285,10 @@ impl Group {
         Ok(Group::new(data_bitmap))
     }
 
-    #[inline]
-    pub fn has_data_block(&self, i: usize) -> bool {
-        self.block_bitmap.get(i - 1).as_deref().unwrap_or(&false) == &true
-    }
+    // #[inline]
+    // pub fn has_data_block(&self, i: usize) -> bool {
+    //     self.block_bitmap.get(i - 1).as_deref().unwrap_or(&false) == &true
+    // }
 
     #[inline]
     pub fn free_data_blocks(&self) -> usize {
@@ -261,11 +316,14 @@ impl Group {
     #[inline]
     fn allocate_one(&mut self, group_index: u32) -> Option<u32> {
         // If we have at least one free block index
-        if let Some(i) = self.block_bitmap.iter_zeros().next() {
+        if let Some(bitmap_index) = self.block_bitmap.iter_zeros().next() {
             // Set it to be taken
-            self.block_bitmap.set(i, true);
+            self.block_bitmap.set(bitmap_index, true);
             // Return index as public address
-            return Some(Self::create_public_address(group_index, i as u32));
+            return Some(Self::create_public_address(
+                group_index,
+                bitmap_index as u32,
+            ));
         }
         None
     }
@@ -343,16 +401,19 @@ impl Group {
             }
         }
 
+        // allocated regions
+        //  |                  remaining blocks to allocate
+        //  |                     |
         (regions, blocks_to_allocate)
     }
 
-    #[inline]
-    fn next_free_data_region(&self, size: u32) -> Option<(usize, usize)> {
-        self.block_bitmap
-            .windows(size as usize)
-            .position(|p| p.not_any())
-            .map(|p| (p + 1, p + size as usize + 1))
-    }
+    // #[inline]
+    // fn next_free_data_region(&self, size: u32) -> Option<(usize, usize)> {
+    //     self.block_bitmap
+    //         .windows(size as usize)
+    //         .position(|p| p.not_any())
+    //         .map(|p| (p + 1, p + size as usize + 1))
+    // }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -369,7 +430,7 @@ pub struct Inode {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Data {
     Raw(Vec<u8>),
-    Direct(Vec<(u32, u32)>),
+    DirectPointers(Vec<(u32, u32)>),
 }
 
 impl Default for Data {

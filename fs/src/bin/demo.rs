@@ -1,4 +1,5 @@
 use fs::Inode;
+use sha2::{Digest, Sha256};
 
 fn main() {
     let mut inode = Inode::default();
@@ -8,8 +9,6 @@ fn main() {
         bincode::serialized_size(&inode).unwrap()
     );
 }
-
-use bitvec::{bitvec, order::Lsb0, vec::BitVec};
 
 // fn main() {
 //     let mut block_bitmap = BitVec::<u8, Lsb0>::with_capacity(4096 as usize);
