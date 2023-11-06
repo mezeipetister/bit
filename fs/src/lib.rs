@@ -198,7 +198,7 @@ impl FS {
                     r.seek(SeekFrom::Start(block_seek_position(*block_index) as u64))?;
 
                     // Create buffer for range
-                    let len = match data_left > BLOCK_SIZE as u64 {
+                    let len = match data_left > (BLOCK_SIZE * range) as u64 {
                         true => (range * BLOCK_SIZE) as usize,
                         false => data_left as usize,
                     };
@@ -256,7 +256,7 @@ impl FS {
         let mut ranges: Vec<(u32, u32)> = vec![];
 
         // Define block_to_allocate
-        let mut blocks_to_allocate = |data_size| {
+        let blocks_to_allocate = |data_size| {
             data_size / BLOCK_SIZE as u64 + u64::from(data_size % BLOCK_SIZE as u64 != 0)
         };
 
@@ -285,6 +285,10 @@ impl FS {
             }
         }
 
+        // Save ranges
+        inode.set_direct_pointers(ranges.clone(), data_len);
+        self.save_inode(inode)?;
+
         // Write data into ranges
         let mut data_left = data_len;
 
@@ -292,10 +296,15 @@ impl FS {
 
         for (block_index, range) in ranges {
             // Determine chunk size
-            let chunk_size = match data_left > BLOCK_SIZE as u64 {
+            let chunk_size = match data_left > (range * BLOCK_SIZE) as u64 {
                 true => (range * BLOCK_SIZE) as usize,
                 false => data_left as usize,
             };
+
+            println!(
+                "data_len: {}, block_index: {}, range: {}, chunk size: {}",
+                data_len, block_index, range, chunk_size
+            );
 
             // Create buffer chunk
             let mut buf = Vec::with_capacity(chunk_size);
@@ -732,6 +741,12 @@ impl Inode {
         self.size = data_size;
         self.data = Data::Raw(buffer);
         Ok(())
+    }
+
+    #[inline]
+    fn set_direct_pointers(&mut self, pointers: Vec<(u32, u32)>, data_size: u64) {
+        self.data = Data::DirectPointers(pointers);
+        self.size = data_size;
     }
 
     #[inline]

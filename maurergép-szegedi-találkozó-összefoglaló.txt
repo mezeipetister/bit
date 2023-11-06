@@ -1,0 +1,191 @@
+MaurerGép Összefoglaló
+----------------------
+
+A Gardenova ÉLIP pályázatában megvalósuló gyömölcslé üzemhez helyszíni
+megbeszélésen voltunk Gabival Szegeden 2020-07-10 napján.
+
+Üzemeltetés
+
+- Az üzem irányításához kell egy üzemvezető, aki a NÉBIH felé felel, és a NÉBIH
+  jóváhagy. Ide kell valamilyen OKJ-s élelmiszeripari végzettség, ilyen pl
+  a zöldség és gyümölcs feldolgozó nevű OKJ-s képzés.
+  
+Maurer gép
+
+- A tervek szerint tőlük vesszük a gépsort, náluk voltunk most Szegeden.
+  Profi cég, 50 országban vannak jelen, magyar, családi vállalkozás. Csak
+  gyümölcsfeldolgozó gépeket gyártanak. Mi a kész gépsorukra kaptunk árajánlatot,
+  de foglalkoznak egyedi gépek tervezésével és építésével is. Amit gyártanak:
+  pálinka főző gépek, gyümölcs prések és gépsorok, lekvárfőző gépek, palackozók,
+  címkéző gépek. Egyedi gépeket vásároltak már tőlük: Zwack, Rauch.
+
+Gépsor
+
+- Jelenleg a mi gépsorunkban az alábbi gépek vannak benne:
+  (1) ládabillentő, erre kell a konténert rátenni, és ez a gép felemeli és rábillenti
+  a gyümölcsöt a válogató szalagra.
+  (2) Válogató szalag, ezen történhet a gyümölcs kézi válogatása,  
+  (3) kefés gyümölcsmodó darálóval, ez a gép mossa tisztára a beérkező gyümölcsöt,
+  van rajta egy futószalag, aminek a végén van egy kihajtható daráló. Ez a daráló
+  az almát megdarálja és úgy küldi tovább a szalagprésbe. A daráló kihajtható,
+  mert pl meggy feldolgozásánál nincs szükség rá, - a meggy a mosó után a magozóba
+  kell, hogy menjen.
+  (4) Szalagprés, ez préseli ki a gyümölcsből a gyümölcslevet.
+  Kb 70%-os lékihozatalra számíthatunk alma esetében.
+  (5) kihordó csiga, ez egy
+  olyan eszköz, ami a présből a gyümölcs húsát és egyéb salakanyagot kivezet,
+  és az épületen kívül elhelyezett konténerbe belehordja.
+  (6) Légyűjtő tartáj,
+  ez a gép fogadja a présből a gyümölcslevet. Van rajta egy nagyteljesítményű szűrő,
+  ami a levet tisztára szűri. Jelenleg egyszeres szűrő van a gépsorunkban, ami azt jelenti,
+  hogy a gyümölcs rostot nem szűri ki. Ha kérjük lehet dupla szűrőt használni, ekkor
+  a gyümölcsléből a rost is el van távolítva. A légyűjtő tartájon van szintkapcsoló,
+  ami azt jelenti, hogy ha a tartáj tele van, akkor a mögötte lévő gépsort (válogató szalag,
+  mosó, prés) megállítja és akkor indítja újra, ha a gyümölcslé a feldolgozás miatt apad)
+  (7) 2 db 500 literes úszófedeles légyűjtő tartály. Ide érkezik a gyümölcslé. Ide a gyümölcslevet
+  a légyűjtő tartály szivattyúja egy csövön keresztül pumpálja.
+  (8) Gázos pasztörizáló, ez gázzal működik, és kb 82 fokon pasztörizálja a gyümölcs
+  levet. Beállítható akár 100 fokra is, de az almalé esetén 82 fok javasolt, mert
+  ebben az esetben 80 fokos lesz a palackozott gyümölcslé, ami ideálís a
+  csírátlanításhoz.
+  (9) Félautomata bag in the box csomagtöltő, ami a 3-5 literes
+  zacskókba tud tölteni.
+  (10) 12 fejes üvegmosó, amivel az üveges töltés esetén
+  az üvegeket lehet egyszerre kimosni.
+  (11) 6 fejes üvegtöltő, ami állítható magasságú
+  és a kívánt méretű üvegekbe tölti a gyümölcslevet.
+  (12) Pasztőrkád, 4 rekeszes
+  pasztőrkád, amivel tovább csírátlaníthatóak az üvegek. A szavatossági idő üveg
+  esetén 1-1.5 évre növelhető vele. Nélküle 4-8 hónap között van a szavatossági idő.
+  Fontos, hogy ez a NÉBIH által adott szavatossági idő. Ezt úgy kapjuk meg, hogy
+  a próbagyártásból készerméket kell a NÉBIH laborjának küldeni, ők bevizsgálják
+  és adnak rá egy engedélyezett szavatossági időt. Ezt írhatjuk rá a termékre.
+  
+- A palackos töltéshez még jelenleg nincs a tervezett gépsorban koronazáró, kukapoló
+  és félautomata címkéző. Ezekre küldenek még ajánlatot. Ezek azért fontosak, mert
+  ezek nélkül nem lehet kisüveges terméket nagyobb tételben legyártani. Kézi kupakolás
+  esetén nem biztosított a csírátlanítás, így a szavatossági idő romolhat, a címke
+  felhelyezése kézzel pedig lassú. A gép kapacitása kisüveges termék esetén
+  500-2000 db üveg per óra.
+  
+- A gépsorban lévő gépek kapacitása eltérő, próbáltuk őket összehangolni. A jelenlegi
+  gépsorral 600 kg per óra gyümölcsöt lehet feldolgozni. Ez a szalagprés kapacitása.
+  Ez azt jelenti, hogy kb 2 konténer per óra a kapacitás. Ez azt jelenti, hogy
+  kb 420 liter per óra almalevet tud a gépsor gyártani - ha minden megfelelően működik.
+  
+- A gépekben vannak kopó alkatrészek, pl kefék, ezeket 2-4 szezononként kell cserélni.
+
+- A gépek 3 fázisú árammal működnek, néhány gép igényel vízet, néhány gép igényel
+  magasnyomású levegőt a működéséhez. Az árajánlatban van kompresszor a levegőhöz.
+
+- A gépekre 5 év garanciát adnak, ha probléma van helyszíni kiszállással szerelik
+  a gépeket. Ha van nekünk is szerelőnk, úgy is működik a probléma elhárítás,
+  hogy gyors futárral küldenek alkatrészt és videó konferencián segítenek
+  a mi szerelőnknek a beépítésnél. Hangsúlyozzák, hogy ezek ipari gépek,
+  mehetnek 3 műszakban megállás nélkül hosszabb időn keresztül. Úgy tapasztalják,
+  hogy ritkán van meghibásodás.
+  
+- Van, hogy a szervíz a helyszíni kiszállást nem tudja aznap, vagy másnap elvégezni
+  mert annyira leterheltek, és csak 5-7 napon belül tudnak kijönni. Ilyenkor vagy
+  mi szereljük meg videó konferenciás segítséggel, vagy annyi tartalékot gyártunk
+  hogy ez a leállás ne okozzon problémát.
+
+- A gépsor teljesen automata. A teljes gépsorhoz 2 ember szükséges. Egy ember
+  a ládabillentővel a konténert felteszi és billenti a futószallagra.
+  A futószallagon kézi válogatást végez, a sérült alma eltávolítására. Ezután
+  a folyamat magától megy egészen a palackozásig. Ott a másik ember vagy a zacskós
+  kiszerelést, vagy az üveges kiszerelést végzi. Még egy ember szükséges lehet
+  ha sok üveget kell a pasztőrkádban pasztőrözni.
+
+- A gyümölcslé készítésénél "Bag in the box" zacskós (3-5 liter) kiszerelést,
+  illetve kisüveges kiszerelést tudunk majd készíteni. Az üveg mérete állítható
+  a 2.5 dl-től akár a 2 literig. A palackozóhoz van pasztőrkád is a gépek között,
+  a pasztőrkáddal a palackozott gyümölcslé várható szavatossági ideje 1-1.5 év.
+  Ez attól függ, hogy milyen sokáig pasztőrözünk. A pasztőrkád 4 rekesszel van
+  szerelve, és kb 3 perc pasztőr tudja az egy éves szavidőt. Pasztőrkád nélkül
+  kb 4-8 hónap szavatossági idő várható.
+  
+- A gépsorban jelenleg nincs koronazáró, kupakoló és félautomata címkéző. Ezekre
+  még küldenek árat.
+  
+Üzem kialakítása
+
+- Az üzemet 3 részben kell kialakítani: szociális helyíség, koszos és tiszta
+  gyártó rész. Egyirányú körforgást kell kialakítani, ahol biztosítani kell,
+  hogy az öltözőből bejuthassunk a tiszta gyártórészbe, de ha onnan átmegyünk
+  a koszos részbe, akkor onnan már csak az öltözőn keresztül lehessen vissza menni
+  a tiszta helyíségbe. A gépsorokat is ennek tükrében ketté kell választani. A koszos
+  helyszíségben van minden olyan művelet ami a gyümölcslé kinyeréséig van. Innen
+  a gyűmölcslének úgy kell tudnia eljutnia a palackba, hogy közben nem találkozik
+  levegővel, csak zárt térben mozog. A koszor teremben van a ládabillentő, válogató
+  szalag, mosó, prés és légyűjtő. Innen egy szivattyú viszi a levet a tiszta helyíségbe,
+  itt van az 1000 literes légyűjtő, a pasztörizáló, a palackozó, töltő és a pasztőrkád.
+  
+- A koszos részbe bemehet gázos targonca, azonan a tiszta helyíségbe nem. Itt vagy
+  kézi béka, vagy elektromos béka / targonca mehet be.
+ 
+- A falat 2.5 m-ig csempézni kell, de van élelmiszeripari szendvicspanel is, ahol
+  a panel borítása megfelel élelmiszeripari szempontból a NÉBIH felé is. Ezt mindeképp
+  igazolni kell tudni ha ez lesz.
+  
+- Az üzemben 5 csövezést kell elvégezni. Nagy hosszú lefolyókat a max 1m3 per óra
+  technológiai víznek, valamint magasnyomású levegő, 3 fázisú áram, víz és magasnyomású
+  víz. Ezeket azt javasolják, hogy a falon vezessük el csöveken. Azt javasolják,
+  hogy az áramot csatornákban vigyük el a plafonon, és onnan direktben minden gép
+  felett lógassuk le lengődugaljal. Így nem akadályozza az embrek, gépek, targonca
+  mozgását, és a magasnyomású mosó sem zavarja majd. Van 2 hangos gép, amit szerintük
+  az üzemen kívül helyezzünk el: a kompresszor és a magasnyomású mosó. Mind a két gép
+  az árajánlatban szerepel - a szalagprés árában szerepel, oda is van írva.
+  A kompresszortól és a magasnyomású mosótól a falon csövekkel vigyük el a levegőt
+  és a vízet. Így bent a falakon 3 cső fog futni egymás felett: víz, magasnyomású víz,
+  magasnyomású levegő. Azt javasolják, hogy gyorscsatlakozókat tegyünk fel a csövekre
+  amilyen sűrűn csak tudunk, így ha az üzemben a gépeket áthelyezzük, akkor is könnyű
+  lesz a csövekre rákötni őket.
+  
+- A magasnyomású mosó beépítettként működik. Mivel gyakran kell használni, ezért
+  a mosó kézi fejét kézzel oda kell vinni ahol használni szeretnénk, a falon lévő
+  aljzatba bedugni és elvégezni a gép / fal / padló mosását. Azért javasolják így
+  mert naponta többször kell használni.
+
+- A gépeket minden műszak után kell tisztítani. A tisztításhoz elégséges a
+  magasnyomású mosó tiszta vízzel, illetve citromsav és hypo. Minden gép könnyen
+  3-5 perc alatt elemerire szedhető és könnyen összerakhatóak.
+
+- A padló kialakításának csempe helyett ipari műgyantát javasolnak. Szerintük
+  összességében olcsóbb a műgyanta. A csempét nehéz takarítani és a NÉBIH
+  ha sérült csempét talál addig bezáratja az üzemet amíg nincs minden csempe
+  kicserélve. A csempénél nehéz a fugát takarítani. Mesélték, hogy az ő almalé
+  üzemükben volt olyan eset, amikor a targonca alatt egy csempe megrepedt
+  és a NÉBIH addig nem engedte őket működni, amíg a csempét ki nem cserélték.
+  Mivel naponta többször kell magasnyomású mosóval takarítani, ezért a műgyantát
+  javasolják.
+
+- A gépek működéséhez víz szükséges, ami folyamatosan áramlik be a gépekbe
+  és onnan ki. A kifolyt víz technológiai víznek minősül, amit nem lehet
+  a csatorna hálózatba engedni. A becsült vízigény maximum 1 m3 óránként.
+  Ez a víz több forrásból adódik: magasnyomású mosóval történő gép, padló és
+  fal tisztítása, valamint a gépeken átáramló és kifolyó technológiai víz.
+  
+- A Maurer gépnél azt javasolják, hogy a víz szabadon áramoljon ki a gépekből
+  a padlóra, a padlónak legyen olyan nagy dőlése a lefolyók felé, hogy a max
+  1 m3 per óra fennakadás nélkül le tudjon folyni.
+  
+- A gépek miatt lehet nyugodtan döntött padló, mert a gépek lábai lábanként
+  állíthatóak.
+  
+- A víz elvezetéséhez azt javasolják, hogy termenként legyen 2 db hosszú lefolyó
+  és a padlót ejtessük w alakban a két lefolyó felé. A gépekből kifolyó vízet
+  pedig egy egy gégecsővel vezessük a lefolyó irányába.
+  
+- A vízigényt ha van jó minőségű fúrott kút, akkor a kútat javasolják. Kúti
+  vízet tilos használni, de attól a költséghatékonyság miatt azt javasolják.
+  Kapcsolóval ellátva a bemenő vízcsapon, ahol lehet kapcsolni, hogy hálózati
+  vagy fúrott kút vízet használunk. Ez egy ellenőrzés miatt fontos.
+  
+- A technológiai víz nem mehet bele a szennyvíz hálózatba, ezért egy kb 30 m3-es
+  víztározót javasolnak létesíteni a telephelyen, ahová a víz folyik. Ez a víz
+  szerintük szabadon kilocsolható öntözés céljából.
+
+Készítette\  
+Mezei Péter
+
