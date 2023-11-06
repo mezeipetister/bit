@@ -4,7 +4,7 @@ use memmap2::MmapMut;
 use serde::{Deserialize, Serialize};
 use std::any;
 use std::fs::{File, OpenOptions};
-use std::io::{BufWriter, Cursor, Seek, SeekFrom};
+use std::io::{BufRead, BufReader, BufWriter, Cursor, Seek, SeekFrom};
 use std::ops::Deref;
 use std::{
     collections::BTreeMap,
@@ -22,7 +22,7 @@ const ROOT_INODE: u32 = 1;
 const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
 const INODE_CAPACITY: usize = 4047;
-const CHUNK_CAPACITY: usize = 4076;
+const INODE_MAX_REGION: usize = 500;
 
 pub mod util;
 
@@ -143,27 +143,122 @@ impl FS {
 
         // Deserialize folders
         let dir: DirectoryIndex = bincode::deserialize(&raw_data)?;
-
-        dir.
     }
 
     #[inline]
-    fn read_inode_data<R, W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
+    fn get_inode<R>(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
+        // Create cursor around memmap
+        let mut r = Cursor::new(self.mmap());
+
+        r.seek(SeekFrom::Start(
+            block_seek_position(inode_block_index) as u64
+        ))?;
+
+        // Deserialize by bincode
+        let inode: Inode = Inode::deserialize_from(r)?;
+
+        // Return inode
+        Ok(inode)
+    }
+
+    #[inline]
+    fn save_inode(&self, inode: &Inode) -> anyhow::Result<()> {
+        let mut w = Cursor::new(self.mmap_mut().as_mut());
+        w.seek(SeekFrom::Start(
+            block_seek_position(inode.block_index) as u64
+        ));
+        inode.serialize_into(w)?;
+        Ok(())
+    }
+
+    #[inline]
+    fn read_inode_data<W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
     where
-        R: Read + Seek,
         W: Write,
     {
         let mut checksum = Checksum::new();
+
+        let mut r = Cursor::new(self.mmap());
 
         match inode.data {
             Data::Raw(data) => {
                 checksum.update(&data);
                 w.write_all(&data)?;
             }
-            Data::DirectPointers(pointers) => {}
+            Data::DirectPointers(pointers) => {
+                // Counting data left to read
+                let mut data_left = inode.size;
+
+                for (block_index, range) in pointers {
+                    // Seek start position
+                    r.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
+
+                    // Create buffer for range
+                    let len = match data_left > BLOCK_SIZE as u64 {
+                        true => (range * BLOCK_SIZE) as usize,
+                        false => data_left as usize,
+                    };
+                    let mut buf = Vec::with_capacity(len);
+                    unsafe { buf.set_len(len) };
+
+                    // Read range bytes
+                    r.read_exact(&mut buf)?;
+
+                    // Update checksum
+                    checksum.update(&buf);
+
+                    // Write buffer to writer
+                    std::io::copy(&mut Cursor::new(buf), &mut w);
+
+                    // Decrease data_left
+                    data_left -= len as u64;
+                }
+            }
         }
 
         Ok(checksum.finalize())
+    }
+
+    #[inline]
+    fn write_inode_data<R>(
+        &self,
+        inode: &mut Inode,
+        mut data: &mut R,
+        mut data_size: u64,
+    ) -> anyhow::Result<()>
+    where
+        R: BufRead,
+    {
+        // If data length fits inside inode
+        if data_size as usize <= INODE_CAPACITY {
+            // Set data inside inode
+            inode.set_raw_data(&mut data, data_size)?;
+
+            // Save inode
+            self.save_inode(inode)?;
+
+            // Return ok
+            return Ok(());
+        }
+
+        // If data does not fit inside Inode as raw data
+
+        // Define empty ranges
+        let mut ranges: Vec<(u32, u32)> = vec![];
+
+        // Define block_to_allocate
+        let blocks_to_allocate =
+            data_size / BLOCK_SIZE as u64 + u64::from(data_size % BLOCK_SIZE as u64 != 0);
+
+        for (group_index, group) in self.groups().iter().enumerate() {
+            let (range, left) = group.allocate_region(
+                group_index as u32,
+                blocks_to_allocate as usize,
+                INODE_MAX_REGION,
+            );
+        }
+
+        Ok(())
     }
 
     #[inline]
@@ -528,14 +623,10 @@ impl Inode {
     }
 
     #[inline]
-    pub fn serialize_into<W>(&self, mut w: W, block_index: u32) -> anyhow::Result<()>
+    pub fn serialize_into<W>(&self, mut w: W) -> anyhow::Result<()>
     where
         W: Write + Seek,
     {
-        // Set correct offset position
-        let offset = block_seek_position(block_index);
-        w.seek(SeekFrom::Start(offset as u64))?;
-
         // Serialize inode bytes array
         let serialized = bincode::serialize(&self)?;
 
@@ -552,21 +643,11 @@ impl Inode {
     }
 
     #[inline]
-    pub fn deserialize_from<R>(mut r: R, block_index: u32) -> anyhow::Result<Self>
+    pub fn deserialize_from<R>(mut r: R) -> anyhow::Result<Self>
     where
         R: Read + Seek,
     {
-        let mut buf = Vec::with_capacity(BLOCK_SIZE as usize);
-        unsafe {
-            buf.set_len(BLOCK_SIZE as usize);
-        }
-
-        let offset = block_seek_position(block_index);
-        r.seek(SeekFrom::Start(offset as u64))?;
-        r.read_exact(&mut buf)?;
-
-        let inode: Inode = bincode::deserialize_from(&*buf)?;
-
+        let inode: Inode = bincode::deserialize_from(&mut r)?;
         Ok(inode)
     }
 
@@ -576,9 +657,27 @@ impl Inode {
     }
 
     #[inline]
-    fn set_data(&mut self, data: Data) {
-        self.data = data;
+    fn set_raw_data<R>(&mut self, mut data: &mut R, data_size: u64) -> anyhow::Result<()>
+    where
+        R: BufRead,
+    {
+        let mut buffer = vec![];
+        let data_len = data.read(&mut buffer)?;
+
+        if data_len != data_size as usize {
+            return Err(anyhow!("Data read and given data size are not the same"));
+        }
+
+        if data_len > INODE_CAPACITY as usize {
+            return Err(anyhow!(
+                "Data is too big to be raw data. Does not fit inside inode"
+            ));
+        }
+
+        self.size = data_size;
+        self.data = Data::Raw(buffer);
         self.set_last_accesed();
+        Ok(())
     }
 
     #[inline]
@@ -645,11 +744,8 @@ impl Directory {
         Ok(dir)
     }
 
-    pub fn get_file(&self, file_name: &str) -> Option<u32>
-    {
-        self.files
-            .get(file_name)
-            .map(|x| *x)
+    pub fn get_file(&self, file_name: &str) -> Option<u32> {
+        self.files.get(file_name).map(|x| *x)
     }
 
     pub fn add_file(&mut self, file_name: &str, inode_block_index: u32) -> anyhow::Result<()> {
@@ -658,7 +754,7 @@ impl Directory {
             None => {
                 self.files.insert(file_name.into(), inode_block_index);
                 Ok(())
-            },
+            }
         }
     }
 
@@ -671,13 +767,18 @@ impl Directory {
             .map(|x| *x)
     }
 
-    pub fn add_folder(&mut self, folder_name: &OsString, inode_block_index: u32) -> anyhow::Result<()> {
+    pub fn add_folder(
+        &mut self,
+        folder_name: &OsString,
+        inode_block_index: u32,
+    ) -> anyhow::Result<()> {
         match self.get_folder(folder_name) {
             Some(_) => Err(anyhow!("Folder already exist")),
             None => {
-                self.directories.insert(folder_name.into(), inode_block_index);
+                self.directories
+                    .insert(folder_name.into(), inode_block_index);
                 Ok(())
-            },
+            }
         }
     }
 
