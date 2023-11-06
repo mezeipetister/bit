@@ -714,10 +714,10 @@ impl Inode {
     #[inline]
     fn set_raw_data<R>(&mut self, data: &mut R, data_size: u64) -> anyhow::Result<()>
     where
-        R: BufRead,
+        R: Read,
     {
         let mut buffer = vec![];
-        let data_len = data.read(&mut buffer)?;
+        let data_len = data.read_to_end(&mut buffer)?;
 
         if data_len != data_size as usize {
             return Err(anyhow!("Data read and given data size are not the same"));
