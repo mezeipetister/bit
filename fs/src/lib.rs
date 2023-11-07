@@ -18,7 +18,7 @@ use util::*;
 // const M: u32 = 0xb1a9;
 const MAGIC: [u8; 7] = *b"*bitfs*";
 const FS_VERSION: u32 = 1;
-const ROOT_INODE: u32 = 1;
+const ROOT_INODE_INDEX: u32 = 2;
 const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
 const INODE_CAPACITY: usize = 4047;
@@ -67,6 +67,10 @@ impl FS {
         // Save superblock
         fs.save_superblock()?;
 
+        // Create directory_index
+        let di = DirectoryIndex::default();
+        fs.save_directory_index(di)?;
+
         Ok(fs)
     }
 
@@ -104,31 +108,71 @@ impl FS {
         Ok(fs)
     }
 
-    // #[inline]
-    // fn find_inode_by_path<P>(&self, p: P) -> anyhow::Result<Inode>
-    // where
-    //     P: AsRef<Path>,
-    // {
-    //     let mut r = Cursor::new(self.mmap());
+    #[inline]
+    fn get_directory_index(&self) -> anyhow::Result<DirectoryIndex> {
+        // Get inode
+        let inode = self.get_inode(ROOT_INODE_INDEX)?;
 
-    //     // Read root inode
-    //     let root_inode = Inode::deserialize_from(r, ROOT_INODE)?;
+        // Read inode data
+        let mut data = vec![];
 
-    //     // Check if its a folder
-    //     assert!(root_inode.folder);
+        {
+            let mut w = BufWriter::new(&mut data);
+            self.read_inode_data(&inode, &mut w)?;
+        }
 
-    //     let mut raw_data = vec![];
-    //     let mut w = BufWriter::new(&mut raw_data);
+        // Deserialize
+        let directory_index: DirectoryIndex = bincode::deserialize(&data)?;
 
-    //     // Read raw data
-    //     let checksum = self.read_inode_data(&root_inode, &mut w)?;
+        Ok(directory_index)
+    }
 
-    //     // Check checksum
-    //     assert_eq!(checksum, root_inode.data_checksum);
+    fn save_directory_index(&mut self, directory_index: DirectoryIndex) -> anyhow::Result<()> {
+        // Allocate first group bitmap for root
+        let root_block_index = self.groups[0].allocate_one(0).unwrap();
 
-    //     // Deserialize folders
-    //     let dir: DirectoryIndex = bincode::deserialize(&raw_data)?;
-    // }
+        // Create inode
+        let mut inode = Inode::new(root_block_index);
+
+        // Save inode
+        self.save_inode(&mut inode)?;
+
+        let data = bincode::serialize(&directory_index)?;
+        let mut w = Cursor::new(&data);
+
+        // Save directory
+        self.write_inode_data(&mut inode, &mut w, data.len() as u64)?;
+
+        Ok(())
+    }
+
+    #[inline]
+    fn get_directory<P>(&self, p: P) -> anyhow::Result<Directory>
+    where
+        P: AsRef<Path>,
+    {
+        let directory_index = self.get_directory_index()?;
+        let directory_index = match directory_index.directories.get(p.as_ref().as_os_str()) {
+            Some(dir) => *dir,
+            None => return Err(anyhow!("Directory not fond")),
+        };
+
+        // Get directory inode
+        let inode = self.get_inode(directory_index)?;
+
+        // Read directory data
+        let mut data: Vec<u8> = vec![];
+
+        {
+            let mut w = BufWriter::new(&mut data);
+            self.read_inode_data(&inode, &mut w)?;
+        }
+
+        // Deserialize directory
+        let directory: Directory = bincode::deserialize(&data)?;
+
+        Ok(directory)
+    }
 
     #[inline]
     fn save_superblock(&mut self) -> anyhow::Result<()> {
@@ -349,8 +393,12 @@ impl FS {
         self.save_group(&group, self.groups.len() as u32 + 1)?;
         // Insert new group to FS groups
         self.groups.push(group);
+        // Increment group count
+        self.superblock.group_count += 1;
         // Truncate itself
         self.truncate()?;
+        // Save superblock
+        self.save_superblock()?;
         // Return ok
         Ok(())
     }

@@ -20,11 +20,11 @@ fn main() {
 
     let mut inode: Inode = fs.get_inode(10).unwrap();
 
-    // let d = std::fs::File::open("demo/file.txt").unwrap();
-    // let mut data = BufReader::new(&d);
+    let d = std::fs::File::open("demo/file.txt").unwrap();
+    let mut data = BufReader::new(&d);
 
-    // fs.write_inode_data(&mut inode, &mut data, d.metadata().unwrap().len())
-    //     .unwrap();
+    fs.write_inode_data(&mut inode, &mut data, d.metadata().unwrap().len())
+        .unwrap();
 
     println!("{:?}", inode);
 
