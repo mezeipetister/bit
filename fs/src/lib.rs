@@ -1,8 +1,6 @@
 use anyhow::anyhow;
 use bitvec::{order::Lsb0, vec::BitVec};
-use memmap2::MmapMut;
 use serde::{Deserialize, Serialize};
-use std::any;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Cursor, Seek, SeekFrom};
 use std::ops::Deref;
@@ -59,7 +57,10 @@ impl FS {
         };
 
         // Create group
-        let group = Group::init();
+        let mut group = Group::init();
+
+        // Set root inode index as allocated
+        group.force_allocate_at(0);
 
         // Add to superblock
         fs.add_group(group)?;
@@ -68,7 +69,7 @@ impl FS {
         fs.save_superblock()?;
 
         // Create directory_index
-        let di = DirectoryIndex::default();
+        let di = DirectoryIndex::init();
         fs.save_directory_index(di)?;
 
         Ok(fs)
@@ -122,20 +123,20 @@ impl FS {
         }
 
         // Deserialize
-        let directory_index: DirectoryIndex = bincode::deserialize(&data)?;
+        let mut directory_index: DirectoryIndex = bincode::deserialize(&data)?;
+
+        if !directory_index.verify_checksum() {
+            return Err(anyhow!("Directory index checksum error"));
+        }
 
         Ok(directory_index)
     }
 
-    fn save_directory_index(&mut self, directory_index: DirectoryIndex) -> anyhow::Result<()> {
-        // Allocate first group bitmap for root
-        let root_block_index = self.groups[0].allocate_one(0).unwrap();
+    fn save_directory_index(&mut self, mut directory_index: DirectoryIndex) -> anyhow::Result<()> {
+        let mut inode = self.get_inode(ROOT_INODE_INDEX)?;
 
-        // Create inode
-        let mut inode = Inode::new(root_block_index);
-
-        // Save inode
-        self.save_inode(&mut inode)?;
+        // Set checksum
+        directory_index.checksum();
 
         let data = bincode::serialize(&directory_index)?;
         let mut w = Cursor::new(&data);
@@ -147,31 +148,133 @@ impl FS {
     }
 
     #[inline]
-    fn get_directory<P>(&self, p: P) -> anyhow::Result<Directory>
+    fn find_directory<P>(&self, dir: P) -> anyhow::Result<(Directory, u32)>
     where
         P: AsRef<Path>,
     {
+        // First get directory index
         let directory_index = self.get_directory_index()?;
-        let directory_index = match directory_index.directories.get(p.as_ref().as_os_str()) {
-            Some(dir) => *dir,
-            None => return Err(anyhow!("Directory not fond")),
-        };
 
-        // Get directory inode
-        let inode = self.get_inode(directory_index)?;
+        // Find directory in dir.index
+        if let Some(directory_inode_index) = directory_index.find_dir(dir) {
+            // Get directory inode
+            let directory_inode = self.get_inode(*directory_inode_index)?;
 
-        // Read directory data
-        let mut data: Vec<u8> = vec![];
+            let mut data = Vec::new();
 
-        {
-            let mut w = BufWriter::new(&mut data);
-            self.read_inode_data(&inode, &mut w)?;
+            // Read inode data
+            {
+                let mut w = BufWriter::new(&mut data);
+                self.read_inode_data(&directory_inode, &mut w)?;
+            }
+
+            // Deserialize directory
+            let directory: Directory = bincode::deserialize(&data)?;
+
+            // Return it
+            return Ok((directory, *directory_inode_index));
+        } else {
+            return Err(anyhow!("Directory not found"));
         }
+    }
 
-        // Deserialize directory
-        let directory: Directory = bincode::deserialize(&data)?;
+    #[inline]
+    fn save_directory(
+        &mut self,
+        directory: Directory,
+        directory_inode_index: u32,
+    ) -> anyhow::Result<Directory> {
+        // Get directory inode
+        let mut directory_inode = self.get_inode(directory_inode_index)?;
+
+        // Serialize directory
+        let data = bincode::serialize(&directory)?;
+        let mut reader = Cursor::new(&data);
+
+        self.write_inode_data(&mut directory_inode, &mut reader, data.len() as u64)?;
 
         Ok(directory)
+    }
+
+    #[inline]
+    pub fn create_directory<P>(&mut self, dir: P) -> anyhow::Result<Directory>
+    where
+        P: AsRef<Path>,
+    {
+        // First get directory index
+        let mut directory_index = self.get_directory_index()?;
+
+        // Then allocate dir inode index
+        let directory_inode = if let Some(i) = self.allocate_inode() {
+            i
+        } else {
+            return Err(anyhow!("Could not allocate inode block"));
+        };
+
+        // Then try to add directory to dir index
+        // If it fails, then free up allocated block
+        if let None = directory_index.create_dir(dir, directory_inode.block_index) {
+            self.release_inode(directory_inode.block_index)?;
+        }
+
+        // Save directory index
+        self.save_directory_index(directory_index)?;
+
+        // Create empty directory
+        let directory = Directory::init();
+
+        // Try to save directory
+        self.save_directory(directory, directory_inode.block_index)
+    }
+
+    #[inline]
+    pub fn add_file<P, R>(
+        &mut self,
+        dir: P,
+        file_name: &str,
+        data: &mut R,
+        data_len: u64,
+    ) -> anyhow::Result<()>
+    where
+        P: AsRef<Path>,
+        R: BufRead,
+    {
+        // Check if dir exist
+        let (mut dir, dir_inode_index) = self.find_directory(dir)?;
+
+        // Find file
+        let mut file_inode = if let Some(inode_block_index) = dir.get_file(file_name) {
+            self.get_inode(inode_block_index)?
+        } else {
+            let file_inode = self.allocate_inode().unwrap();
+            dir.add_file(file_name, file_inode.block_index)?;
+            self.save_directory(dir, dir_inode_index)?;
+            file_inode
+        };
+
+        self.write_inode_data(&mut file_inode, data, data_len)?;
+
+        Ok(())
+    }
+
+    #[inline]
+    pub fn get_file_data<P, W>(&mut self, dir: P, file_name: &str, w: &mut W) -> anyhow::Result<u32>
+    where
+        P: AsRef<Path>,
+        W: Write,
+    {
+        // First find directory
+        let (directory, _) = self.find_directory(dir)?;
+
+        // Then find file
+        let file_inode = if let Some(file_inode_index) = directory.get_file(file_name) {
+            self.get_inode(file_inode_index)?
+        } else {
+            // Else return error
+            return Err(anyhow!("File not found"));
+        };
+
+        self.read_inode_data(&file_inode, w)
     }
 
     #[inline]
@@ -205,17 +308,21 @@ impl FS {
 
         w.seek(SeekFrom::Start(
             block_seek_position(inode.block_index) as u64
-        ));
+        ))?;
         inode.set_last_modified();
         inode.serialize_into(w)?;
         Ok(())
     }
 
     #[inline]
-    fn save_group(&mut self, group: &Group, group_index: u32) -> anyhow::Result<()> {
+    fn save_group(&mut self, group: Group, group_index: u32) -> anyhow::Result<()> {
+        // Update group at FS
+        self.groups[group_index as usize] = group.clone();
+
+        // Write group to disk
         let mut w = BufWriter::new(&self.file);
 
-        w.seek(SeekFrom::Start(Group::seek_position(group_index) as u64));
+        w.seek(SeekFrom::Start(Group::seek_position(group_index) as u64))?;
         group.serialize_into(w)?;
         Ok(())
     }
@@ -307,9 +414,9 @@ impl FS {
         // Determine how many block we need
         let mut block_to_allocate = blocks_to_allocate(data_len);
 
-        let mut groups = self.groups.clone();
+        let groups = self.groups.clone();
 
-        for (group_index, group) in groups.iter_mut().enumerate() {
+        for (group_index, mut group) in groups.into_iter().enumerate() {
             // Check if we need any blocks?
             if block_to_allocate > 0 {
                 // Allocate regions from group
@@ -320,7 +427,7 @@ impl FS {
                 );
 
                 // Save group
-                self.save_group(&group, group_index as u32)?;
+                self.save_group(group, group_index as u32)?;
 
                 ranges.append(&mut range);
 
@@ -388,11 +495,28 @@ impl FS {
     }
 
     #[inline]
+    fn allocate_inode(&mut self) -> Option<Inode> {
+        let mut res = None;
+        for (group_index, group) in self.groups_mut().iter_mut().enumerate() {
+            if let Some(inode_block_index) = group.allocate_one(group_index as u32) {
+                let mut inode = Inode::new(inode_block_index);
+                res = Some(inode);
+                break;
+            }
+        }
+        if let Some(inode) = &mut res {
+            self.save_inode(inode).unwrap();
+        }
+        // TODO! Shoud handle the case when inode fails to save
+        res
+    }
+
+    #[inline]
     fn add_group(&mut self, group: Group) -> anyhow::Result<()> {
-        // Save group to disk
-        self.save_group(&group, self.groups.len() as u32 + 1)?;
         // Insert new group to FS groups
-        self.groups.push(group);
+        self.groups.push(group.clone());
+        // Save group to disk
+        self.save_group(group, self.groups.len() as u32 - 1)?;
         // Increment group count
         self.superblock.group_count += 1;
         // Truncate itself
@@ -421,6 +545,55 @@ impl FS {
     #[inline]
     fn superblock_mut(&mut self) -> &mut Superblock {
         &mut self.superblock
+    }
+
+    #[inline]
+    fn release_inode_data(&mut self, data_pointers: Vec<(u32, u32)>) -> anyhow::Result<()> {
+        let mut groups = self.groups_mut().as_mut().to_owned();
+        // Check each data region
+        for (block_index, range) in data_pointers {
+            // Translate public address
+            let (group_index, bitmap_index) = Group::translate_public_address(block_index);
+            // Release data region
+            groups[group_index as usize].release_data_region(bitmap_index, range);
+        }
+        // Iter groups
+        for (group_index, group) in groups.into_iter().enumerate() {
+            {
+                // And save each group to disk
+                self.save_group(group, group_index as u32)?;
+            }
+        }
+        Ok(())
+    }
+
+    #[inline]
+    fn release_inode(&mut self, inode_block_index: u32) -> anyhow::Result<()> {
+        // Check if inode exist
+        let inode = self.get_inode(inode_block_index)?;
+
+        // Translate block index
+        let (group_index, bitmap_index) = Group::translate_public_address(inode_block_index);
+
+        // Release data
+        match inode.data {
+            // Dont do anything when it has raw data
+            Data::Raw(_) => (),
+            // Release all direct pointers
+            Data::DirectPointers(direct_pointers) => self.release_inode_data(direct_pointers)?,
+        }
+
+        let mut group = self.groups[group_index as usize].to_owned();
+
+        {
+            // Release index bitmap
+            group.release_one(bitmap_index);
+        }
+
+        // Save group
+        self.save_group(group, group_index)?;
+
+        Ok(())
     }
 }
 
@@ -594,6 +767,13 @@ impl Group {
         for i in bitmap_index..(bitmap_index + length) {
             self.block_bitmap.set(i as usize, false);
         }
+    }
+
+    /// Set bitmap index by force
+    #[inline]
+    fn force_allocate_at(&mut self, bitmap_index: u32) {
+        // Set it to be taken
+        self.block_bitmap.set(bitmap_index as usize, true);
     }
 
     /// Allocate one block
@@ -798,36 +978,62 @@ impl Inode {
     }
 
     #[inline]
-    fn data<R, W>(&self) -> &Data {
+    fn data(&self) -> &Data {
         &self.data
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct DirectoryIndex {
-    pub directories: BTreeMap<OsString, u32>,
+    directories: BTreeMap<OsString, u32>,
     checksum: u32,
 }
 
 impl DirectoryIndex {
-    fn init() -> anyhow::Result<Self> {
-        let mut dir = DirectoryIndex {
+    pub fn init() -> Self {
+        let mut r = Self {
             directories: BTreeMap::new(),
             checksum: 0,
         };
-        dir.checksum();
-        Ok(dir)
+        r.checksum();
+        r
     }
-
-    pub fn entry<P>(&self, path: P) -> Option<u32>
+    pub fn find_dir<P>(&self, dir: P) -> Option<&u32>
     where
         P: AsRef<Path>,
     {
-        self.directories
-            .get(&path.as_ref().as_os_str().to_os_string())
-            .map(|x| *x)
+        self.directories.get(dir.as_ref().as_os_str())
     }
+    pub fn create_dir<P>(&mut self, dir: P, inode_index: u32) -> Option<&u32>
+    where
+        P: AsRef<Path>,
+    {
+        if self.find_dir(&dir).is_some() {
+            return None;
+        }
+        self.directories
+            .insert(dir.as_ref().as_os_str().to_os_string(), inode_index);
+        self.find_dir(dir)
+    }
+    pub fn move_dir<P>(&mut self, from: P, to: P) -> anyhow::Result<()>
+    where
+        P: AsRef<Path>,
+    {
+        if self.find_dir(&from).is_none() {
+            return Err(anyhow!("From directory not found"));
+        }
+        if self.find_dir(&to).is_some() {
+            return Err(anyhow!("Target directory has already exist"));
+        }
 
+        let dir_inode = self.directories.remove(from.as_ref().as_os_str()).unwrap();
+
+        let _ = self
+            .directories
+            .insert(to.as_ref().as_os_str().to_os_string(), dir_inode);
+
+        Ok(())
+    }
     fn checksum(&mut self) {
         self.checksum = 0;
         self.checksum = calculate_checksum(&self);
@@ -845,20 +1051,18 @@ impl DirectoryIndex {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Directory {
-    pub directories: BTreeMap<OsString, u32>,
     pub files: BTreeMap<String, u32>,
     checksum: u32,
 }
 
 impl Directory {
-    fn init() -> anyhow::Result<Self> {
+    fn init() -> Self {
         let mut dir = Directory {
-            directories: BTreeMap::new(),
             files: BTreeMap::new(),
             checksum: 0,
         };
         dir.checksum();
-        Ok(dir)
+        dir
     }
 
     pub fn get_file(&self, file_name: &str) -> Option<u32> {
@@ -870,30 +1074,6 @@ impl Directory {
             Some(_) => Err(anyhow!("File already exist")),
             None => {
                 self.files.insert(file_name.into(), inode_block_index);
-                Ok(())
-            }
-        }
-    }
-
-    pub fn get_folder<P>(&self, path: P) -> Option<u32>
-    where
-        P: AsRef<Path>,
-    {
-        self.directories
-            .get(&path.as_ref().as_os_str().to_os_string())
-            .map(|x| *x)
-    }
-
-    pub fn add_folder(
-        &mut self,
-        folder_name: &OsString,
-        inode_block_index: u32,
-    ) -> anyhow::Result<()> {
-        match self.get_folder(folder_name) {
-            Some(_) => Err(anyhow!("Folder already exist")),
-            None => {
-                self.directories
-                    .insert(folder_name.into(), inode_block_index);
                 Ok(())
             }
         }
