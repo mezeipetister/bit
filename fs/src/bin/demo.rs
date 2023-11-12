@@ -26,6 +26,7 @@ enum Commands {
         path: String,
         filename: String,
     },
+    Info,
 }
 
 fn main() {
@@ -40,6 +41,7 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Info => println!("{:?}", &fs.superblock),
         Commands::Add {
             from,
             path,

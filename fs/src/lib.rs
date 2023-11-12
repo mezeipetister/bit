@@ -91,7 +91,7 @@ impl FS {
         let mut groups = vec![];
 
         // Deserialize groups based on superblock group count
-        for group_index in 0..superblock.block_count {
+        for group_index in 0..superblock.group_count {
             let group = Group::deserialize_from(&mut r, group_index)?;
             groups.push(group);
         }
@@ -261,10 +261,17 @@ impl FS {
             let file_inode = self.allocate_inode().unwrap();
             dir.add_file(file_name, file_inode.block_index)?;
             self.save_directory(dir, dir_inode_index)?;
+
+            // Inc. file count
+            self.superblock_mut().file_count += 1;
+
             file_inode
         };
 
         self.write_inode_data(&mut file_inode, data, data_len)?;
+
+        // Save superblock
+        self.save_superblock()?;
 
         Ok(())
     }
@@ -290,9 +297,33 @@ impl FS {
     }
 
     #[inline]
-    fn save_superblock(&mut self) -> anyhow::Result<()> {
-        let mut w = BufWriter::new(&self.file);
+    fn superblock_check(&mut self) {
+        // Set group count
+        self.superblock.group_count = self.groups.len() as u32;
+        // Set free blocks
+        self.superblock.free_blocks = self
+            .groups
+            .iter()
+            .map(|g| g.block_bitmap.count_zeros() as u32)
+            .sum();
+        // Set block count
+        self.superblock.block_count = self
+            .groups
+            .iter()
+            .map(|g| g.total_data_blocks() as u32)
+            .sum();
+        // Set last modified time
+        self.superblock.modified = now();
+        // Set checksum
         self.superblock.checksum();
+    }
+
+    #[inline]
+    fn save_superblock(&mut self) -> anyhow::Result<()> {
+        // Create superblock checks
+        self.superblock_check();
+
+        let mut w = BufWriter::new(&self.file);
         let mut data = bincode::serialize(&self.superblock)?;
         w.seek(SeekFrom::Start(0))?;
         w.write_all(&mut data)?;
@@ -396,6 +427,12 @@ impl FS {
     where
         R: BufRead,
     {
+        // Release inode data
+        match &inode.data {
+            Data::Raw(_) => (),
+            Data::DirectPointers(pointers) => self.release_inode_data(pointers.clone())?,
+        }
+
         // If data length fits inside inode
         if data_len as usize <= INODE_CAPACITY {
             // Set data inside inode
