@@ -1,6 +1,7 @@
 use fs::FS;
 use std::{
-    io::{BufReader, Cursor},
+    fs::File,
+    io::{BufReader, Cursor, Write},
     path::Path,
 };
 
@@ -26,7 +27,19 @@ enum Commands {
         path: String,
         filename: String,
     },
-    Info,
+    Fsinfo,
+    Fileinfo {
+        path: String,
+        filename: String,
+    },
+    Ls {
+        path: String,
+    },
+    Export {
+        path: String,
+        filename: String,
+        out: String,
+    },
 }
 
 fn main() {
@@ -41,7 +54,15 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Info => println!("{:?}", &fs.superblock),
+        Commands::Fsinfo => println!("{:?}", &fs.superblock),
+        Commands::Fileinfo { path, filename } => {
+            let inode = fs.get_file_info(&path, &filename).unwrap();
+            println!("{:?}", &inode);
+        }
+        Commands::Ls { path } => {
+            let (dir, _) = fs.find_directory(&path).unwrap();
+            println!("{:?}", &dir);
+        }
         Commands::Add {
             from,
             path,
@@ -52,6 +73,11 @@ fn main() {
         Commands::Get { path, filename } => {
             print_file(&mut fs, &path, &filename);
         }
+        Commands::Export {
+            path,
+            filename,
+            out,
+        } => export(&mut fs, &path, &filename, &out),
     }
 }
 
@@ -72,4 +98,10 @@ fn print_file(fs: &mut FS, path: &str, file_name: &str) {
     fs.get_file_data(path, file_name, &mut buf).unwrap();
 
     println!("{}", String::from_utf8_lossy(&d));
+}
+
+fn export(fs: &mut FS, path: &str, file_name: &str, output: &str) {
+    let mut file = File::create(output).unwrap();
+    fs.get_file_data(path, file_name, &mut file).unwrap();
+    file.flush().unwrap();
 }

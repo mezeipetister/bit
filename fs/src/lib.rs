@@ -160,7 +160,7 @@ impl FS {
     }
 
     #[inline]
-    fn find_directory<P>(&self, dir: P) -> anyhow::Result<(Directory, u32)>
+    pub fn find_directory<P>(&self, dir: P) -> anyhow::Result<(Directory, u32)>
     where
         P: AsRef<Path>,
     {
@@ -237,6 +237,22 @@ impl FS {
 
         // Try to save directory
         self.save_directory(directory, directory_inode.block_index)
+    }
+
+    #[inline]
+    pub fn get_file_info<P>(&mut self, dir: P, file_name: &str) -> anyhow::Result<Inode>
+    where
+        P: AsRef<Path>,
+    {
+        // Check if dir exist
+        let (mut dir, dir_inode_index) = self.find_directory(dir)?;
+
+        // Find file
+        if let Some(inode_block_index) = dir.get_file(file_name) {
+            return self.get_inode(inode_block_index);
+        } else {
+            return Err(anyhow!("File not found"));
+        }
     }
 
     #[inline]
