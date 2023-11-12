@@ -3,7 +3,6 @@ use bitvec::{order::Lsb0, vec::BitVec};
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Cursor, Seek, SeekFrom};
-use std::ops::Deref;
 use std::{
     collections::BTreeMap,
     ffi::OsString,
@@ -65,12 +64,8 @@ impl FS {
         // Add to superblock
         fs.add_group(group)?;
 
-        // Save superblock
-        fs.save_superblock()?;
-
         // Create directory_index
-        let di = DirectoryIndex::init();
-        fs.save_directory_index(di)?;
+        fs.init_directory_index()?;
 
         Ok(fs)
     }
@@ -87,6 +82,8 @@ impl FS {
             .open(path.as_ref())?;
 
         let mut r = BufReader::new(&mut file);
+
+        r.seek(SeekFrom::Start(0))?;
 
         // Deserialize superblock from cursor
         let superblock: Superblock = Superblock::deserialize_from(&mut r)?;
@@ -143,6 +140,21 @@ impl FS {
 
         // Save directory
         self.write_inode_data(&mut inode, &mut w, data.len() as u64)?;
+
+        Ok(())
+    }
+
+    fn init_directory_index(&mut self) -> anyhow::Result<()> {
+        let di = DirectoryIndex::init();
+
+        let di_data = bincode::serialize(&di)?;
+        let mut r = Cursor::new(&di_data);
+
+        let mut directory_index_inode = Inode::new(ROOT_INODE_INDEX);
+
+        self.save_inode(&mut directory_index_inode)?;
+
+        self.write_inode_data(&mut directory_index_inode, &mut r, di_data.len() as u64)?;
 
         Ok(())
     }
@@ -452,11 +464,6 @@ impl FS {
                 false => data_left as usize,
             };
 
-            println!(
-                "data_len: {}, block_index: {}, range: {}, chunk size: {}",
-                data_len, block_index, range, chunk_size
-            );
-
             // Create buffer chunk
             let mut buf = Vec::with_capacity(chunk_size);
             unsafe { buf.set_len(chunk_size) };
@@ -702,7 +709,7 @@ impl Group {
     #[inline]
     fn create_public_address(group_index: u32, bitmap_index: u32) -> u32 {
         // Maybe +1?
-        Self::seek_position(group_index) / BLOCK_SIZE + bitmap_index
+        Self::seek_position(group_index) / BLOCK_SIZE + bitmap_index + 1
     }
 
     // Returns (group_index, inner_block_index)
