@@ -1,11 +1,32 @@
-use anyhow::anyhow;
-use serde::{Deserialize, Serialize};
+use fs::FS;
 use std::{
-    collections::HashMap,
-    ffi::{OsStr, OsString},
     io::{BufReader, Cursor},
     path::Path,
 };
+
+use clap::{Parser, Subcommand};
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Adds files to myapp
+    Add {
+        from: String,
+        path: String,
+        filename: String,
+    },
+    Get {
+        path: String,
+        filename: String,
+    },
+}
 
 fn main() {
     let path = Path::new("demo/demo.db");
@@ -16,23 +37,37 @@ fn main() {
         fs::FS::init(path).unwrap()
     };
 
-    // fs.create_directory("/hello/bello").unwrap();
+    let cli = Cli::parse();
 
-    // let d = std::fs::File::open("demo/file2.txt").unwrap();
-    // let mut data = BufReader::new(&d);
+    match cli.command {
+        Commands::Add {
+            from,
+            path,
+            filename,
+        } => {
+            add_file(&mut fs, &from, &path, &filename);
+        }
+        Commands::Get { path, filename } => {
+            print_file(&mut fs, &path, &filename);
+        }
+    }
+}
 
-    // fs.add_file(
-    //     "/hello/bello",
-    //     "demo",
-    //     &mut data,
-    //     d.metadata().unwrap().len(),
-    // )
-    // .unwrap();
+fn add_file(fs: &mut FS, file_path: &str, path: &str, file_name: &str) {
+    fs.create_directory(path).unwrap();
 
+    let d = std::fs::File::open(file_path).unwrap();
+    let mut data = BufReader::new(&d);
+
+    fs.add_file(path, file_name, &mut data, d.metadata().unwrap().len())
+        .unwrap();
+}
+
+fn print_file(fs: &mut FS, path: &str, file_name: &str) {
     let mut d = vec![];
     let mut buf = Cursor::new(&mut d);
 
-    fs.get_file_data("/hello/bello", "demo", &mut buf).unwrap();
+    fs.get_file_data(path, file_name, &mut buf).unwrap();
 
     println!("{}", String::from_utf8_lossy(&d));
 }
