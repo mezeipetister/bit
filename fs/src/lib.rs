@@ -107,7 +107,7 @@ impl FS {
     }
 
     #[inline]
-    fn get_directory_index(&self) -> anyhow::Result<DirectoryIndex> {
+    pub fn get_directory_index(&self) -> anyhow::Result<DirectoryIndex> {
         // Get inode
         let inode = self.get_inode(ROOT_INODE_INDEX)?;
 
@@ -1106,6 +1106,9 @@ impl DirectoryIndex {
             .insert(to.as_ref().as_os_str().to_os_string(), dir_inode);
 
         Ok(())
+    }
+    pub fn directories(&self) -> &BTreeMap<OsString, u32> {
+        &self.directories
     }
     fn checksum(&mut self) {
         self.checksum = 0;

@@ -35,6 +35,7 @@ enum Commands {
     Ls {
         path: String,
     },
+    Lsdir,
     Export {
         path: String,
         filename: String,
@@ -62,6 +63,12 @@ fn main() {
         Commands::Ls { path } => {
             let (dir, _) = fs.find_directory(&path).unwrap();
             println!("{:?}", &dir);
+        }
+        Commands::Lsdir => {
+            let dirindex = fs.get_directory_index().unwrap();
+            dirindex.directories().iter().for_each(|(dir, _index)| {
+                println!("{}", dir.to_string_lossy());
+            });
         }
         Commands::Add {
             from,
