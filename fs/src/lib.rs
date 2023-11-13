@@ -159,6 +159,8 @@ impl FS {
         Ok(())
     }
 
+    /// Find directory
+    /// returns directory and its inode index
     #[inline]
     pub fn find_directory<P>(&self, dir: P) -> anyhow::Result<(Directory, u32)>
     where
@@ -208,6 +210,8 @@ impl FS {
         Ok(directory)
     }
 
+    /// Create directory
+    /// returns created directory
     #[inline]
     pub fn create_directory<P>(&mut self, dir: P) -> anyhow::Result<Directory>
     where
@@ -239,13 +243,15 @@ impl FS {
         self.save_directory(directory, directory_inode.block_index)
     }
 
+    /// Get file by dir and filename
+    /// returns found file inode
     #[inline]
     pub fn get_file_info<P>(&mut self, dir: P, file_name: &str) -> anyhow::Result<Inode>
     where
         P: AsRef<Path>,
     {
         // Check if dir exist
-        let (mut dir, dir_inode_index) = self.find_directory(dir)?;
+        let (dir, _dir_inode_index) = self.find_directory(dir)?;
 
         // Find file
         if let Some(inode_block_index) = dir.get_file(file_name) {
@@ -255,6 +261,10 @@ impl FS {
         }
     }
 
+    /// Create a file at a given dir
+    /// with a given name
+    /// Copy data to the given file
+    /// data_len (bytes) must be correct
     #[inline]
     pub fn add_file<P, R>(
         &mut self,
@@ -292,6 +302,9 @@ impl FS {
         Ok(())
     }
 
+    /// Read file data
+    /// Finds file by dir and filename
+    /// And writes its content to the given writer
     #[inline]
     pub fn get_file_data<P, W>(&mut self, dir: P, file_name: &str, w: &mut W) -> anyhow::Result<u32>
     where
@@ -347,7 +360,7 @@ impl FS {
     }
 
     #[inline]
-    pub fn get_inode(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
+    fn get_inode(&self, inode_block_index: u32) -> anyhow::Result<Inode> {
         let mut r = BufReader::new(&self.file);
 
         r.seek(SeekFrom::Start(
@@ -362,7 +375,7 @@ impl FS {
     }
 
     #[inline]
-    pub fn save_inode(&mut self, inode: &mut Inode) -> anyhow::Result<()> {
+    fn save_inode(&mut self, inode: &mut Inode) -> anyhow::Result<()> {
         let mut w = BufWriter::new(&self.file);
 
         w.seek(SeekFrom::Start(
@@ -387,7 +400,7 @@ impl FS {
     }
 
     #[inline]
-    pub fn read_inode_data<W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
+    fn read_inode_data<W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
     where
         W: Write,
     {
@@ -434,7 +447,7 @@ impl FS {
     }
 
     #[inline]
-    pub fn write_inode_data<R>(
+    fn write_inode_data<R>(
         &mut self,
         inode: &mut Inode,
         mut data: &mut R,
