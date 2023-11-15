@@ -55,11 +55,25 @@ pub fn block_seek_position(block_index: u32) -> u32 {
 }
 
 #[inline]
-pub fn encrypt(bytes: &[u8], secret: &[u8]) -> Vec<u8> {
+pub fn encrypt(bytes: &mut [u8], secret: &[u8]) {
+    // let len = secret.len();
+    // bytes
+    //     .iter()
+    //     .enumerate()
+    //     .map(|(index, byte)| byte ^ secret[index % len])
+    //     .collect()
+
+    // V2
+    // let len = secret.len();
+    // let mut result = Vec::new();
+    // for (index, byte) in bytes.iter().enumerate() {
+    //     result.push(byte ^ secret[index % len]);
+    // }
+    // result
+
+    // V3
     let len = secret.len();
-    bytes
-        .iter()
-        .enumerate()
-        .map(|(index, byte)| byte ^ secret[index % len])
-        .collect()
+    for (index, byte) in bytes.iter_mut().enumerate() {
+        *byte ^= secret[index % len];
+    }
 }

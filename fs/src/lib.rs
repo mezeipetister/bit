@@ -110,14 +110,14 @@ impl FS {
     #[inline]
     pub fn get_directory_index(&self) -> anyhow::Result<DirectoryIndex> {
         // Get inode
-        let inode = self.get_inode(ROOT_INODE_INDEX)?;
+        let mut inode = self.get_inode(ROOT_INODE_INDEX)?;
 
         // Read inode data
         let mut data = vec![];
 
         {
             let mut w = BufWriter::new(&mut data);
-            self.read_inode_data(&inode, &mut w)?;
+            self.read_inode_data(&mut inode, &mut w)?;
         }
 
         // Deserialize
@@ -173,14 +173,14 @@ impl FS {
         // Find directory in dir.index
         if let Some(directory_inode_index) = directory_index.find_dir(dir) {
             // Get directory inode
-            let directory_inode = self.get_inode(*directory_inode_index)?;
+            let mut directory_inode = self.get_inode(*directory_inode_index)?;
 
             let mut data = Vec::new();
 
             // Read inode data
             {
                 let mut w = BufWriter::new(&mut data);
-                self.read_inode_data(&directory_inode, &mut w)?;
+                self.read_inode_data(&mut directory_inode, &mut w)?;
             }
 
             // Deserialize directory
@@ -303,6 +303,37 @@ impl FS {
         Ok(())
     }
 
+    #[inline]
+    pub fn remove_file(&mut self, dir: &str, file_name: &str) -> anyhow::Result<()> {
+        // Check if dir exist
+        let (mut dir, dir_inode_index) = self.find_directory(dir)?;
+
+        // Find file
+        let file_inode = if let Some(inode_block_index) = dir.get_file(file_name) {
+            if let Ok(inode) = self.get_inode(inode_block_index) {
+                inode
+            } else {
+                return Err(anyhow!("No file found in dir!"));
+            }
+        } else {
+            return Err(anyhow!("Unknown directory!"));
+        };
+
+        // Release inode
+        self.release_inode(file_inode.block_index)?;
+
+        // Remove file from directory
+        dir.remove_file(file_name)?;
+
+        // Save directory
+        self.save_directory(dir, dir_inode_index)?;
+
+        // Save superblock
+        self.save_superblock()?;
+
+        Ok(())
+    }
+
     /// Read file data
     /// Finds file by dir and filename
     /// And writes its content to the given writer
@@ -316,14 +347,14 @@ impl FS {
         let (directory, _) = self.find_directory(dir)?;
 
         // Then find file
-        let file_inode = if let Some(file_inode_index) = directory.get_file(file_name) {
+        let mut file_inode = if let Some(file_inode_index) = directory.get_file(file_name) {
             self.get_inode(file_inode_index)?
         } else {
             // Else return error
             return Err(anyhow!("File not found"));
         };
 
-        self.read_inode_data(&file_inode, w)
+        self.read_inode_data(&mut file_inode, w)
     }
 
     #[inline]
@@ -401,17 +432,17 @@ impl FS {
     }
 
     #[inline]
-    fn read_inode_data<W>(&self, inode: &Inode, mut w: &mut W) -> anyhow::Result<u32>
+    fn read_inode_data<W>(&self, inode: &mut Inode, mut w: &mut W) -> anyhow::Result<u32>
     where
         W: Write,
     {
         let mut checksum = Checksum::new();
         let mut r = BufReader::new(&self.file);
 
-        match &inode.data {
+        match &mut inode.data {
             Data::Raw(data) => {
                 // Decrypt raw data
-                let data = encrypt(&data, &SECRET);
+                encrypt(data, &SECRET);
 
                 // Update checksum
                 checksum.update(&data);
@@ -428,8 +459,8 @@ impl FS {
                     r.seek(SeekFrom::Start(block_seek_position(*block_index) as u64))?;
 
                     // Create buffer for range
-                    let len = match data_left > (BLOCK_SIZE * range) as u64 {
-                        true => (range * BLOCK_SIZE) as usize,
+                    let len = match data_left > (BLOCK_SIZE * *range) as u64 {
+                        true => (*range * BLOCK_SIZE) as usize,
                         false => data_left as usize,
                     };
                     let mut buf = Vec::with_capacity(len);
@@ -439,7 +470,7 @@ impl FS {
                     r.get_mut().read_exact(&mut buf)?;
 
                     // Decrypt chunk
-                    buf = encrypt(&buf, &SECRET);
+                    encrypt(&mut buf, &SECRET);
 
                     // Update checksum
                     checksum.update(&buf);
@@ -481,7 +512,7 @@ impl FS {
             data.read_to_end(&mut buffer)?;
 
             // Encrypt buffer
-            let buffer = encrypt(&buffer, &SECRET);
+            encrypt(&mut buffer, &SECRET);
 
             // Create reader from buffer
             let mut data = Cursor::new(&buffer);
@@ -560,7 +591,7 @@ impl FS {
             data.read_exact(&mut buf)?;
 
             // Encrypt chunk
-            buf = encrypt(&buf, &SECRET);
+            encrypt(&mut buf, &SECRET);
 
             // Seek position
             w.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
@@ -1177,6 +1208,13 @@ impl Directory {
                 self.files.insert(file_name.into(), inode_block_index);
                 Ok(())
             }
+        }
+    }
+
+    fn remove_file(&mut self, file_name: &str) -> anyhow::Result<()> {
+        match self.files.remove(file_name) {
+            Some(_) => Ok(()),
+            None => Err(anyhow!("File not found!")),
         }
     }
 

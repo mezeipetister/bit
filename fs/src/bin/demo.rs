@@ -23,6 +23,10 @@ enum Commands {
         path: String,
         filename: String,
     },
+    Remove {
+        path: String,
+        filename: String,
+    },
     Get {
         path: String,
         filename: String,
@@ -77,6 +81,9 @@ fn main() {
         } => {
             add_file(&mut fs, &from, &path, &filename);
         }
+        Commands::Remove { path, filename } => {
+            remove_file(&mut fs, &path, &filename);
+        }
         Commands::Get { path, filename } => {
             print_file(&mut fs, &path, &filename);
         }
@@ -96,6 +103,10 @@ fn add_file(fs: &mut FS, file_path: &str, path: &str, file_name: &str) {
 
     fs.add_file(path, file_name, &mut data, d.metadata().unwrap().len())
         .unwrap();
+}
+
+fn remove_file(fs: &mut FS, path: &str, file_name: &str) {
+    fs.remove_file(path, file_name).unwrap();
 }
 
 fn print_file(fs: &mut FS, path: &str, file_name: &str) {
