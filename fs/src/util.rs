@@ -1,4 +1,7 @@
-use std::time::{self, SystemTime};
+use std::{
+    ops::{BitXor, BitXorAssign},
+    time::{self, SystemTime},
+};
 
 use crc32fast::Hasher;
 
@@ -55,26 +58,28 @@ pub fn block_seek_position(block_index: u32) -> u32 {
 }
 
 #[inline]
-pub fn encrypt(bytes: &mut [u8], secret: &[u8]) {
+pub fn encrypt(bytes: &mut [u8], lookup_table: &Vec<u8>) {
     // let len = secret.len();
-    // bytes
-    //     .iter()
-    //     .enumerate()
-    //     .map(|(index, byte)| byte ^ secret[index % len])
-    //     .collect()
-
-    // V2
-    // let len = secret.len();
-    // let mut result = Vec::new();
-    // for (index, byte) in bytes.iter().enumerate() {
-    //     result.push(byte ^ secret[index % len]);
+    // for (index, byte) in bytes.iter_mut().enumerate() {
+    //     let i = index & (len - 1);
+    //     // byte.bitxor_assign(secret[i]);
+    //     unsafe {
+    //         *byte ^= secret.get_unchecked(i);
+    //     }
     // }
-    // result
+    bytes
+        .iter_mut()
+        .zip(lookup_table)
+        .for_each(|(byte, secret)| *byte ^= secret);
+}
 
-    // V3
-    let len = secret.len();
-    for (index, byte) in bytes.iter_mut().enumerate() {
-        let i = index & (len - 1);
-        *byte ^= secret[i];
-    }
+#[inline]
+pub fn create_lookup_table(secret: &[u8], block_size: u32) -> Vec<u8> {
+    // let mut res: Vec<u8> = Vec::with_capacity(block_size as usize);
+    // unsafe { res.set_len(block_size as usize) };
+
+    (0..block_size)
+        .into_iter()
+        .map(|i| secret[i as usize & (secret.len() - 1)])
+        .collect()
 }

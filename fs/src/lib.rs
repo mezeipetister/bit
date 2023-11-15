@@ -20,7 +20,7 @@ const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
 const INODE_CAPACITY: usize = 4047;
 const INODE_MAX_REGION: usize = 500;
-const SECRET: [u8; 10] = *b"hellobello";
+const SECRET: &[u8] = b"hellobellomiahelyzet?";
 
 pub mod util;
 
@@ -29,6 +29,7 @@ pub struct FS {
     pub superblock: Superblock,
     pub file: File,
     pub groups: Vec<Group>,
+    pub lookup_table: Vec<u8>,
 }
 
 impl FS {
@@ -54,6 +55,7 @@ impl FS {
             superblock,
             file,
             groups: vec![],
+            lookup_table: create_lookup_table(SECRET, BLOCK_SIZE),
         };
 
         // Create group
@@ -101,6 +103,7 @@ impl FS {
             superblock,
             groups,
             file,
+            lookup_table: create_lookup_table(SECRET, BLOCK_SIZE),
         };
 
         // Return FS
@@ -442,7 +445,7 @@ impl FS {
         match &mut inode.data {
             Data::Raw(data) => {
                 // Decrypt raw data
-                encrypt(data, &SECRET);
+                encrypt(data, &self.lookup_table);
 
                 // Update checksum
                 checksum.update(&data);
@@ -472,7 +475,7 @@ impl FS {
                         r.read_exact(&mut block_buffer)?;
 
                         // Decrypt chunk
-                        encrypt(&mut block_buffer, &SECRET);
+                        encrypt(&mut block_buffer, &self.lookup_table);
 
                         // Update checksum
                         checksum.update(&block_buffer);
@@ -516,7 +519,7 @@ impl FS {
             data.read_to_end(&mut buffer)?;
 
             // Encrypt buffer
-            encrypt(&mut buffer, &SECRET);
+            encrypt(&mut buffer, &self.lookup_table);
 
             // Create reader from buffer
             let mut data = Cursor::new(&buffer);
@@ -599,7 +602,7 @@ impl FS {
                 data.read_exact(&mut block_buffer)?;
 
                 // Encrypt chunk
-                encrypt(&mut block_buffer, &SECRET);
+                encrypt(&mut block_buffer, &self.lookup_table);
 
                 // Write chunk buffer to disk
                 w.write_all(&mut block_buffer)?;

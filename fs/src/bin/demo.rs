@@ -145,6 +145,10 @@ fn export(fs: &mut FS, path: &str, file_name: &str, output: &str) {
     let start = Instant::now();
 
     let mut file = File::create(output).unwrap();
+    let finfo = fs.get_file_info(path, file_name).unwrap();
+
+    file.set_len(finfo.size).unwrap();
+
     fs.get_file_data(path, file_name, &mut file).unwrap();
     file.flush().unwrap();
 
