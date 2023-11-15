@@ -12,6 +12,7 @@ use clap::{Parser, Subcommand};
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
+    secret: String,
     #[command(subcommand)]
     command: Commands,
 }
@@ -55,13 +56,13 @@ enum Commands {
 fn main() {
     let path = Path::new("demo/demo.db");
 
-    let mut fs = if path.exists() {
-        fs::FS::new(path).unwrap()
-    } else {
-        fs::FS::init(path).unwrap()
-    };
-
     let cli = Cli::parse();
+
+    let mut fs = if path.exists() {
+        fs::FS::new(path, &cli.secret).unwrap()
+    } else {
+        fs::FS::init(path, &cli.secret).unwrap()
+    };
 
     match cli.command {
         Commands::Fsinfo => println!("{:?}", &fs.superblock),

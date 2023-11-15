@@ -20,7 +20,7 @@ const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
 const INODE_CAPACITY: usize = 4047;
 const INODE_MAX_REGION: usize = 500;
-const SECRET: &[u8] = b"hellobellomiahelyzet?";
+// const SECRET: &[u8] = b"hellobellomiahelyzet?";
 
 pub mod util;
 
@@ -34,7 +34,7 @@ pub struct FS {
 
 impl FS {
     /// Init FS to a given path
-    pub fn init<P>(path: P) -> anyhow::Result<Self>
+    pub fn init<P>(path: P, secret: &str) -> anyhow::Result<Self>
     where
         P: AsRef<Path>,
     {
@@ -55,7 +55,7 @@ impl FS {
             superblock,
             file,
             groups: vec![],
-            lookup_table: create_lookup_table(SECRET, BLOCK_SIZE),
+            lookup_table: create_lookup_table(secret.as_bytes(), BLOCK_SIZE),
         };
 
         // Create group
@@ -74,7 +74,7 @@ impl FS {
     }
 
     /// Open FS from a given path
-    pub fn new<P>(path: P) -> anyhow::Result<Self>
+    pub fn new<P>(path: P, secret: &str) -> anyhow::Result<Self>
     where
         P: AsRef<Path>,
     {
@@ -103,7 +103,7 @@ impl FS {
             superblock,
             groups,
             file,
-            lookup_table: create_lookup_table(SECRET, BLOCK_SIZE),
+            lookup_table: create_lookup_table(secret.as_bytes(), BLOCK_SIZE),
         };
 
         // Return FS
@@ -551,6 +551,12 @@ impl FS {
 
         // Determine how many block we need
         let mut block_to_allocate = blocks_to_allocate(data_len);
+
+        // Check if we have enough space for file
+        while self.superblock().free_blocks < block_to_allocate as u32 {
+            // Add new group
+            self.add_group(Group::init())?;
+        }
 
         let groups = self.groups.clone();
 
