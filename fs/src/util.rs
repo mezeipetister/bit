@@ -63,5 +63,3 @@ pub fn encrypt(bytes: &[u8], secret: &[u8]) -> Vec<u8> {
         .map(|(index, byte)| byte ^ secret[index % len])
         .collect()
 }
-
-//demo

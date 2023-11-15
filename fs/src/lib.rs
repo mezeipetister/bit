@@ -20,6 +20,7 @@ const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
 const INODE_CAPACITY: usize = 4047;
 const INODE_MAX_REGION: usize = 500;
+const SECRET: [u8; 10] = *b"hellobello";
 
 pub mod util;
 
@@ -409,7 +410,13 @@ impl FS {
 
         match &inode.data {
             Data::Raw(data) => {
+                // Decrypt raw data
+                let data = encrypt(&data, &SECRET);
+
+                // Update checksum
                 checksum.update(&data);
+
+                // Write data into writer
                 w.write_all(&data)?;
             }
             Data::DirectPointers(pointers) => {
@@ -431,6 +438,9 @@ impl FS {
                     // Read range bytes
                     r.get_mut().read_exact(&mut buf)?;
 
+                    // Decrypt chunk
+                    buf = encrypt(&buf, &SECRET);
+
                     // Update checksum
                     checksum.update(&buf);
 
@@ -450,7 +460,7 @@ impl FS {
     fn write_inode_data<R>(
         &mut self,
         inode: &mut Inode,
-        mut data: &mut R,
+        data: &mut R,
         data_len: u64,
     ) -> anyhow::Result<()>
     where
@@ -464,6 +474,18 @@ impl FS {
 
         // If data length fits inside inode
         if data_len as usize <= INODE_CAPACITY {
+            // Create buffer
+            let mut buffer = vec![];
+
+            // and read data into it
+            data.read_to_end(&mut buffer)?;
+
+            // Encrypt buffer
+            let buffer = encrypt(&buffer, &SECRET);
+
+            // Create reader from buffer
+            let mut data = Cursor::new(&buffer);
+
             // Set data inside inode
             inode.set_raw_data(&mut data, data_len)?;
 
@@ -536,6 +558,9 @@ impl FS {
 
             // Read data into chunk buffer
             data.read_exact(&mut buf)?;
+
+            // Encrypt chunk
+            buf = encrypt(&buf, &SECRET);
 
             // Seek position
             w.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
