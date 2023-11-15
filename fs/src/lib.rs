@@ -576,31 +576,33 @@ impl FS {
 
         let mut w = BufWriter::new(&self.file);
 
+        let mut block_buffer: Vec<u8> = Vec::with_capacity(BLOCK_SIZE as usize);
+        unsafe { block_buffer.set_len(BLOCK_SIZE as usize) };
+
         for (block_index, range) in ranges {
-            // Determine chunk size
-            let chunk_size = match data_left > (range * BLOCK_SIZE) as u64 {
-                true => (range * BLOCK_SIZE) as usize,
-                false => data_left as usize,
-            };
-
-            // Create buffer chunk
-            let mut buf = Vec::with_capacity(chunk_size);
-            unsafe { buf.set_len(chunk_size) };
-
-            // Read data into chunk buffer
-            data.read_exact(&mut buf)?;
-
-            // Encrypt chunk
-            encrypt(&mut buf, &SECRET);
-
             // Seek position
             w.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
 
-            // Write chunk buffer to disk
-            w.write_all(&mut buf)?;
+            // Iter over rage
+            for i in block_index..(block_index + range) {
+                // Determine if last block
+                if data_left < BLOCK_SIZE as u64 {
+                    block_buffer = Vec::with_capacity(data_left as usize);
+                    unsafe { block_buffer.set_len(data_left as usize) };
+                };
 
-            // Decrease data left
-            data_left -= chunk_size as u64;
+                // Read data into chunk buffer
+                data.read_exact(&mut block_buffer)?;
+
+                // Encrypt chunk
+                encrypt(&mut block_buffer, &SECRET);
+
+                // Write chunk buffer to disk
+                w.write_all(&mut block_buffer)?;
+
+                // Decrease data left
+                data_left -= block_buffer.capacity() as u64;
+            }
         }
 
         // Check all data has written
