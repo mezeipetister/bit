@@ -53,3 +53,13 @@ pub fn now() -> u64 {
 pub fn block_seek_position(block_index: u32) -> u32 {
     block_index * BLOCK_SIZE
 }
+
+#[inline]
+pub fn encrypt(bytes: &[u8], secret: &[u8]) -> Vec<u8> {
+    let len = secret.len();
+    bytes
+        .iter()
+        .enumerate()
+        .map(|(index, byte)| byte ^ secret[index % len])
+        .collect()
+}
