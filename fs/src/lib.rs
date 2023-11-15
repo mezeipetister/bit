@@ -454,32 +454,36 @@ impl FS {
                 // Counting data left to read
                 let mut data_left = inode.size;
 
+                let mut block_buffer: Vec<u8> = Vec::with_capacity(BLOCK_SIZE as usize);
+                unsafe { block_buffer.set_len(BLOCK_SIZE as usize) };
+
                 for (block_index, range) in pointers {
                     // Seek start position
                     r.seek(SeekFrom::Start(block_seek_position(*block_index) as u64))?;
 
-                    // Create buffer for range
-                    let len = match data_left > (BLOCK_SIZE * *range) as u64 {
-                        true => (*range * BLOCK_SIZE) as usize,
-                        false => data_left as usize,
-                    };
-                    let mut buf = Vec::with_capacity(len);
-                    unsafe { buf.set_len(len) };
+                    for _ in *block_index..(*block_index + *range) {
+                        // Determine if last block
+                        if data_left < BLOCK_SIZE as u64 {
+                            block_buffer = Vec::with_capacity(data_left as usize);
+                            unsafe { block_buffer.set_len(data_left as usize) };
+                        };
 
-                    // Read range bytes
-                    r.get_mut().read_exact(&mut buf)?;
+                        // Read range bytes
+                        r.read_exact(&mut block_buffer)?;
 
-                    // Decrypt chunk
-                    encrypt(&mut buf, &SECRET);
+                        // Decrypt chunk
+                        encrypt(&mut block_buffer, &SECRET);
 
-                    // Update checksum
-                    checksum.update(&buf);
+                        // Update checksum
+                        checksum.update(&block_buffer);
 
-                    // Write buffer to writer
-                    std::io::copy(&mut BufReader::new(Cursor::new(&buf)), &mut w)?;
+                        // Write buffer to writer
+                        w.write_all(&mut block_buffer)?;
+                        // std::io::copy(&mut BufReader::new(Cursor::new(&block_buffer)), &mut w)?;
 
-                    // Decrease data_left
-                    data_left -= len as u64;
+                        // Decrease data_left
+                        data_left -= block_buffer.capacity() as u64;
+                    }
                 }
             }
         }
@@ -584,7 +588,7 @@ impl FS {
             w.seek(SeekFrom::Start(block_seek_position(block_index) as u64))?;
 
             // Iter over rage
-            for i in block_index..(block_index + range) {
+            for _ in block_index..(block_index + range) {
                 // Determine if last block
                 if data_left < BLOCK_SIZE as u64 {
                     block_buffer = Vec::with_capacity(data_left as usize);
