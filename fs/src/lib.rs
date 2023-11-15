@@ -476,7 +476,7 @@ impl FS {
                     checksum.update(&buf);
 
                     // Write buffer to writer
-                    std::io::copy(&mut Cursor::new(buf), &mut w)?;
+                    std::io::copy(&mut BufReader::new(Cursor::new(&buf)), &mut w)?;
 
                     // Decrease data_left
                     data_left -= len as u64;

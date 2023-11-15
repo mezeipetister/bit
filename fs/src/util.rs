@@ -74,6 +74,7 @@ pub fn encrypt(bytes: &mut [u8], secret: &[u8]) {
     // V3
     let len = secret.len();
     for (index, byte) in bytes.iter_mut().enumerate() {
-        *byte ^= secret[index % len];
+        let i = index & (len - 1);
+        *byte ^= secret[i];
     }
 }

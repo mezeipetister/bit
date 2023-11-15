@@ -16,6 +16,11 @@ fn decrypt(bytes: &[u8], secret: &[u8]) -> Vec<u8> {
         .collect()
 }
 
+fn cal(a: usize, b: usize) -> usize {
+    let i = a & (b - 1);
+    i
+}
+
 fn main() {
     let secret = b"hellobello";
     let a = "hello bello mi a helyzet?";
@@ -26,4 +31,8 @@ fn main() {
     println!("Original: {}", &a);
     println!("Encypted: {}", String::from_utf8_lossy(&encrypted));
     println!("Decrypted: {}", String::from_utf8_lossy(&decrypted));
+
+    for i in 0..100 {
+        println!("{}", cal(i, 4));
+    }
 }

@@ -1,8 +1,9 @@
 use fs::FS;
 use std::{
     fs::File,
-    io::{BufReader, Cursor, Write},
+    io::{BufReader, BufWriter, Cursor, Write},
     path::Path,
+    time::Instant,
 };
 
 use clap::{Parser, Subcommand};
@@ -30,6 +31,10 @@ enum Commands {
     Get {
         path: String,
         filename: String,
+    },
+    Copy {
+        from: String,
+        to: String,
     },
     Fsinfo,
     Fileinfo {
@@ -81,6 +86,19 @@ fn main() {
         } => {
             add_file(&mut fs, &from, &path, &filename);
         }
+        Commands::Copy { from, to } => {
+            let start = Instant::now();
+
+            let from = File::open(from).unwrap();
+            let to = File::create(to).unwrap();
+
+            let mut r = BufReader::new(&from);
+            let mut w = BufWriter::new(&to);
+            std::io::copy(&mut r, &mut w).unwrap();
+
+            let duration = start.elapsed();
+            println!("Time alapsed: {} millisec", duration.as_millis());
+        }
         Commands::Remove { path, filename } => {
             remove_file(&mut fs, &path, &filename);
         }
@@ -96,6 +114,8 @@ fn main() {
 }
 
 fn add_file(fs: &mut FS, file_path: &str, path: &str, file_name: &str) {
+    let start = Instant::now();
+
     fs.create_directory(path).unwrap();
 
     let d = std::fs::File::open(file_path).unwrap();
@@ -103,6 +123,9 @@ fn add_file(fs: &mut FS, file_path: &str, path: &str, file_name: &str) {
 
     fs.add_file(path, file_name, &mut data, d.metadata().unwrap().len())
         .unwrap();
+
+    let duration = start.elapsed();
+    println!("Time alapsed: {} millisec", duration.as_millis());
 }
 
 fn remove_file(fs: &mut FS, path: &str, file_name: &str) {
@@ -119,7 +142,12 @@ fn print_file(fs: &mut FS, path: &str, file_name: &str) {
 }
 
 fn export(fs: &mut FS, path: &str, file_name: &str, output: &str) {
+    let start = Instant::now();
+
     let mut file = File::create(output).unwrap();
     fs.get_file_data(path, file_name, &mut file).unwrap();
     file.flush().unwrap();
+
+    let duration = start.elapsed();
+    println!("Time alapsed: {} millisec", duration.as_millis());
 }
