@@ -700,14 +700,10 @@ impl FS {
     fn release_inode_data(&mut self, data_pointers: Vec<(u32, u32)>) -> anyhow::Result<()> {
         let mut groups = self.groups_mut().as_mut().to_owned();
 
-        println!("{}", groups.len());
-        println!("{:?}", &data_pointers);
-
         // Check each data region
         for (block_index, range) in data_pointers {
             // Translate public address
             let (group_index, bitmap_index) = Group::translate_public_address(block_index);
-            println!("{}, {}, {}", block_index, group_index, bitmap_index);
             // Release data region
             groups[group_index as usize].release_data_region(bitmap_index, range);
         }
