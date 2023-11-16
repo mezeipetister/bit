@@ -1,0 +1,21 @@
+#[inline]
+fn seek_position(group_index: u32) -> u32 {
+    // Superblock BLOCK_SIZE (4kib)
+    // + Group ID * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE)
+    BLOCK_SIZE + (group_index * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE))
+}
+
+#[inline]
+pub fn create_public_address(group_index: u32, bitmap_index: u32) -> u32 {
+    // Maybe +1?
+    Self::seek_position(group_index) / BLOCK_SIZE + bitmap_index + 1
+}
+
+/// Returns (group_index, bitmap_index)
+#[inline]
+pub fn translate_public_address(block_index: u32) -> (u32, u32) {
+    let inodes_per_group = BLOCKS_PER_GROUP;
+    let group_index = (block_index - 1 as u32) / inodes_per_group;
+    let bitmap_index = (block_index as u32 - 2) & (inodes_per_group - 1);
+    (group_index, bitmap_index - group_index)
+}

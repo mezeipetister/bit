@@ -1,38 +1,28 @@
-fn encrypt(bytes: &[u8], secret: &[u8]) -> Vec<u8> {
-    let len = secret.len();
-    bytes
-        .iter()
-        .enumerate()
-        .map(|(index, byte)| byte ^ secret[index % len])
-        .collect()
-}
+use fs::Group;
 
-fn decrypt(bytes: &[u8], secret: &[u8]) -> Vec<u8> {
-    let len = secret.len();
-    bytes
-        .iter()
-        .enumerate()
-        .map(|(index, byte)| byte ^ secret[index % len])
-        .collect()
-}
-
-fn cal(a: usize, b: usize) -> usize {
-    let i = a & (b - 1);
-    i
+fn test_address(group_index: u32, bitmap_index: u32) {
+    // println!(
+    //     "initial => group_index: {}, bitmap_index: {}",
+    //     group_index, bitmap_index
+    // );
+    let block_index = Group::create_public_address(group_index, bitmap_index);
+    // println!("computed => block_index: {}", block_index);
+    let (group_index2, bitmap_index2) = Group::translate_public_address(block_index);
+    // println!(
+    //     "translated => group_index: {}, bitmap_index: {}",
+    //     group_index2, bitmap_index2
+    // );
+    // println!("-----------------------")
+    assert_eq!(group_index, group_index2);
+    assert_eq!(bitmap_index, bitmap_index2);
 }
 
 fn main() {
-    let secret = b"hellobello";
-    let a = "hello bello mi a helyzet?";
-
-    let encrypted = encrypt(a.as_bytes(), secret);
-    let decrypted = decrypt(&encrypted, secret);
-
-    println!("Original: {}", &a);
-    println!("Encypted: {}", String::from_utf8_lossy(&encrypted));
-    println!("Decrypted: {}", String::from_utf8_lossy(&decrypted));
-
-    for i in 0..100 {
-        println!("{}", cal(i, 4));
+    for group_index in 0..20 {
+        for bitmap_index in 0..32_768 {
+            // println!("test {} -> {}", group_index, bitmap_index);
+            test_address(group_index, bitmap_index);
+        }
     }
+    println!("Ok");
 }

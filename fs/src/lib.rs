@@ -640,6 +640,11 @@ impl FS {
 
     #[inline]
     fn allocate_inode(&mut self) -> Option<Inode> {
+        // Check if we need more space
+        // while self.superblock().free_blocks < 3 {
+        //     self.add_group(Group::init()).unwrap();
+        // }
+
         let mut res = None;
         for (group_index, group) in self.groups_mut().iter_mut().enumerate() {
             if let Some(inode_block_index) = group.allocate_one(group_index as u32) {
@@ -694,10 +699,15 @@ impl FS {
     #[inline]
     fn release_inode_data(&mut self, data_pointers: Vec<(u32, u32)>) -> anyhow::Result<()> {
         let mut groups = self.groups_mut().as_mut().to_owned();
+
+        println!("{}", groups.len());
+        println!("{:?}", &data_pointers);
+
         // Check each data region
         for (block_index, range) in data_pointers {
             // Translate public address
             let (group_index, bitmap_index) = Group::translate_public_address(block_index);
+            println!("{}, {}, {}", block_index, group_index, bitmap_index);
             // Release data region
             groups[group_index as usize].release_data_region(bitmap_index, range);
         }
@@ -830,7 +840,7 @@ impl Group {
         Self { block_bitmap }
     }
 
-    fn init() -> Self {
+    pub fn init() -> Self {
         let mut block_bitmap = BitVec::<u8, Lsb0>::with_capacity(BLOCK_SIZE as usize * 8);
         block_bitmap.resize(BLOCK_SIZE as usize * 8, false);
         Self { block_bitmap }
@@ -840,22 +850,27 @@ impl Group {
     fn seek_position(group_index: u32) -> u32 {
         // Superblock BLOCK_SIZE (4kib)
         // + Group ID * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE)
-        BLOCK_SIZE + group_index * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE)
+        BLOCK_SIZE + (group_index * (BLOCK_SIZE + BLOCKS_PER_GROUP * BLOCK_SIZE))
     }
 
     #[inline]
-    fn create_public_address(group_index: u32, bitmap_index: u32) -> u32 {
+    pub fn create_public_address(group_index: u32, bitmap_index: u32) -> u32 {
         // Maybe +1?
         Self::seek_position(group_index) / BLOCK_SIZE + bitmap_index + 1
     }
 
-    // Returns (group_index, inner_block_index)
+    /// Returns (group_index, bitmap_index)
     #[inline]
-    fn translate_public_address(block_index: u32) -> (u32, u32) {
-        let inodes_per_group = BLOCKS_PER_GROUP;
-        let inode_bg = (block_index as u32 - 1) / inodes_per_group;
-        let bitmap_index = (block_index as u32 - 1) & (inodes_per_group - 1);
-        (inode_bg, bitmap_index)
+    pub fn translate_public_address(mut block_index: u32) -> (u32, u32) {
+        block_index -= 1;
+        let n = BLOCKS_PER_GROUP + 1;
+        let group_index = (block_index as u32) / n;
+        let bitmap_index = if group_index == 0 {
+            block_index - 1
+        } else {
+            block_index % (group_index * n) - 1
+        };
+        (group_index, bitmap_index)
     }
 
     #[inline]
