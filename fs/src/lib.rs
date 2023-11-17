@@ -12,15 +12,14 @@ use std::{
 
 use util::*;
 
-// const M: u32 = 0xb1a9;
 const MAGIC: [u8; 7] = *b"*bitfs*";
+// const TEST_BYTES: [u8; 20] = *b"canureadthistextbro?";
 const FS_VERSION: u32 = 1;
 const ROOT_INODE_INDEX: u32 = 2;
 const BLOCK_SIZE: u32 = 4096;
 const BLOCKS_PER_GROUP: u32 = BLOCK_SIZE * 8;
 const INODE_CAPACITY: usize = 4047;
 const INODE_MAX_REGION: usize = 500;
-// const SECRET: &[u8] = b"hellobellomiahelyzet?";
 
 pub mod util;
 
@@ -744,8 +743,9 @@ impl FS {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Superblock {
-    magic: [u8; 7],   // Magic number to check
-    fs_version: u32,  // FS Version
+    magic: [u8; 7],  // Magic number to check
+    fs_version: u32, // FS Version
+    // test_bytes: [u8; 20], // Secret test bytes
     block_size: u32,  // Block size in bytes
     group_count: u32, // Total groups count
     block_count: u32, // Total blocks count
