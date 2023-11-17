@@ -12,6 +12,7 @@ use clap::{Parser, Subcommand};
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
+    fs_path: String,
     secret: String,
     #[command(subcommand)]
     command: Commands,
@@ -19,6 +20,7 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    Init,
     /// Adds files to myapp
     Add {
         from: String,
@@ -58,23 +60,32 @@ fn main() {
 
     let cli = Cli::parse();
 
-    let mut fs = if path.exists() {
-        fs::FS::new(path, &cli.secret).unwrap()
-    } else {
-        fs::FS::init(path, &cli.secret).unwrap()
-    };
+    // let mut fs = if path.exists() {
+    //     fs::FS::new(path, &cli.secret).unwrap()
+    // } else {
+    //     fs::FS::init(path, &cli.secret).unwrap()
+    // };
 
     match cli.command {
-        Commands::Fsinfo => println!("{:?}", &fs.superblock),
+        Commands::Init => init(&cli.fs_path, &cli.secret),
+        Commands::Fsinfo => {
+            let mut fs = FS::new(&cli.fs_path, &cli.secret).unwrap();
+            println!("{:?}", &fs.superblock)
+        }
         Commands::Fileinfo { path, filename } => {
+            let mut fs = FS::new(&cli.fs_path, &cli.secret).unwrap();
             let inode = fs.get_file_info(&path, &filename).unwrap();
             println!("{:?}", &inode);
         }
         Commands::Ls { path } => {
+            let mut fs = FS::new(&cli.fs_path, &cli.secret).unwrap();
             let (dir, _) = fs.find_directory(&path).unwrap();
-            println!("{:?}", &dir);
+            dir.files
+                .iter()
+                .for_each(|f| println!("{0: <20} | inode: {1}", f.0, f.1))
         }
         Commands::Lsdir => {
+            let mut fs = FS::new(&cli.fs_path, &cli.secret).unwrap();
             let dirindex = fs.get_directory_index().unwrap();
             dirindex.directories().iter().for_each(|(dir, _index)| {
                 println!("{}", dir.to_string_lossy());
@@ -85,7 +96,7 @@ fn main() {
             path,
             filename,
         } => {
-            add_file(&mut fs, &from, &path, &filename);
+            add_file(&cli.fs_path, &cli.secret, &from, &path, &filename);
         }
         Commands::Copy { from, to } => {
             let start = Instant::now();
@@ -101,20 +112,22 @@ fn main() {
             println!("Time alapsed: {} millisec", duration.as_millis());
         }
         Commands::Remove { path, filename } => {
-            remove_file(&mut fs, &path, &filename);
+            remove_file(&cli.fs_path, &cli.secret, &path, &filename);
         }
         Commands::Get { path, filename } => {
-            print_file(&mut fs, &path, &filename);
+            print_file(&cli.fs_path, &cli.secret, &path, &filename);
         }
         Commands::Export {
             path,
             filename,
             out,
-        } => export(&mut fs, &path, &filename, &out),
+        } => export(&cli.fs_path, &cli.secret, &path, &filename, &out),
     }
 }
 
-fn add_file(fs: &mut FS, file_path: &str, path: &str, file_name: &str) {
+fn add_file(fs_path: &str, secret: &str, file_path: &str, path: &str, file_name: &str) {
+    let mut fs = FS::new(fs_path, secret).unwrap();
+
     let start = Instant::now();
 
     fs.create_directory(path).unwrap();
@@ -129,11 +142,13 @@ fn add_file(fs: &mut FS, file_path: &str, path: &str, file_name: &str) {
     println!("Time alapsed: {} millisec", duration.as_millis());
 }
 
-fn remove_file(fs: &mut FS, path: &str, file_name: &str) {
+fn remove_file(fs_path: &str, secret: &str, path: &str, file_name: &str) {
+    let mut fs = FS::new(fs_path, secret).unwrap();
     fs.remove_file(path, file_name).unwrap();
 }
 
-fn print_file(fs: &mut FS, path: &str, file_name: &str) {
+fn print_file(fs_path: &str, secret: &str, path: &str, file_name: &str) {
+    let mut fs = FS::new(fs_path, secret).unwrap();
     let mut d = vec![];
     let mut buf = Cursor::new(&mut d);
 
@@ -142,7 +157,9 @@ fn print_file(fs: &mut FS, path: &str, file_name: &str) {
     println!("{}", String::from_utf8_lossy(&d));
 }
 
-fn export(fs: &mut FS, path: &str, file_name: &str, output: &str) {
+fn export(fs_path: &str, secret: &str, path: &str, file_name: &str, output: &str) {
+    let mut fs = FS::new(fs_path, secret).unwrap();
+
     let start = Instant::now();
 
     let mut file = File::create(output).unwrap();
@@ -155,4 +172,8 @@ fn export(fs: &mut FS, path: &str, file_name: &str, output: &str) {
 
     let duration = start.elapsed();
     println!("Time alapsed: {} millisec", duration.as_millis());
+}
+
+fn init(path: &str, secret: &str) {
+    FS::init(path, secret).unwrap();
 }
