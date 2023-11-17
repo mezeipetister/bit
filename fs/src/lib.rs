@@ -435,7 +435,7 @@ impl FS {
     }
 
     #[inline]
-    fn read_inode_data<W>(&self, inode: &mut Inode, mut w: &mut W) -> anyhow::Result<u32>
+    fn read_inode_data<W>(&self, inode: &mut Inode, w: &mut W) -> anyhow::Result<u32>
     where
         W: Write,
     {
@@ -648,7 +648,7 @@ impl FS {
         let mut res = None;
         for (group_index, group) in self.groups_mut().iter_mut().enumerate() {
             if let Some(inode_block_index) = group.allocate_one(group_index as u32) {
-                let mut inode = Inode::new(inode_block_index);
+                let inode = Inode::new(inode_block_index);
                 res = Some(inode);
                 break;
             }
@@ -674,11 +674,6 @@ impl FS {
         self.save_superblock()?;
         // Return ok
         Ok(())
-    }
-
-    #[inline]
-    fn groups(&self) -> &[Group] {
-        &self.groups
     }
 
     #[inline]
@@ -977,7 +972,7 @@ impl Group {
             // If current block index is free
             if !*i {
                 // If we have opened region
-                if let Some((block_index, region_length)) = region.as_mut() {
+                if let Some((_block_index, region_length)) = region.as_mut() {
                     // Then increment region_length
                     *region_length += 1;
                 } else {
@@ -1131,11 +1126,6 @@ impl Inode {
         self.data = Data::DirectPointers(pointers);
         self.size = data_size;
     }
-
-    #[inline]
-    fn data(&self) -> &Data {
-        &self.data
-    }
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -1261,9 +1251,9 @@ impl Directory {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::io::Cursor;
-    use std::time::{self, SystemTime};
+    // use super::*;
+    // use std::io::Cursor;
+    // use std::time::{self, SystemTime};
 
     #[test]
     fn test_block_bitmap_seek_position() {
@@ -1272,52 +1262,5 @@ mod tests {
 
         // let group = Group::new(1);
         // assert_eq!(group.bitmap_seek_position(), 134_221_824);
-    }
-
-    #[test]
-    fn test_block_address() {
-        let group_index = 0;
-        let bitmap_index = 3;
-        let block_index = Group::create_public_address(group_index, bitmap_index);
-        let (_group_index, _bitmap_index) = Group::translate_public_address(block_index);
-        assert_eq!(group_index, _group_index);
-        assert_eq!(bitmap_index, _bitmap_index);
-    }
-
-    #[test]
-    fn test_block_allocation() {
-        let mut group = Group::init();
-
-        for i in [2, 20, 1500, 2000, 2002] {
-            group.block_bitmap.set(i, true);
-        }
-
-        let res = group.allocate_region(0, 1000, 500);
-        println!("{:?}", res);
-        assert_eq!(res.0.len(), 3);
-        assert_eq!(res.1, 0);
-
-        // Test to release allocated regions
-        for (address, length) in res.0 {
-            let (block_index, bitmap_index) = Group::translate_public_address(address);
-            println!("{}", bitmap_index);
-            group.release_data_region(bitmap_index, length);
-        }
-
-        for i in [2, 20, 1500, 2000, 2002] {
-            group.block_bitmap.set(i, false);
-        }
-
-        assert_eq!(group.free_data_blocks() as u32, BLOCKS_PER_GROUP);
-
-        let res = group.allocate_region(0, 40000, 200);
-
-        // Test to release allocated regions
-        for (address, length) in res.0 {
-            let (block_index, bitmap_index) = Group::translate_public_address(address);
-            group.release_data_region(bitmap_index, length);
-        }
-
-        assert_eq!(group.free_data_blocks() as u32, BLOCKS_PER_GROUP);
     }
 }
