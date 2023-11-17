@@ -1,7 +1,4 @@
-use std::{
-    ops::{BitXor, BitXorAssign},
-    time::{self, SystemTime},
-};
+use std::time::{self, SystemTime};
 
 use crc32fast::Hasher;
 
