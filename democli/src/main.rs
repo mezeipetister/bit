@@ -57,6 +57,29 @@ fn main() {
 
         match parsed.0.as_str() {
             "hello" => println!("Bello!"),
+            "touch" => {
+                let parts: Vec<&'_ str> = parsed.1.split(" ").collect();
+                let path = parts[0].to_string();
+                let filename = parts[1].to_string();
+                match fs.add_file(&path, &filename, &mut BufReader::new(Cursor::new([])), 0) {
+                    Ok(_) => (),
+                    Err(_) => {
+                        println!("Error creating file");
+                        continue;
+                    }
+                }
+            }
+            "mkdir" => {
+                let parts: Vec<&'_ str> = parsed.1.split(" ").collect();
+                let path = parts[0].to_string();
+                match fs.create_directory(&path) {
+                    Ok(_) => println!("Created"),
+                    Err(_) => {
+                        println!("Error creating directory");
+                        continue;
+                    }
+                }
+            }
             "open" => {
                 let parts: Vec<&'_ str> = parsed.1.split(" ").collect();
                 let path = parts[0].to_string();
@@ -64,7 +87,10 @@ fn main() {
                 // Open file
                 let content = match get_file(&mut fs, &path, &filename) {
                     Ok(content) => content,
-                    Err(_) => String::new(),
+                    Err(_) => {
+                        println!("No file found!");
+                        continue;
+                    }
                 };
 
                 let on_save = |content: String| -> Result<(), String> {
