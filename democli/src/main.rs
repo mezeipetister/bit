@@ -1,5 +1,5 @@
 use std::{
-    io::{BufRead, BufReader, Cursor},
+    io::{BufRead, BufReader, Cursor, Write},
     path::Path,
     sync::{Arc, Mutex},
 };
@@ -48,9 +48,10 @@ fn main() {
     let mut fs = init_db();
 
     let stdin = std::io::stdin();
-    let stdout = std::io::stdout();
+    let mut stdout = std::io::stdout();
 
     loop {
+        stdout.flush().unwrap();
         let line = stdin.lock().lines().next().unwrap().unwrap();
         let parsed = parse_line(&line);
 
@@ -77,6 +78,8 @@ fn main() {
                 let mut editor = Editor::new(document, &stdin, &stdout).unwrap();
 
                 editor.run().unwrap();
+
+                drop(editor);
             }
             "quit" => {
                 println!("bye!");
