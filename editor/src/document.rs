@@ -1,20 +1,25 @@
-use std::{io::BufWriter, ops::Deref};
+use std::{
+    io::BufWriter,
+    ops::{Deref, DerefMut},
+};
 
 use crate::{editor::Position, row::Row};
 
-pub struct Document {
+pub struct Document<F>
+where
+    F: FnMut(String) -> Result<(), String>,
+{
     pub title: String,
     pub(crate) rows: Vec<Row>,
     dirty: bool,
-    on_save: Box<dyn Fn(String) -> Result<(), String>>,
+    on_save: F,
 }
 
-impl Document {
-    pub fn new(
-        title: String,
-        content: String,
-        on_save: Box<dyn Fn(String) -> Result<(), String>>,
-    ) -> Self {
+impl<F> Document<F>
+where
+    F: FnMut(String) -> Result<(), String>,
+{
+    pub fn new(title: String, content: String, on_save: F) -> Self {
         let mut rows = Vec::new();
 
         for value in content.lines() {
@@ -29,7 +34,8 @@ impl Document {
         }
     }
     pub fn save(&mut self) -> Result<(), String> {
-        self.on_save.deref()(self.as_string())?;
+        let content = self.as_string();
+        (self.on_save)(content)?;
         self.dirty = false;
         Ok(())
     }

@@ -34,23 +34,33 @@ impl StatusMessage {
     }
 }
 
-pub struct Editor {
+pub struct Editor<'a, F>
+where
+    F: FnMut(String) -> Result<(), String>,
+{
     should_quit: bool,
-    document: Document,
-    terminal: Terminal,
+    document: Document<F>,
+    terminal: Terminal<'a>,
     offset: Position,
     status_message: StatusMessage,
     cursor_position: Position,
 }
 
-impl Editor {
-    pub fn new(document: Document) -> Result<Self, std::io::Error> {
+impl<'a, F> Editor<'a, F>
+where
+    F: FnMut(String) -> Result<(), String>,
+{
+    pub fn new(
+        document: Document<F>,
+        stdin: &'a std::io::Stdin,
+        stdout: &'a std::io::Stdout,
+    ) -> Result<Self, std::io::Error> {
         let msg = format!("Welcome to BIT editor");
 
         let res = Self {
             should_quit: false,
             document,
-            terminal: Terminal::default()?,
+            terminal: Terminal::default(stdin, stdout)?,
             offset: Position { x: 0, y: 0 },
             status_message: StatusMessage::from(msg),
             cursor_position: Position::default(),
@@ -65,7 +75,7 @@ impl Editor {
             if self.should_quit {
                 break;
             }
-            if let Ok(event) = Terminal::read_event() {
+            if let Ok(event) = self.terminal.read_event() {
                 match event {
                     termion::event::Event::Key(k) => {
                         if let Err(error) = self.process_keypress(k) {

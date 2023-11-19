@@ -7,5 +7,6 @@ members = [
   "parser",
   "bitc",
   "editor",
-  "fs"
+  "fs",
+  "democli"
 ]

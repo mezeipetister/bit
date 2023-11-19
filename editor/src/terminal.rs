@@ -12,19 +12,24 @@ pub struct Size {
     pub height: u16,
 }
 
-pub struct Terminal {
+pub struct Terminal<'a> {
     size: Size,
-    _stdout: MouseTerminal<AlternateScreen<RawTerminal<std::io::Stdout>>>,
+    stdin: &'a std::io::Stdin,
+    _stdout: MouseTerminal<AlternateScreen<RawTerminal<&'a std::io::Stdout>>>,
 }
 
-impl Terminal {
-    pub fn default() -> Result<Self, std::io::Error> {
+impl<'a> Terminal<'a> {
+    pub fn default(
+        stdin: &'a std::io::Stdin,
+        stdout: &'a std::io::Stdout,
+    ) -> Result<Self, std::io::Error> {
         let mut res = Self {
             size: Size {
                 width: 0,
                 height: 0,
             },
-            _stdout: MouseTerminal::from(stdout().into_raw_mode()?.into_alternate_screen()?),
+            stdin,
+            _stdout: MouseTerminal::from(stdout.into_raw_mode()?.into_alternate_screen()?),
         };
         res.set_size()?;
         Ok(res)
@@ -56,16 +61,16 @@ impl Terminal {
     pub fn flush() -> Result<(), std::io::Error> {
         io::stdout().flush()
     }
-    pub fn read_event() -> Result<Event, std::io::Error> {
+    pub fn read_event(&self) -> Result<Event, std::io::Error> {
         loop {
-            if let Some(event) = io::stdin().lock().events().next() {
+            if let Some(event) = self.stdin.lock().events().next() {
                 return event;
             }
         }
     }
-    pub fn read_key() -> Result<Key, std::io::Error> {
+    pub fn read_key(&self) -> Result<Key, std::io::Error> {
         loop {
-            if let Some(key) = io::stdin().lock().keys().next() {
+            if let Some(key) = self.stdin.lock().keys().next() {
                 return key;
             }
         }

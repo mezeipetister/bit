@@ -6,6 +6,9 @@ fn main() {
         Ok(())
     });
     let doc = Document::new("Demo".into(), "".into(), clbk);
-    let res = editor::Editor::new(doc).unwrap().run().unwrap();
+    let res = editor::Editor::new(doc, &std::io::stdin(), &std::io::stdout())
+        .unwrap()
+        .run()
+        .unwrap();
     println!("{}", res);
 }
