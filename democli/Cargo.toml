@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 editor = {path="../editor"}
 fs = {path="../fs"}
+native-dialog = "0.7.0"
+cli = {path="../cli"}

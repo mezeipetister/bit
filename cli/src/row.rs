@@ -1,104 +1,119 @@
 use std::cmp;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::cli::Context;
-
+#[derive(Debug)]
 pub(crate) struct Row {
-    prefix: String,
-    user_input: String,
-    len: usize,
+    pre: String,
+    input: String,
+    length: usize,
+    previous_length: usize,
+    pub position: usize,
 }
 
 impl Row {
-    pub fn new(ctx: &Context, slice: &str) -> Self {
+    pub fn new(slice: &str) -> Self {
         Self {
-            prefix: create_prefix(ctx),
-            user_input: String::from(slice),
-            len: slice.graphemes(true).count(),
+            pre: "bit > ".to_string(),
+            input: String::from(slice),
+            length: slice.graphemes(true).count(),
+            previous_length: 0,
+            position: slice.graphemes(true).count(),
         }
     }
-    pub fn render(&self, start: usize, end: usize) -> String {
-        let end = cmp::min(end, self.user_input.len());
-        let start = cmp::min(start, end);
-        let mut result = String::new();
-        #[allow(clippy::integer_arithmetic)]
-        for (index, grapheme) in self.user_input[..]
-            .graphemes(true)
-            .enumerate()
-            .skip(start)
-            .take(end - start)
-        {
-            if let Some(c) = grapheme.chars().next() {
-                if c == '\t' {
-                    result.push_str(" ");
-                } else {
-                    result.push(c);
-                }
-            }
-        }
-        result
-    }
-    pub fn as_str(&self) -> &str {
-        &self.user_input
-    }
+    // pub fn render(&self, start: usize, end: usize) -> String {
+    //     let end = cmp::min(end, self.input.len());
+    //     let start = cmp::min(start, end);
+    //     let mut result = String::new();
+    //     #[allow(clippy::integer_arithmetic)]
+    //     for (index, grapheme) in self.input[..]
+    //         .graphemes(true)
+    //         .enumerate()
+    //         .skip(start)
+    //         .take(end - start)
+    //     {
+    //         if let Some(c) = grapheme.chars().next() {
+    //             if c == '\t' {
+    //                 result.push_str(" ");
+    //             } else {
+    //                 result.push(c);
+    //             }
+    //         }
+    //     }
+    //     result
+    // }
     pub fn display(&self) -> String {
-        format!("{}{}", self.prefix, &self.user_input)
-    }
-    pub fn as_string(self) -> String {
-        self.user_input
-    }
-    pub fn len(&self) -> usize {
-        self.len
-    }
-    pub fn prefix_len(&self) -> usize {
-        self.prefix.len()
-    }
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-    pub fn insert(&mut self, at: usize, c: char) {
-        if at >= self.len() {
-            self.user_input.push(c);
-            self.len += 1;
-            return;
+        let mut res = format!("{}{}", &self.pre, &self.input);
+        let len = res.graphemes(true).count();
+        let (width, _) = termion::terminal_size().unwrap();
+        for _ in 0..width - len as u16 {
+            res.push_str(" ");
         }
+        res
+    }
+    pub fn go_left(&mut self) {
+        if self.position > 0 {
+            self.position -= 1;
+        }
+    }
+    pub fn go_right(&mut self) {
+        if self.position < self.length {
+            self.position += 1;
+        }
+    }
+    pub fn insert(&mut self, c: char) {
+        // Set previous length
+        self.previous_length = self.input.graphemes(true).count();
+
         let mut result: String = String::new();
-        let mut length = 0;
-        for (index, grapheme) in self.user_input[..].graphemes(true).enumerate() {
-            length += 1;
-            if index == at {
-                length += 1;
+
+        for (index, grapheme) in self.input[..].graphemes(true).enumerate() {
+            if index == self.position {
                 result.push(c);
             }
             result.push_str(grapheme);
         }
-        self.len = length;
-        self.user_input = result;
-    }
-    pub fn append(&mut self, new: &Self) {
-        self.user_input = format!("{}{}", self.user_input, new.user_input);
-        self.len += new.len;
-    }
-    pub fn delete(&mut self, at: usize) {
-        if at >= self.len() {
-            return;
+
+        if self.length == self.position {
+            result.push(c);
         }
+
+        // Set length
+        self.length = result.graphemes(true).count();
+
+        // Set new input
+        self.input = result;
+
+        // Move cursor right
+        self.go_right();
+    }
+    pub fn delete(&mut self) {
+        // Set previous length
+        self.previous_length = self.input.graphemes(true).count();
+
         let mut result: String = String::new();
         let mut length = 0;
-        for (index, grapheme) in self.user_input[..].graphemes(true).enumerate() {
-            if index != at {
+        for (index, grapheme) in self.input[..].graphemes(true).enumerate() {
+            if index != self.position {
                 length += 1;
                 result.push_str(grapheme);
             }
         }
-        self.len = length;
-        self.user_input = result;
+        self.length = length;
+        self.input = result;
+    }
+    pub fn backspace(&mut self) {
+        // Move cursor left
+        self.go_left();
+        // Perform a delete action
+        self.delete();
     }
     pub fn as_bytes(&self) -> &[u8] {
-        self.user_input.as_bytes()
+        self.input.as_bytes()
     }
-}
-
-fn create_prefix(ctx: &Context) -> String {
-    format!("{}@{} {}: ", &ctx.user, &ctx.repo, &ctx.path)
+    pub fn as_str(&self) -> &str {
+        &self.input
+    }
+    pub fn position(&self) -> usize {
+        self.position + self.pre.graphemes(true).count()
+    }
 }

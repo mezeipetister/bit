@@ -1,5 +1,6 @@
 use cli::Cli;
 
 fn main() {
-    Cli::new().unwrap().run().unwrap();
+    let stdout = std::io::stdout();
+    // Cli::new(&stdout).unwrap().run().unwrap();
 }

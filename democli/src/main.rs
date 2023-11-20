@@ -1,11 +1,13 @@
 use std::{
     io::{BufRead, BufReader, Cursor, Write},
-    path::Path,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
+use cli::Cli;
 use editor::{Document, Editor};
 use fs::FS;
+use native_dialog::{FileDialog, MessageDialog, MessageType};
 
 const SECRET: &'static str = "hellobello";
 
@@ -44,19 +46,32 @@ fn get_file(fs: &mut FS, path: &str, file_name: &str) -> Result<String, String> 
     Ok(String::from_utf8_lossy(&d).to_string())
 }
 
+fn get_path() -> Option<PathBuf> {
+    FileDialog::new()
+        .set_location("~/Desktop")
+        .add_filter("PNG Image", &["png"])
+        .add_filter("JPEG Image", &["jpg", "jpeg"])
+        .show_open_single_file()
+        .unwrap()
+}
+
 fn main() {
     let mut fs = init_db();
 
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
 
-    loop {
-        stdout.flush().unwrap();
-        let line = stdin.lock().lines().next().unwrap().unwrap();
+    // loop {
+    //     stdout.flush().unwrap();
+    //     let line = stdin.lock().lines().next().unwrap().unwrap();
+    // }
+
+    let actions = |line: String| -> Result<(), String> {
         let parsed = parse_line(&line);
 
         match parsed.0.as_str() {
             "hello" => println!("Bello!"),
+            "select" => println!("{:?}", get_path()),
             "touch" => {
                 let parts: Vec<&'_ str> = parsed.1.split(" ").collect();
                 let path = parts[0].to_string();
@@ -65,7 +80,6 @@ fn main() {
                     Ok(_) => (),
                     Err(_) => {
                         println!("Error creating file");
-                        continue;
                     }
                 }
             }
@@ -76,7 +90,6 @@ fn main() {
                     Ok(_) => println!("Created"),
                     Err(_) => {
                         println!("Error creating directory");
-                        continue;
                     }
                 }
             }
@@ -89,7 +102,7 @@ fn main() {
                     Ok(content) => content,
                     Err(_) => {
                         println!("No file found!");
-                        continue;
+                        return Ok(());
                     }
                 };
 
@@ -109,9 +122,13 @@ fn main() {
             }
             "quit" => {
                 println!("bye!");
-                return;
+                return Ok(());
             }
             _ => println!("Unknown command"),
         }
-    }
+        Ok(())
+    };
+
+    let mut cli = Cli::new(&stdout, &stdin, actions).unwrap();
+    cli.run().unwrap();
 }
