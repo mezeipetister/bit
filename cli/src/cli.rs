@@ -77,15 +77,23 @@ impl<'a, A: FnMut(String) -> Result<(), String>> Cli<'a, A> {
             Key::Left => self.input.go_left(),
             Key::Right => self.input.go_right(),
             Key::Up => {
-                self.input = Row::new(&self.history[self.history_position - 1]);
-                if self.history_position > 1 {
-                    self.history_position -= 1;
+                if self.history.len() > 0 {
+                    if self.history_position > 0 {
+                        self.history_position -= 1;
+                    }
+                    self.input = Row::new(&self.history[self.history_position]);
                 }
             }
             Key::Down => {
-                self.input = Row::new(&self.history[self.history_position - 1]);
-                if self.history_position < self.history.len() {
-                    self.history_position += 1;
+                if self.history.len() > 0 {
+                    if self.history_position < self.history.len() {
+                        self.history_position += 1;
+                    }
+                    self.input = if self.history_position == self.history.len() {
+                        Row::new("")
+                    } else {
+                        Row::new(&self.history[self.history_position])
+                    };
                 }
             }
             _ => (),
