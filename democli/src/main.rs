@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use cli::Cli;
+use cli::{terminal::Terminal, Cli};
 use editor::{Document, Editor};
 use fs::FS;
 use native_dialog::{FileDialog, MessageDialog, MessageType};
@@ -71,7 +71,13 @@ fn main() {
 
         match parsed.0.as_str() {
             "hello" => println!("Bello!"),
-            "select" => println!("{:?}", get_path()),
+            "select" => {
+                get_path();
+            }
+            "clear" => {
+                Terminal::clear_screen();
+                Terminal::goto(0, 0);
+            }
             "touch" => {
                 let parts: Vec<&'_ str> = parsed.1.split(" ").collect();
                 let path = parts[0].to_string();

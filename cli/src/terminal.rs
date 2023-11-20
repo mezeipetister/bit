@@ -64,6 +64,9 @@ impl<'a> Terminal<'a> {
     pub fn blink() {
         print!("{}", termion::cursor::BlinkingBar);
     }
+    pub fn goto(x: u16, y: u16) {
+        print!("{}", termion::cursor::Goto(x, y));
+    }
     pub fn backspace(&mut self) {
         let (x, y) = self._stdout.cursor_pos().unwrap();
         write!(self._stdout, "{}{}", " ", termion::cursor::Goto(x - 1, y));
