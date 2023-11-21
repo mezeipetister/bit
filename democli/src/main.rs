@@ -67,12 +67,13 @@ fn main() {
     // }
 
     let actions = |line: String| -> Result<(), String> {
+        println!("");
         let parsed = parse_line(&line);
 
         match parsed.0.as_str() {
             "hello" => println!("Bello!"),
             "select" => {
-                get_path();
+                println!("{:?}", get_path());
             }
             "clear" => {
                 Terminal::clear_screen();

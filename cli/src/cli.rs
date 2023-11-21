@@ -37,7 +37,6 @@ impl<'a, A: FnMut(String) -> Result<(), String>> Cli<'a, A> {
                 // println!("..");
                 // println!("{}", self.input.display());
                 // println!("{:?}", self.input);
-                println!("");
                 self.history.push(self.input.as_str().to_string());
                 self.history_position = self.history.len();
                 self.input = Row::new("");
@@ -45,6 +44,7 @@ impl<'a, A: FnMut(String) -> Result<(), String>> Cli<'a, A> {
                 print!("{}", termion::cursor::Goto(1, y));
                 (self.actions)(self.history.last().unwrap().to_string()).unwrap();
                 self.enter_pressed = false;
+                // println!("");
             }
             if let Err(error) = self.render() {
                 die(error);
