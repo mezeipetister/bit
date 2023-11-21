@@ -62,7 +62,7 @@ impl<'a> Terminal<'a> {
         print!("{}", termion::cursor::Right(1));
     }
     pub fn blink() {
-        print!("{}", termion::cursor::BlinkingBar);
+        print!("{}", termion::cursor::BlinkingBlock);
     }
     pub fn goto(x: u16, y: u16) {
         print!("{}", termion::cursor::Goto(x, y));
