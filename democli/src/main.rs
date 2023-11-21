@@ -49,8 +49,7 @@ fn get_file(fs: &mut FS, path: &str, file_name: &str) -> Result<String, String> 
 fn get_path() -> Option<PathBuf> {
     FileDialog::new()
         .set_location("~/Desktop")
-        .add_filter("PNG Image", &["png"])
-        .add_filter("JPEG Image", &["jpg", "jpeg"])
+        .add_filter("PDF File", &["pdf"])
         .show_open_single_file()
         .unwrap()
 }

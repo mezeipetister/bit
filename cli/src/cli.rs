@@ -50,6 +50,8 @@ impl<'a, A: FnMut(String) -> Result<(), String>> Cli<'a, A> {
                 die(error);
             }
             if self.should_quit {
+                println!("");
+                self.terminal.goto_first_char();
                 break;
             }
             if let Err(error) = self.process_keypress() {

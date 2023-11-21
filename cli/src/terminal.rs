@@ -67,6 +67,10 @@ impl<'a> Terminal<'a> {
     pub fn goto(x: u16, y: u16) {
         print!("{}", termion::cursor::Goto(x, y));
     }
+    pub fn goto_first_char(&mut self) {
+        let (_x, y) = self._stdout.cursor_pos().unwrap();
+        print!("{}", termion::cursor::Goto(1, y));
+    }
     pub fn backspace(&mut self) {
         let (x, y) = self._stdout.cursor_pos().unwrap();
         write!(self._stdout, "{}{}", " ", termion::cursor::Goto(x - 1, y));
