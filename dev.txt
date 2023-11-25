@@ -1,0 +1,23 @@
+FS
+
+/working
+    /notes
+        /ID_1
+        /ID_2
+        /ID_3
+        /ID_N
+    /accounts
+        /ACCOUNT_1
+        /ACCOUNT_2
+        /ACCOUNT_3
+        /ACCOUNT_N
+
+/sync
+    - commit_log
+
+/objects/
+    - OBJECT_ID_1
+    - OBJECT_ID_2
+    - OBJECT_ID_3
+    - OBJECT_ID_4
+    - OBJECT_ID_N
