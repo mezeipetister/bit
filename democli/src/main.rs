@@ -6,8 +6,8 @@ use std::{
 
 use cli::{terminal::Terminal, Cli};
 use editor::{Document, Editor};
-use fs::FS;
 use native_dialog::{FileDialog, MessageDialog, MessageType};
+use walnut::FS;
 
 const SECRET: &'static str = "hellobello";
 

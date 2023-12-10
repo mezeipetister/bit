@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 editor = {path="../editor"}
-fs = {path="../fs"}
+walnut = "*"
 native-dialog = "0.7.0"
 cli = {path="../cli"}
