@@ -2,6 +2,7 @@
 members = [
   "repository",
   "corelib",
+  "core",
   "cli",
   "_cli",
   "parser",

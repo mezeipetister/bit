@@ -86,5 +86,6 @@ TRANSACTION
     AMOUNT 150"#;
 
     parser::expression::from_str(input).unwrap();
+
     Ok(())
 }
