@@ -4,6 +4,7 @@ use unicode_segmentation::UnicodeSegmentation;
 #[derive(Debug)]
 pub(crate) struct Row {
     pre: String,
+    project: Option<String>,
     input: String,
     length: usize,
     previous_length: usize,
@@ -12,13 +13,26 @@ pub(crate) struct Row {
 
 impl Row {
     pub fn new(slice: &str) -> Self {
-        Self {
-            pre: "bit > ".to_string(),
+        let mut res = Self {
+            pre: "".into(),
+            project: None,
             input: String::from(slice),
             length: slice.graphemes(true).count(),
             previous_length: 0,
             position: slice.graphemes(true).count(),
-        }
+        };
+        res.set_pre();
+        res
+    }
+    pub fn set_project(&mut self, project: Option<String>) {
+        self.project = project;
+        self.set_pre();
+    }
+    pub fn set_pre(&mut self) {
+        self.pre = match &self.project {
+            Some(p) => format!("bit {}", p),
+            None => "bit".into(),
+        };
     }
     // pub fn render(&self, start: usize, end: usize) -> String {
     //     let end = cmp::min(end, self.input.len());
@@ -42,7 +56,7 @@ impl Row {
     //     result
     // }
     pub fn display(&self) -> String {
-        let mut res = format!("{}{}", &self.pre, &self.input);
+        let mut res = format!("{} > {}", &self.pre, &self.input);
         let len = res.graphemes(true).count();
         let (width, _) = termion::terminal_size().unwrap();
         for _ in 0..width - len as u16 {
@@ -114,6 +128,6 @@ impl Row {
         &self.input
     }
     pub fn position(&self) -> usize {
-        self.position + self.pre.graphemes(true).count()
+        self.position + self.pre.graphemes(true).count() + 3
     }
 }
