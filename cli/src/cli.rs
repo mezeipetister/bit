@@ -6,7 +6,7 @@ use termion::event::Key;
 use crate::row::Row;
 use crate::terminal::Terminal;
 
-pub struct Cli<'a, A: FnMut(String) -> Result<(), String>> {
+pub struct Cli<'a, A: FnMut(String) -> Result<String, String>> {
     actions: A,
     should_quit: bool,
     enter_pressed: bool,
@@ -17,7 +17,7 @@ pub struct Cli<'a, A: FnMut(String) -> Result<(), String>> {
     history_position: usize,
 }
 
-impl<'a, A: FnMut(String) -> Result<(), String>> Cli<'a, A> {
+impl<'a, A: FnMut(String) -> Result<String, String>> Cli<'a, A> {
     pub fn new(stdout: &'a Stdout, stdin: &'a Stdin, actions: A) -> Result<Self, std::io::Error> {
         let res = Self {
             actions,
@@ -42,7 +42,11 @@ impl<'a, A: FnMut(String) -> Result<(), String>> Cli<'a, A> {
                 self.input = Row::new("");
                 let (x, y) = self.terminal._stdout.cursor_pos().unwrap();
                 print!("{}", termion::cursor::Goto(1, y));
-                (self.actions)(self.history.last().unwrap().to_string()).unwrap();
+                let cmd_res = (self.actions)(self.history.last().unwrap().to_string()).unwrap();
+                println!("");
+                if !cmd_res.is_empty() {
+                    println!("{}", cmd_res);
+                }
                 self.enter_pressed = false;
                 // println!("");
             }
