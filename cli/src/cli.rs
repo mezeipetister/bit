@@ -70,8 +70,8 @@ impl<'a, A: FnMut(String, &'_ mut Context, &'_ mut Terminal) -> Result<String, S
                         &mut self.terminal,
                     )
                     .unwrap();
-                    println!("");
                     if !cmd_res.is_empty() {
+                        println!("");
                         println!("{}", cmd_res);
                     }
                     let r = &mut self.input;
