@@ -21,10 +21,16 @@ fn main() {
                     print!("\x1B[2J\x1B[1;1H");
                     Ok("".into())
                 }
-                "exit" => {
-                    ctx.project = None;
-                    Ok("exiting project".into())
-                }
+                "exit" => match &ctx.project {
+                    Some(p) => {
+                        ctx.project = None;
+                        Ok("exiting project".into())
+                    }
+                    None => {
+                        ctx.should_quit = true;
+                        Ok("bye".into())
+                    }
+                },
                 "open" => {
                     ctx.project = tokens.get(1).map(|s| s.to_string());
                     Ok("opening project".into())

@@ -49,14 +49,24 @@ impl<'a, A: FnMut(String, &'_ mut Context, &'_ mut Terminal) -> Result<String, S
         self.terminal.goto_first_char();
         println!("-------------------");
         self.terminal.goto_first_char();
+        println!("Type 'help' for a list of commands");
+        self.terminal.goto_first_char();
+        self.print_start();
+    }
+    pub fn print_start(&mut self) {
+        self.terminal.goto_first_char();
         println!("To start, type 'open <project>'");
         self.terminal.goto_first_char();
-        println!("Type 'help' for a list of commands");
     }
     pub fn run(&mut self) -> Result<(), String> {
         self.print_welcome();
         loop {
             if self.enter_pressed {
+                // Print start message if project is not set
+                // if self.context.project.is_none() {
+                //     self.print_start();
+                // }
+
                 self.history.push(self.input.as_str().to_string());
                 self.history_position = self.history.len();
                 self.input = Row::new("");
