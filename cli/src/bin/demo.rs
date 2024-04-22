@@ -10,7 +10,21 @@ use cli::{
 fn main() {
     let stdout = std::io::stdout();
     let stdin = std::io::stdin();
-    let commands = CommandRegistry::new(vec![
+
+    let pre = vec![
+        Command::new("/open", "Open project", |args, ctx, terminal| {
+            if args.is_empty() {
+                return Err("Please provide a name".to_string());
+            }
+            ctx.project = Some(args.to_string());
+            Ok("Opening project".to_string())
+        }),
+        Command::new("/create", "Creating project", |args, ctx, terminal| {
+            Ok("Creating project".to_string())
+        }),
+    ];
+
+    let commands = vec![
         Command::new("/welcome", "Welcome message", |args, ctx, terminal| {
             Ok("Welcome to Bit CLI".to_string())
         }),
@@ -23,6 +37,8 @@ fn main() {
         Command::new("/settings/user/add", "Add a user", |args, ctx, terminal| {
             Ok("User added".to_string())
         }),
-    ]);
+    ];
+
+    let commands = CommandRegistry::new(pre, commands);
     Cli::new(&stdout, &stdin, commands).unwrap().run().unwrap();
 }

@@ -76,7 +76,9 @@ impl<'a> Cli<'a> {
                 print!("{}", termion::cursor::Goto(1, y));
                 {
                     let c = self.context.borrow_mut();
-                    let cmd_res = self.commands.run(&self.history.last().unwrap());
+                    let cmd_res = self
+                        .commands
+                        .run(&self.history.last().unwrap(), &self.context);
 
                     // Print empty line to separate the command from the result
                     println!("");
@@ -106,7 +108,7 @@ impl<'a> Cli<'a> {
             if self.tab_pressed {
                 let completions: Vec<MatchResult> = self
                     .commands
-                    .run(&self.input.as_str())
+                    .run(&self.input.as_str(), &self.context)
                     .into_iter()
                     .filter(|r| match r {
                         MatchResult::CommandSuggestion(_) => true,

@@ -13,19 +13,33 @@ pub enum MatchResult {
 }
 
 pub struct CommandRegistry {
+    pre_commands: Vec<Command>,
     commands: Vec<Command>,
 }
 
 impl CommandRegistry {
-    pub fn new(commands: Vec<Command>) -> Self {
-        Self { commands }
+    pub fn new(pre_commands: Vec<Command>, commands: Vec<Command>) -> Self {
+        Self {
+            pre_commands,
+            commands,
+        }
     }
-    pub fn run(&self, path: &str) -> Vec<MatchResult> {
+    pub fn run(&self, path: &str, ctx: &Context) -> Vec<MatchResult> {
         let mut results = Vec::new();
-        for cmd in &self.commands {
-            let result = cmd.match_path(path);
-            if result != MatchResult::None {
-                results.push(result);
+
+        if ctx.project.is_some() {
+            for cmd in &self.commands {
+                let result = cmd.match_path(path);
+                if result != MatchResult::None {
+                    results.push(result);
+                }
+            }
+        } else {
+            for cmd in &self.pre_commands {
+                let result = cmd.match_path(path);
+                if result != MatchResult::None {
+                    results.push(result);
+                }
             }
         }
 
