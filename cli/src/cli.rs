@@ -63,19 +63,13 @@ impl<'a> Cli<'a> {
         Ok(res)
     }
     pub fn print_welcome(&mut self) {
-        println!("Welcome to Bit CLI");
-        // Set cursor to the first character
-        self.terminal.goto_first_char();
-        println!("-------------------");
-        self.terminal.goto_first_char();
-        println!("Type 'help' for a list of commands");
-        self.terminal.goto_first_char();
+        self.terminal.print_str(
+            "Welcome to Bit CLI\n-------------------\nType 'help' for a list of commands",
+        );
         self.print_start();
     }
     pub fn print_start(&mut self) {
-        self.terminal.goto_first_char();
-        println!("To start, type 'open <project>'");
-        self.terminal.goto_first_char();
+        self.terminal.print_str("To start, type 'open <project>");
     }
     pub fn run(&mut self) -> Result<(), String> {
         self.print_welcome();
@@ -110,7 +104,8 @@ impl<'a> Cli<'a> {
                             if let Ok(res) = res {
                                 // If result is not empty, print it
                                 if res.len() > 0 {
-                                    println!("{}", res);
+                                    // Print result using terminal print_str
+                                    self.terminal.print_str(&res);
                                 }
                             } else {
                                 // If result is an error, print it

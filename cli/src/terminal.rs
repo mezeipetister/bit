@@ -73,6 +73,20 @@ impl<'a> Terminal<'a> {
     }
     pub fn backspace(&mut self) {
         let (x, y) = self._stdout.cursor_pos().unwrap();
-        write!(self._stdout, "{}{}", " ", termion::cursor::Goto(x - 1, y));
+        write!(self._stdout, "{}{}", " ", termion::cursor::Goto(x - 1, y)).unwrap();
+    }
+    pub fn print_str(&mut self, str: &str) {
+        Self::cursor_hide();
+
+        let lines = str.split("\n");
+        for line in lines {
+            // print!("{}\n", line);
+            write!(self._stdout, "{}\n", line).unwrap();
+            // Go to furst char of next line
+            write!(self._stdout, "{}", termion::cursor::Left(line.len() as u16)).unwrap();
+        }
+
+        Self::cursor_show();
+        self._stdout.flush().unwrap();
     }
 }

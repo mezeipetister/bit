@@ -22,6 +22,15 @@ fn main() {
             ctx.should_quit = true;
             Ok("bye".to_string())
         }),
+        Command::new("help", "Help", |_, _, _| {
+            Ok("Available commands:\n/open, /create, exit, help\n".to_string())
+        }),
+        Command::new("count", "Count", |_, _, _| {
+            Ok((0..100)
+                .map(|num| num.to_string())
+                .collect::<Vec<String>>()
+                .join("\n"))
+        }),
     ];
 
     let commands = vec![
