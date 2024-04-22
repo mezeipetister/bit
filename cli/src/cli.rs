@@ -27,7 +27,7 @@ impl Context {
     pub fn exit(&mut self) {
         self.user = None;
         self.project = None;
-        self.cwd = "/".to_string();
+        self.cwd = "".to_string();
     }
 }
 
@@ -73,6 +73,7 @@ impl<'a> Cli<'a> {
     }
     pub fn run(&mut self) -> Result<(), String> {
         self.print_welcome();
+
         loop {
             // If enter pressed, smart process it
             if self.enter_pressed {
@@ -110,10 +111,6 @@ impl<'a> Cli<'a> {
                             } else {
                                 // If result is an error, print it
                                 println!("Error: {}", res.unwrap_err());
-                            }
-                            // If project is not set, print start message
-                            if self.context.project.is_none() {
-                                self.print_start();
                             }
                         }
                         // If path match, set the cwd

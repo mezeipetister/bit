@@ -13,6 +13,7 @@ fn main() {
                 return Err("Please provide a name".to_string());
             }
             ctx.project = Some(args.to_string());
+            ctx.user = Some("peti".to_string());
             Ok("Opening project".to_string())
         }),
         Command::new("/create", "Creating project", |args, ctx, terminal| {
