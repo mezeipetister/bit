@@ -1,10 +1,10 @@
 use std::cmp;
 use unicode_segmentation::UnicodeSegmentation;
 
+use crate::cli::Context;
+
 #[derive(Debug)]
 pub(crate) struct Row {
-    pre: String,
-    project: Option<String>,
     input: String,
     length: usize,
     previous_length: usize,
@@ -14,25 +14,12 @@ pub(crate) struct Row {
 impl Row {
     pub fn new(slice: &str) -> Self {
         let mut res = Self {
-            pre: "".into(),
-            project: None,
             input: String::from(slice),
             length: slice.graphemes(true).count(),
             previous_length: 0,
             position: slice.graphemes(true).count(),
         };
-        res.set_pre();
         res
-    }
-    pub fn set_project(&mut self, project: Option<String>) {
-        self.project = project;
-        self.set_pre();
-    }
-    pub fn set_pre(&mut self) {
-        self.pre = match &self.project {
-            Some(p) => format!("bit {}", p),
-            None => "bit".into(),
-        };
     }
     // pub fn render(&self, start: usize, end: usize) -> String {
     //     let end = cmp::min(end, self.input.len());
@@ -55,8 +42,20 @@ impl Row {
     //     }
     //     result
     // }
-    pub fn display(&self) -> String {
-        let mut res = format!("{} > {}", &self.pre, &self.input);
+    pub fn display_raw(&self, ctx: &Context) -> String {
+        let mut res = format!(
+            "bit {}{}> {}",
+            match &ctx.project {
+                Some(pname) => format!("{}@{} ", ctx.user.to_owned().unwrap_or_default(), pname),
+                None => "".to_string(),
+            },
+            ctx.cwd,
+            &self.input
+        );
+        res
+    }
+    pub fn display(&self, ctx: &Context) -> String {
+        let mut res = self.display_raw(ctx);
         let len = res.graphemes(true).count();
         let (width, _) = termion::terminal_size().unwrap();
         for _ in 0..width - len as u16 {
@@ -127,7 +126,7 @@ impl Row {
     pub fn as_str(&self) -> &str {
         &self.input
     }
-    pub fn position(&self) -> usize {
-        self.position + self.pre.graphemes(true).count() + 3
+    pub fn position(&self, ctx: &Context) -> usize {
+        self.display_raw(ctx).graphemes(true).count()
     }
 }

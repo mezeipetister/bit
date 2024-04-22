@@ -1,6 +1,11 @@
+use crate::{cli::Context, terminal::Terminal};
+
 #[derive(Debug, PartialEq)]
 pub enum MatchResult {
-    CommandMatch(Vec<String>, fn(&str) -> Result<String, String>),
+    CommandMatch(
+        Vec<String>,
+        fn(&str, &mut Context, &mut Terminal) -> Result<String, String>,
+    ),
     CommandSuggestion(String),
     PathMatch(String),
     PathSuggestion(String),
@@ -31,14 +36,14 @@ impl CommandRegistry {
 pub struct Command {
     path: &'static str,
     help: &'static str,
-    fn_ptr: fn(&str) -> Result<String, String>,
+    fn_ptr: fn(&str, &mut Context, &mut Terminal) -> Result<String, String>,
 }
 
 impl Command {
     pub fn new(
         path: &'static str,
         help: &'static str,
-        fn_ptr: fn(&str) -> Result<String, String>,
+        fn_ptr: fn(&str, &mut Context, &mut Terminal) -> Result<String, String>,
     ) -> Self {
         Self { path, fn_ptr, help }
     }
@@ -73,7 +78,11 @@ impl Command {
 
         // Path match
         if command_path == input_tokens {
-            return MatchResult::PathMatch(path.to_string());
+            let command_path = vec![""]
+                .into_iter()
+                .chain(command_path.into_iter())
+                .collect::<Vec<&str>>();
+            return MatchResult::PathMatch(command_path.join("/"));
         }
 
         // Path suggestion

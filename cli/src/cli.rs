@@ -8,6 +8,7 @@ use termion::event::Key;
 
 #[derive(Default)]
 pub struct Context {
+    pub user: Option<String>,
     pub project: Option<String>,
     pub cwd: String,
     pub should_quit: bool,
@@ -80,25 +81,27 @@ impl<'a> Cli<'a> {
                     // Print empty line to separate the command from the result
                     println!("");
 
+                    // println!("{:?}", &cmd_res);
+
                     if cmd_res.is_empty() {
                         println!("Unknown command");
                     } else {
-                        // If command is found, print the result
-                        if cmd_res.len() == 1 {
-                            if let MatchResult::CommandMatch(params, fn_ptr) = &cmd_res[0] {
-                                let res = fn_ptr(&params.join(" "));
-                                if let Ok(res) = res {
-                                    println!("{}", res);
-                                } else {
-                                    println!("Error: {}", res.unwrap_err());
-                                }
+                        if let MatchResult::CommandMatch(params, fn_ptr) = &cmd_res[0] {
+                            let res =
+                                fn_ptr(&params.join(" "), &mut self.context, &mut self.terminal);
+                            if let Ok(res) = res {
+                                println!("{}", res);
+                            } else {
+                                println!("Error: {}", res.unwrap_err());
                             }
+                        }
+                        if let MatchResult::PathMatch(path) = &cmd_res[0] {
+                            self.context.cwd = path.to_string();
                         }
                     }
                     let r = &mut self.input;
                 }
                 self.enter_pressed = false;
-                self.input.set_project(self.context.project.clone());
             }
             if self.tab_pressed {
                 let completions: Vec<MatchResult> = self
@@ -187,11 +190,13 @@ impl<'a> Cli<'a> {
 
         let (x, y) = self.terminal._stdout.cursor_pos().unwrap();
         print!("{}", termion::cursor::Goto(1, y));
-        print!("{}", self.input.display());
+        // print!("{}", self.input.display());
+
+        print!("{}", self.input.display(&self.context));
 
         print!(
             "{}",
-            termion::cursor::Goto(self.input.position() as u16 + 1, y)
+            termion::cursor::Goto(self.input.position(&self.context) as u16 + 1, y)
         );
 
         Terminal::cursor_show();
