@@ -14,6 +14,18 @@ pub struct Context {
     pub should_quit: bool,
 }
 
+impl Context {
+    pub fn set_cwd(&mut self, path: String) {
+        if path.len() == 0 {
+            let path = "/".to_string();
+        }
+        if !path.starts_with("/") {
+            let path = format!("/{}", path);
+        }
+        self.cwd = path;
+    }
+}
+
 pub struct Cli<'a> {
     commands: CommandRegistry,
     enter_pressed: bool,
