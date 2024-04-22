@@ -104,7 +104,9 @@ impl<'a> Cli<'a> {
                             let res =
                                 fn_ptr(&params.join(" "), &mut self.context, &mut self.terminal);
                             if let Ok(res) = res {
-                                println!("{}", res);
+                                if res.len() > 0 {
+                                    println!("{}", res);
+                                }
                             } else {
                                 println!("Error: {}", res.unwrap_err());
                             }

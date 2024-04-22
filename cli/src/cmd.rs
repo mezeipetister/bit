@@ -1,3 +1,5 @@
+use std::arch::global_asm;
+
 use crate::{cli::Context, terminal::Terminal};
 
 #[derive(Debug, PartialEq)]
@@ -24,19 +26,19 @@ impl CommandRegistry {
             commands,
         }
     }
-    pub fn run(&self, path: &str, ctx: &Context) -> Vec<MatchResult> {
+    pub fn run(&self, input: &str, ctx: &Context) -> Vec<MatchResult> {
         let mut results = Vec::new();
 
         if ctx.project.is_some() {
             for cmd in &self.commands {
-                let result = cmd.match_path(path);
+                let result = cmd.match_path(input, ctx);
                 if result != MatchResult::None {
                     results.push(result);
                 }
             }
         } else {
             for cmd in &self.pre_commands {
-                let result = cmd.match_path(path);
+                let result = cmd.match_path(input, ctx);
                 if result != MatchResult::None {
                     results.push(result);
                 }
@@ -62,9 +64,31 @@ impl Command {
         Self { path, fn_ptr, help }
     }
 
-    pub fn match_path(&self, path: &str) -> MatchResult {
+    pub fn match_path(&self, input: &str, ctx: &Context) -> MatchResult {
+        let is_global = !self.path.starts_with("/");
+
         let command_tokens = tokenize_line(self.path);
-        let input_tokens = tokenize_line(path);
+
+        let mut input = input.trim().to_string();
+
+        let input_tokens = tokenize_line(&input);
+
+        // Check global command match
+        if is_global {
+            if input.starts_with(&self.path) {
+                return MatchResult::CommandMatch(
+                    input_tokens[command_tokens.len()..].to_vec(),
+                    self.fn_ptr,
+                );
+            }
+        }
+
+        if !input.starts_with("/") {
+            input = format!("/{}/{}", &ctx.cwd, input);
+        }
+
+        let input_tokens = tokenize_line(&input);
+
         // Check complete command match
         if input_tokens.starts_with(&command_tokens) {
             return MatchResult::CommandMatch(
@@ -100,7 +124,7 @@ impl Command {
         }
 
         // Path suggestion
-        if self.path.starts_with(&path) {
+        if self.path.starts_with(&input) {
             if let Some(p) = command_path.last() {
                 return MatchResult::PathSuggestion(format!("/{}", command_path.join("/")));
             }
