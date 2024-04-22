@@ -62,7 +62,11 @@ impl Command {
             if let Some(cmd) = command_cmd {
                 if let Some(_cmd) = input_cmd {
                     if cmd.starts_with(_cmd) {
-                        return MatchResult::CommandSuggestion(cmd.to_string());
+                        return MatchResult::CommandSuggestion(format!(
+                            "/{} {}",
+                            command_path.join("/"),
+                            command_cmd.unwrap()
+                        ));
                     }
                 }
             }
@@ -76,7 +80,7 @@ impl Command {
         // Path suggestion
         if self.path.starts_with(&path) {
             if let Some(p) = command_path.last() {
-                return MatchResult::PathSuggestion(p.to_string());
+                return MatchResult::PathSuggestion(format!("/{}", command_path.join("/")));
             }
         }
 

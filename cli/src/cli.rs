@@ -16,6 +16,7 @@ pub struct Context {
 pub struct Cli<'a> {
     commands: CommandRegistry,
     enter_pressed: bool,
+    tab_pressed: bool,
     terminal: Terminal<'a>,
     stdin: &'a Stdin,
     input: Row,
@@ -33,6 +34,7 @@ impl<'a> Cli<'a> {
         let res = Self {
             commands,
             enter_pressed: false,
+            tab_pressed: false,
             terminal: Terminal::default(stdout)?,
             stdin,
             input: Row::new(""),
@@ -98,6 +100,31 @@ impl<'a> Cli<'a> {
                 self.enter_pressed = false;
                 self.input.set_project(self.context.project.clone());
             }
+            if self.tab_pressed {
+                let completions: Vec<MatchResult> = self
+                    .commands
+                    .run(&self.input.as_str())
+                    .into_iter()
+                    .filter(|r| match r {
+                        MatchResult::CommandSuggestion(_) => true,
+                        MatchResult::PathSuggestion(_) => true,
+                        _ => false,
+                    })
+                    .collect();
+                println!("{:?}", &completions);
+                if let Some(c) = completions.first() {
+                    match c {
+                        MatchResult::CommandSuggestion(s) => {
+                            self.input = Row::new(s);
+                        }
+                        MatchResult::PathSuggestion(s) => {
+                            self.input = Row::new(s);
+                        }
+                        _ => (),
+                    }
+                }
+                self.tab_pressed = false;
+            }
             if self.context.should_quit {
                 self.terminal.goto_first_char();
                 break;
@@ -119,6 +146,8 @@ impl<'a> Cli<'a> {
             Key::Char(c) => {
                 if c == '\n' {
                     self.enter_pressed = true;
+                } else if c == '\t' {
+                    self.tab_pressed = true;
                 } else {
                     self.input.insert(c);
                 }
