@@ -1,15 +1,10 @@
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
-use std::io::{Stdin, Stdout};
-use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
-
-use termion::cursor::DetectCursorPos;
-use termion::event::Key;
-
+use crate::cmd::{CommandRegistry, MatchResult};
 use crate::row::Row;
 use crate::terminal::Terminal;
+use std::borrow::BorrowMut;
+use std::io::{Stdin, Stdout};
+use termion::cursor::DetectCursorPos;
+use termion::event::Key;
 
 #[derive(Default)]
 pub struct Context {
@@ -18,8 +13,8 @@ pub struct Context {
     pub should_quit: bool,
 }
 
-pub struct Cli<'a, A: FnMut(String, &'_ mut Context, &'_ mut Terminal) -> Result<String, String>> {
-    actions: A,
+pub struct Cli<'a> {
+    commands: CommandRegistry,
     enter_pressed: bool,
     terminal: Terminal<'a>,
     stdin: &'a Stdin,
@@ -29,10 +24,14 @@ pub struct Cli<'a, A: FnMut(String, &'_ mut Context, &'_ mut Terminal) -> Result
     context: Context,
 }
 
-impl<'a, A: FnMut(String, &'_ mut Context, &'_ mut Terminal) -> Result<String, String>> Cli<'a, A> {
-    pub fn new(stdout: &'a Stdout, stdin: &'a Stdin, actions: A) -> Result<Self, std::io::Error> {
+impl<'a> Cli<'a> {
+    pub fn new(
+        stdout: &'a Stdout,
+        stdin: &'a Stdin,
+        commands: CommandRegistry,
+    ) -> Result<Self, std::io::Error> {
         let res = Self {
-            actions,
+            commands,
             enter_pressed: false,
             terminal: Terminal::default(stdout)?,
             stdin,
@@ -74,15 +73,25 @@ impl<'a, A: FnMut(String, &'_ mut Context, &'_ mut Terminal) -> Result<String, S
                 print!("{}", termion::cursor::Goto(1, y));
                 {
                     let c = self.context.borrow_mut();
-                    let cmd_res = (self.actions)(
-                        self.history.last().unwrap().to_string(),
-                        &mut self.context, // Specify the lifetime of the borrowed value
-                        &mut self.terminal,
-                    )
-                    .unwrap();
-                    if !cmd_res.is_empty() {
-                        println!("");
-                        println!("{}", cmd_res);
+                    let cmd_res = self.commands.run(&self.history.last().unwrap());
+
+                    // Print empty line to separate the command from the result
+                    println!("");
+
+                    if cmd_res.is_empty() {
+                        println!("Unknown command");
+                    } else {
+                        // If command is found, print the result
+                        if cmd_res.len() == 1 {
+                            if let MatchResult::CommandMatch(params, fn_ptr) = &cmd_res[0] {
+                                let res = fn_ptr(&params.join(" "));
+                                if let Ok(res) = res {
+                                    println!("{}", res);
+                                } else {
+                                    println!("Error: {}", res.unwrap_err());
+                                }
+                            }
+                        }
                     }
                     let r = &mut self.input;
                 }
