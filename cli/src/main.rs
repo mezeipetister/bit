@@ -1,9 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
-
 use cli::{
-    cli::Context,
     cmd::{Command, CommandRegistry},
-    terminal::Terminal,
     Cli,
 };
 
@@ -25,10 +21,10 @@ fn main() {
     ];
 
     let commands = vec![
-        Command::new("/welcome", "Welcome message", |args, ctx, terminal| {
+        Command::new("/welcome", "Welcome message", |_, _, _| {
             Ok("Welcome to Bit CLI".to_string())
         }),
-        Command::new("/hi", "Hi", |args, ctx, terminal| Ok("Hi too".to_string())),
+        Command::new("/hi", "Hi", |_, _, _| Ok("Hi too".to_string())),
         Command::new(
             "/settings/user/print",
             "Print all users",
