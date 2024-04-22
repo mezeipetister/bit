@@ -24,6 +24,11 @@ impl Context {
         }
         self.cwd = path;
     }
+    pub fn exit(&mut self) {
+        self.user = None;
+        self.project = None;
+        self.cwd = "/".to_string();
+    }
 }
 
 pub struct Cli<'a> {
@@ -75,12 +80,8 @@ impl<'a> Cli<'a> {
     pub fn run(&mut self) -> Result<(), String> {
         self.print_welcome();
         loop {
+            // If enter pressed, smart process it
             if self.enter_pressed {
-                // Print start message if project is not set
-                // if self.context.project.is_none() {
-                //     self.print_start();
-                // }
-
                 self.history.push(self.input.as_str().to_string());
                 self.history_position = self.history.len();
                 self.input = Row::new("");
@@ -101,16 +102,26 @@ impl<'a> Cli<'a> {
                         println!("Unknown command");
                     } else {
                         if let MatchResult::CommandMatch(params, fn_ptr) = &cmd_res[0] {
+                            // Execute the command
                             let res =
                                 fn_ptr(&params.join(" "), &mut self.context, &mut self.terminal);
+
+                            // Print the result of the command
                             if let Ok(res) = res {
+                                // If result is not empty, print it
                                 if res.len() > 0 {
                                     println!("{}", res);
                                 }
                             } else {
+                                // If result is an error, print it
                                 println!("Error: {}", res.unwrap_err());
                             }
+                            // If project is not set, print start message
+                            if self.context.project.is_none() {
+                                self.print_start();
+                            }
                         }
+                        // If path match, set the cwd
                         if let MatchResult::PathMatch(path) = &cmd_res[0] {
                             self.context.cwd = path.to_string();
                         }

@@ -18,6 +18,10 @@ fn main() {
         Command::new("/create", "Creating project", |args, ctx, terminal| {
             Ok("Creating project".to_string())
         }),
+        Command::new("exit", "Close BIT", |_, ctx, _| {
+            ctx.should_quit = true;
+            Ok("bye".to_string())
+        }),
     ];
 
     let commands = vec![
@@ -39,6 +43,11 @@ fn main() {
             path.pop();
             ctx.cwd = path.join("/");
             Ok("".to_string())
+        }),
+        Command::new("exit", "Exit project", |_, ctx, _| {
+            let pname = ctx.project.to_owned().unwrap_or("".to_string());
+            ctx.exit();
+            Ok(format!("Logout from project: {}", pname))
         }),
     ];
 
