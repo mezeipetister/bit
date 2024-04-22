@@ -1,0 +1,48 @@
+/parent/child command param1 param2 p3 p4
+------------- ------- -------------------
+     |           |         |  
+     |           *- Command|single word token
+     *- Path section       |
+                           *- params section
+
+/parent child command p1 p2 p3 p4
+  |
+  |*- Transform input line
+  |
+/parent/child/command/p1/p2/p3/p4
+
+*-------------*
+* Match types *
+*-------------*
+
+Complete match
+==============
+Input: /settings/user print all
+Command: /settings/user/print[all]
+Response: MatchResult::Command((fn(&str)->Result<String,String>, &str))
+/settings/user/print/all  | This is a complete match
+/settings/user/print      | Params and command function returned
+
+Command partial match
+=====================
+Input: /settings/user pri
+Command: /settings/user/print[all]
+Response: MatchResult::CommandSuggestion("/settings/user/print")
+/settings/user/pri        | This is a partial match
+/settings/user/print      | /full path is returnd as CommandSuggestion
+
+Path match
+=====================
+Input: /settings/user
+Command: /settings/user/print[all]
+Response: MatchResult::Path("/settings/user")
+/settings/user            | This is a complete path match
+/settings/user/print      | path returned as path match
+
+Path partial match
+=====================
+Input: /settings/us
+Command: /settings/user/print[all]
+Response: MatchResult::PathSuggestion("/settings/user")
+/settings/user/pri        | This is a partial path match
+/settings/user/print      | parent path returnd as path suggestion
