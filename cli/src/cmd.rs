@@ -62,11 +62,10 @@ impl Command {
             if let Some(cmd) = command_cmd {
                 if let Some(_cmd) = input_cmd {
                     if cmd.starts_with(_cmd) {
-                        return MatchResult::CommandSuggestion(format!(
-                            "/{} {}",
-                            command_path.join("/"),
-                            command_cmd.unwrap()
-                        ));
+                        return MatchResult::CommandSuggestion(match command_path.len() {
+                            0 => format!("/{}", command_cmd.unwrap()),
+                            _ => format!("/{} {}", command_path.join("/"), command_cmd.unwrap()),
+                        });
                     }
                 }
             }
@@ -99,7 +98,7 @@ fn split_last_token(tokens: &Vec<String>) -> (Vec<&str>, Option<&String>) {
         return (rest.iter().map(|s| s.as_str()).collect(), Some(last));
     }
 
-    (tokens.iter().map(|s| s.as_str()).collect(), None)
+    (vec![], tokens.get(0))
 }
 
 fn tokenize_line(line: &str) -> Vec<String> {

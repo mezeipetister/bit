@@ -111,7 +111,7 @@ impl<'a> Cli<'a> {
                         _ => false,
                     })
                     .collect();
-                println!("{:?}", &completions);
+                // println!("{:?}", &completions);
                 if let Some(c) = completions.first() {
                     match c {
                         MatchResult::CommandSuggestion(s) => {
