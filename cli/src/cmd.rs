@@ -64,12 +64,12 @@ impl Command {
         Self { path, fn_ptr, help }
     }
 
-    pub fn match_path(&self, input: &str, ctx: &Context) -> MatchResult {
+    pub fn match_path(&self, raw_input: &str, ctx: &Context) -> MatchResult {
         let is_global = !self.path.starts_with("/");
 
         let command_tokens = tokenize_line(self.path);
 
-        let mut input = input.trim().to_string();
+        let mut input = raw_input.trim().to_string();
 
         let input_tokens = tokenize_line(&input);
 
@@ -98,6 +98,9 @@ impl Command {
         }
 
         // Suggesting command
+        // /settings/user print
+        // /
+        // settings user pr
         let (command_path, command_cmd) = split_last_token(&command_tokens);
         let (input_path, input_cmd) = split_last_token(&input_tokens);
 

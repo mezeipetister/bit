@@ -137,10 +137,13 @@ impl<'a> Cli<'a> {
                 if let Some(c) = completions.first() {
                     match c {
                         MatchResult::CommandSuggestion(s) => {
-                            self.input = Row::new(s);
+                            // substract self.context.cwd from s
+                            let s = s.replace(&self.context.cwd, "");
+                            self.input = Row::new(s.trim());
                         }
                         MatchResult::PathSuggestion(s) => {
-                            self.input = Row::new(s);
+                            let s = s.replace(&self.context.cwd, "");
+                            self.input = Row::new(s.trim());
                         }
                         _ => (),
                     }
