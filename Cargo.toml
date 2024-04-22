@@ -9,6 +9,4 @@ members = [
   "bitc",
   "editor",
   "protocol",
-  "democli",
-  "dparser",
 ]

@@ -1,5 +1,5 @@
-#[derive(Debug)]
-enum MatchResult {
+#[derive(Debug, PartialEq)]
+pub enum MatchResult {
     CommandMatch(Vec<String>, fn(&str) -> Result<String, String>),
     CommandSuggestion(String),
     PathMatch(String),
@@ -7,14 +7,35 @@ enum MatchResult {
     None,
 }
 
-struct Command {
+pub struct CommandRegistry {
+    commands: Vec<Command>,
+}
+
+impl CommandRegistry {
+    pub fn new(commands: Vec<Command>) -> Self {
+        Self { commands }
+    }
+    pub fn run(&self, path: &str) -> Vec<MatchResult> {
+        let mut results = Vec::new();
+        for cmd in &self.commands {
+            let result = cmd.match_path(path);
+            if result != MatchResult::None {
+                results.push(result);
+            }
+        }
+
+        results
+    }
+}
+
+pub struct Command {
     path: &'static str,
     help: &'static str,
     fn_ptr: fn(&str) -> Result<String, String>,
 }
 
 impl Command {
-    fn new(
+    pub fn new(
         path: &'static str,
         help: &'static str,
         fn_ptr: fn(&str) -> Result<String, String>,
@@ -22,7 +43,7 @@ impl Command {
         Self { path, fn_ptr, help }
     }
 
-    fn match_path(&self, path: &str) -> MatchResult {
+    pub fn match_path(&self, path: &str) -> MatchResult {
         let command_tokens = tokenize_line(self.path);
         let input_tokens = tokenize_line(path);
         // Check complete command match
@@ -108,28 +129,28 @@ fn tokenize_line(line: &str) -> Vec<String> {
     tokens
 }
 
-fn main() {
-    let cmd = Command::new(
-        "/settings/user print",
-        "Print user settings lorem ipsum dolorem set ami",
-        |_| Err("".to_string()),
-    );
+// fn main() {
+//     let cmd = Command::new(
+//         "/settings/user print",
+//         "Print user settings lorem ipsum dolorem set ami",
+//         |_| Err("".to_string()),
+//     );
 
-    println!("{:?}", cmd.match_path("/settings/user print"));
-    println!("{:?}", cmd.match_path("/settings/user print all"));
-    println!("{:?}", cmd.match_path("/settings/user print all params"));
-    println!("{:?}", cmd.match_path("/settings/user print all a=1 b=2"));
-    println!("{:?}", cmd.match_path("/settings/user pri"));
-    println!("{:?}", cmd.match_path("/settings/user"));
-    println!("{:?}", cmd.match_path("/settings/us"));
+//     println!("{:?}", cmd.match_path("/settings/user print"));
+//     println!("{:?}", cmd.match_path("/settings/user print all"));
+//     println!("{:?}", cmd.match_path("/settings/user print all params"));
+//     println!("{:?}", cmd.match_path("/settings/user print all a=1 b=2"));
+//     println!("{:?}", cmd.match_path("/settings/user pri"));
+//     println!("{:?}", cmd.match_path("/settings/user"));
+//     println!("{:?}", cmd.match_path("/settings/us"));
 
-    let cmd = Command::new("/note create", "Create a new note", |_| Err("".to_string()));
+//     let cmd = Command::new("/note create", "Create a new note", |_| Err("".to_string()));
 
-    println!("{:?}", cmd.match_path("/note create new"));
-    println!("{:?}", cmd.match_path("/note create"));
-    println!("{:?}", cmd.match_path("/note cr"));
-    println!("{:?}", cmd.match_path("/note"));
-    println!("{:?}", cmd.match_path("/no"));
+//     println!("{:?}", cmd.match_path("/note create new"));
+//     println!("{:?}", cmd.match_path("/note create"));
+//     println!("{:?}", cmd.match_path("/note cr"));
+//     println!("{:?}", cmd.match_path("/note"));
+//     println!("{:?}", cmd.match_path("/no"));
 
-    // println!("{:?}", &r);
-}
+//     // println!("{:?}", &r);
+// }
