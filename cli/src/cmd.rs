@@ -9,6 +9,7 @@ pub enum MatchResult {
         fn(&str, &mut Context, &mut Terminal) -> Result<String, String>,
     ),
     PathMatch(String),
+    Info(&'static str),
     None,
 }
 
@@ -102,10 +103,13 @@ impl Command {
         // Check global command match
         if is_global {
             if input.starts_with(&self.path) {
-                return MatchResult::CommandMatch(
-                    input_tokens[command_tokens.len()..].to_vec(),
-                    self.fn_ptr,
-                );
+                let params = input_tokens[command_tokens.len()..].to_vec();
+                if let Some(ft) = params.get(0) {
+                    if ft == "?" {
+                        return MatchResult::Info(self.help);
+                    }
+                }
+                return MatchResult::CommandMatch(params, self.fn_ptr);
             }
         }
 
@@ -117,10 +121,13 @@ impl Command {
 
         // Check complete command match
         if input_tokens.starts_with(&command_tokens) {
-            return MatchResult::CommandMatch(
-                input_tokens[command_tokens.len()..].to_vec(),
-                self.fn_ptr,
-            );
+            let params = input_tokens[command_tokens.len()..].to_vec();
+            if let Some(ft) = params.get(0) {
+                if ft == "?" {
+                    return MatchResult::Info(self.help);
+                }
+            }
+            return MatchResult::CommandMatch(params, self.fn_ptr);
         }
 
         let (command_path, command_cmd) = split_last_token(&command_tokens);

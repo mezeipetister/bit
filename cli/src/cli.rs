@@ -123,6 +123,12 @@ impl<'a> Cli<'a> {
                                 println!("Error: {}", res.unwrap_err());
                             }
                         }
+                        // Help
+                        if let MatchResult::Info(msg) = &cmd_res[0] {
+                            self.terminal.goto_first_char();
+                            self.terminal.print_str("Help:");
+                            self.terminal.print_str(msg);
+                        }
                         // If path match, set the cwd
                         if let MatchResult::PathMatch(path) = &cmd_res[0] {
                             self.context.cwd = path.to_string();

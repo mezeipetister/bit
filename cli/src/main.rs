@@ -8,17 +8,23 @@ fn main() {
     let stdin = std::io::stdin();
 
     let pre = vec![
-        Command::new("/open", "Open project", |args, ctx, terminal| {
-            if args.is_empty() {
-                return Err("Please provide a name".to_string());
-            }
-            ctx.project = Some(args.to_string());
-            ctx.user = Some("peti".to_string());
-            Ok("Opening project".to_string())
-        }),
-        Command::new("/create", "Creating project", |args, ctx, terminal| {
-            Ok("Creating project".to_string())
-        }),
+        Command::new(
+            "/open",
+            "/open PROJECT_NAME\nOpening a project by providing its name.",
+            |args, ctx, terminal| {
+                if args.is_empty() {
+                    return Err("Please provide a name".to_string());
+                }
+                ctx.project = Some(args.to_string());
+                ctx.user = Some("peti".to_string());
+                Ok("Opening project".to_string())
+            },
+        ),
+        Command::new(
+            "/create",
+            "/create NAME\nCreating a new project by providing a name",
+            |args, ctx, terminal| Ok("Creating project".to_string()),
+        ),
         Command::new("exit", "Close BIT", |_, ctx, _| {
             ctx.should_quit = true;
             Ok("bye".to_string())
