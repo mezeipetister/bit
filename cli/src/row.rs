@@ -43,13 +43,9 @@ impl Row {
     // }
     pub fn display_raw(&self, ctx: &Context) -> String {
         let mut res = format!(
-            "bit {}{}> {}",
+            "\x1b[36mbit\x1b[0m {}{}> {}",
             match &ctx.project {
-                Some(pname) => format!(
-                    "[{}@\x1b[34m{}\x1b[0m] ",
-                    ctx.user.to_owned().unwrap_or_default(),
-                    pname
-                ),
+                Some(pname) => format!("[{}@{}] ", ctx.user.to_owned().unwrap_or_default(), pname),
                 None => "".to_string(),
             },
             format!("\x1b[32m{}\x1b[0m", ctx.cwd),
@@ -136,9 +132,12 @@ impl Row {
 }
 
 pub fn count_visible_chars(input: &str) -> usize {
-    let visible_input = input
-        .replace("\x1b[32m", "")
-        .replace("\x1b[34m", "")
-        .replace("\x1b[0m", "");
+    let color_codes: Vec<&str> = vec![
+        "\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[34m", "\x1b[36m", "\x1b[37m", "\x1b[0m",
+    ];
+    let mut visible_input = input.to_string();
+    for color_code in color_codes {
+        visible_input = visible_input.replace(color_code, "");
+    }
     visible_input.graphemes(true).count()
 }
