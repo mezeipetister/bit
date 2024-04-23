@@ -1,7 +1,6 @@
+use crate::cli::Context;
 use std::cmp;
 use unicode_segmentation::UnicodeSegmentation;
-
-use crate::cli::Context;
 
 #[derive(Debug)]
 pub(crate) struct Row {
@@ -46,10 +45,14 @@ impl Row {
         let mut res = format!(
             "bit {}{}> {}",
             match &ctx.project {
-                Some(pname) => format!("{}@{} ", ctx.user.to_owned().unwrap_or_default(), pname),
+                Some(pname) => format!(
+                    "[{}@\x1b[34m{}\x1b[0m] ",
+                    ctx.user.to_owned().unwrap_or_default(),
+                    pname
+                ),
                 None => "".to_string(),
             },
-            ctx.cwd,
+            format!("\x1b[32m{}\x1b[0m", ctx.cwd),
             &self.input
         );
         res
@@ -127,6 +130,15 @@ impl Row {
         &self.input
     }
     pub fn position(&self, ctx: &Context) -> usize {
-        self.display_raw(ctx).graphemes(true).count()
+        let raw = self.display_raw(ctx);
+        count_visible_chars(&raw)
     }
+}
+
+pub fn count_visible_chars(input: &str) -> usize {
+    let visible_input = input
+        .replace("\x1b[32m", "")
+        .replace("\x1b[34m", "")
+        .replace("\x1b[0m", "");
+    visible_input.graphemes(true).count()
 }
