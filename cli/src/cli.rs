@@ -2,6 +2,7 @@ use crate::cmd::{CommandRegistry, MatchResult};
 use crate::row::Row;
 use crate::terminal::Terminal;
 use std::borrow::BorrowMut;
+use std::env::consts::DLL_SUFFIX;
 use std::io::{Stdin, Stdout};
 use termion::cursor::DetectCursorPos;
 use termion::event::Key;
@@ -71,6 +72,15 @@ impl<'a> Cli<'a> {
     pub fn print_start(&mut self) {
         self.terminal.print_str("To start, type 'open <project>");
     }
+    pub fn set_suggestion(&mut self, suggestion: &str) {
+        if suggestion.starts_with(&self.context.cwd) {
+            let plus = if self.context.cwd.len() > 0 { 1 } else { 0 };
+            let start = self.context.cwd.len() + plus;
+            self.input = Row::new(&format!("{} ", suggestion[start..].trim()));
+        } else {
+            self.input = Row::new(suggestion);
+        }
+    }
     pub fn run(&mut self) -> Result<(), String> {
         self.print_welcome();
 
@@ -137,13 +147,10 @@ impl<'a> Cli<'a> {
                 if let Some(c) = completions.first() {
                     match c {
                         MatchResult::CommandSuggestion(s) => {
-                            // substract self.context.cwd from s
-                            let s = s.replace(&self.context.cwd, "");
-                            self.input = Row::new(s.trim());
+                            self.set_suggestion(s);
                         }
                         MatchResult::PathSuggestion(s) => {
-                            let s = s.replace(&self.context.cwd, "");
-                            self.input = Row::new(s.trim());
+                            self.set_suggestion(s);
                         }
                         _ => (),
                     }

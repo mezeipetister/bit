@@ -98,9 +98,6 @@ impl Command {
         }
 
         // Suggesting command
-        // /settings/user print
-        // /
-        // settings user pr
         let (command_path, command_cmd) = split_last_token(&command_tokens);
         let (input_path, input_cmd) = split_last_token(&input_tokens);
 
@@ -118,11 +115,16 @@ impl Command {
         }
 
         // Path match
-        if command_path == input_tokens {
-            let command_path = vec![""]
+        if command_path
+            .iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<String>>()
+            .starts_with(&input_tokens)
+        {
+            let command_path = vec!["".to_string()]
                 .into_iter()
-                .chain(command_path.into_iter())
-                .collect::<Vec<&str>>();
+                .chain(input_tokens.into_iter())
+                .collect::<Vec<String>>();
             return MatchResult::PathMatch(command_path.join("/"));
         }
 

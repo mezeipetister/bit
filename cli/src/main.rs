@@ -47,6 +47,10 @@ fn main() {
         Command::new("/settings/user/add", "Add a user", |args, ctx, terminal| {
             Ok("User added".to_string())
         }),
+        Command::new("/note/create", "Create note", |_, _, _| {
+            Ok("Note created".into())
+        }),
+        Command::new("/note/list", "List notes", |_, _, _| Ok("Notes".into())),
         Command::new("..", "Step back in path", |args, ctx, terminal| {
             // Remove ctx.cwd last element
             let mut path = ctx.cwd.split('/').collect::<Vec<&str>>();
