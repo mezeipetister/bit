@@ -205,12 +205,12 @@ impl Command {
             if let Some(command_token) = command_tokens.get(input_index) {
                 // First level suggestion
                 if input_tokens.len() == 1 {
-                    if command_path.len() > 1 {
-                        return CompletionResult::PathSuggestion(format!(
-                            "/{}",
-                            command_path[0..1].join("/")
-                        ));
-                    }
+                    // if command_path.len() > 1 {
+                    //     return CompletionResult::PathSuggestion(format!(
+                    //         "/{}",
+                    //         command_path[0..1].join("/")
+                    //     ));
+                    // }
                     if command_token.starts_with(input_token) {
                         return CompletionResult::PathSuggestion(format!("/{}", command_token));
                     }
