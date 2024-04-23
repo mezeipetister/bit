@@ -129,9 +129,36 @@ impl Command {
         }
 
         // Path suggestion
-        if self.path.starts_with(&input) {
-            if let Some(p) = command_path.last() {
-                return MatchResult::PathSuggestion(format!("/{}", command_path.join("/")));
+        // Iter over input tokens
+        let mut input_tokens_peekable = input_tokens.iter().enumerate().peekable();
+        // Get input tokens one by one
+        while let Some((index, input_token)) = input_tokens_peekable.next() {
+            // If the same leve command token exist
+            if let Some(command_token) = command_tokens.get(index) {
+                // First level suggestion
+                if input_tokens.len() == 1 {
+                    if command_token.starts_with(input_token) {
+                        return MatchResult::PathSuggestion(format!("/{}", command_token));
+                    }
+                }
+                // After first level completion
+                // If tokens are the same
+                if command_token == input_token {
+                    // If there is next input token
+                    if let Some((next_index, next_input_token)) = input_tokens_peekable.peek() {
+                        // If the same command token exist
+                        if let Some(next_command_token) = command_tokens.get(*next_index) {
+                            if next_command_token != *next_input_token {
+                                if next_command_token.starts_with(*next_input_token) {
+                                    return MatchResult::PathSuggestion(format!(
+                                        "/{}",
+                                        command_tokens[0..*next_index + 1].join("/")
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
