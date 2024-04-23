@@ -83,6 +83,7 @@ impl<'a> Terminal<'a> {
             // print!("{}\n", line);
             write!(self._stdout, "{}\n", line).unwrap();
             // Go to furst char of next line
+            // Go to first char of line without knowing the position
             write!(self._stdout, "{}", termion::cursor::Left(line.len() as u16)).unwrap();
         }
 

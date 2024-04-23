@@ -47,6 +47,11 @@ fn main() {
         Command::new("/settings/user/add", "Add a user", |args, ctx, terminal| {
             Ok("User added".to_string())
         }),
+        Command::new(
+            "/settings/account/add",
+            "Add an account",
+            |args, ctx, terminal| Ok("Account added".to_string()),
+        ),
         Command::new("/note/create", "Create note", |_, _, _| {
             Ok("Note created".into())
         }),

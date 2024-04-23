@@ -1,4 +1,4 @@
-use crate::cmd::{CommandRegistry, MatchResult};
+use crate::cmd::{CommandRegistry, CompletionResult, MatchResult};
 use crate::row::Row;
 use crate::terminal::Terminal;
 use std::borrow::BorrowMut;
@@ -133,28 +133,37 @@ impl<'a> Cli<'a> {
                 self.enter_pressed = false;
             }
             if self.tab_pressed {
-                let completions: Vec<MatchResult> = self
-                    .commands
-                    .run(&self.input.as_str(), &self.context)
-                    .into_iter()
-                    .filter(|r| match r {
-                        MatchResult::CommandSuggestion(_) => true,
-                        MatchResult::PathSuggestion(_) => true,
-                        _ => false,
-                    })
-                    .collect();
+                // Get completions
+                let mut completions: Vec<CompletionResult> =
+                    self.commands.complete(&self.input.as_str(), &self.context);
+
+                // Dedup completions
+                completions.dedup();
+
                 // println!("{:?}", &completions);
-                if let Some(c) = completions.first() {
-                    match c {
-                        MatchResult::CommandSuggestion(s) => {
-                            self.set_suggestion(s);
+
+                match completions.len() {
+                    0 => (),
+                    1 => match &completions[0] {
+                        CompletionResult::CommandSuggestion(s) => self.set_suggestion(s),
+                        CompletionResult::PathSuggestion(s) => self.set_suggestion(s),
+                        CompletionResult::None => (),
+                    },
+                    _ => {
+                        self.terminal.goto_first_char();
+                        self.terminal.print_str("\nAvailable options:");
+                        for c in &completions {
+                            match c {
+                                CompletionResult::CommandSuggestion(s) => {
+                                    self.terminal.print_str(s)
+                                }
+                                CompletionResult::PathSuggestion(s) => self.terminal.print_str(s),
+                                CompletionResult::None => (),
+                            }
                         }
-                        MatchResult::PathSuggestion(s) => {
-                            self.set_suggestion(s);
-                        }
-                        _ => (),
                     }
                 }
+
                 self.tab_pressed = false;
             }
             if self.context.should_quit {

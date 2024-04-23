@@ -8,8 +8,13 @@ pub enum MatchResult {
         Vec<String>,
         fn(&str, &mut Context, &mut Terminal) -> Result<String, String>,
     ),
-    CommandSuggestion(String),
     PathMatch(String),
+    None,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum CompletionResult {
+    CommandSuggestion(String),
     PathSuggestion(String),
     None,
 }
@@ -40,6 +45,27 @@ impl CommandRegistry {
             for cmd in &self.pre_commands {
                 let result = cmd.match_path(input, ctx);
                 if result != MatchResult::None {
+                    results.push(result);
+                }
+            }
+        }
+
+        results
+    }
+    pub fn complete(&self, input: &str, ctx: &Context) -> Vec<CompletionResult> {
+        let mut results = Vec::new();
+
+        if ctx.project.is_some() {
+            for cmd in &self.commands {
+                let result = cmd.completion(input, ctx);
+                if result != CompletionResult::None {
+                    results.push(result);
+                }
+            }
+        } else {
+            for cmd in &self.pre_commands {
+                let result = cmd.completion(input, ctx);
+                if result != CompletionResult::None {
                     results.push(result);
                 }
             }
@@ -97,22 +123,8 @@ impl Command {
             );
         }
 
-        // Suggesting command
         let (command_path, command_cmd) = split_last_token(&command_tokens);
         let (input_path, input_cmd) = split_last_token(&input_tokens);
-
-        if command_path == input_path {
-            if let Some(cmd) = command_cmd {
-                if let Some(_cmd) = input_cmd {
-                    if cmd.starts_with(_cmd) {
-                        return MatchResult::CommandSuggestion(match command_path.len() {
-                            0 => format!("/{}", command_cmd.unwrap()),
-                            _ => format!("/{} {}", command_path.join("/"), command_cmd.unwrap()),
-                        });
-                    }
-                }
-            }
-        }
 
         // Path match
         if command_path
@@ -125,10 +137,51 @@ impl Command {
                 .into_iter()
                 .chain(input_tokens.into_iter())
                 .collect::<Vec<String>>();
+
             return MatchResult::PathMatch(command_path.join("/"));
         }
 
-        // Next path suggestion
+        MatchResult::None
+    }
+
+    pub fn completion(&self, raw_input: &str, ctx: &Context) -> CompletionResult {
+        let is_global = !self.path.starts_with("/");
+
+        let command_tokens = tokenize_line(self.path);
+
+        let mut input = raw_input.trim().to_string();
+
+        let input_tokens = tokenize_line(&input);
+
+        if !input.starts_with("/") {
+            input = format!("/{}/{}", &ctx.cwd, input);
+        }
+
+        let input_tokens = tokenize_line(&input);
+
+        let (command_path, command_cmd) = split_last_token(&command_tokens);
+        let (input_path, input_cmd) = split_last_token(&input_tokens);
+
+        // Complete command
+        if command_path == input_path {
+            if let Some(cmd) = command_cmd {
+                if let Some(_cmd) = input_cmd {
+                    if cmd.starts_with(_cmd) {
+                        return CompletionResult::CommandSuggestion(match command_path.len() {
+                            0 => format!("/{}", command_cmd.unwrap()),
+                            _ => format!("/{} {}", command_path.join("/"), command_cmd.unwrap()),
+                        });
+                    }
+                }
+            }
+        }
+
+        // Suggest command
+        if command_path == input_tokens {
+            return CompletionResult::CommandSuggestion(self.path.to_string());
+        }
+
+        // Path suggestion
         if command_path
             .iter()
             .map(|t| t.to_string())
@@ -136,14 +189,14 @@ impl Command {
             .starts_with(&input_tokens)
         {
             if command_path.len() > input_tokens.len() {
-                return MatchResult::PathSuggestion(format!(
+                return CompletionResult::PathSuggestion(format!(
                     "/{}",
                     command_path[0..input_tokens.len() + 1].join("/"),
                 ));
             }
         }
 
-        // Path suggestion
+        // Path completion
         // Iter over input tokens
         let mut input_tokens_peekable = input_tokens.iter().enumerate().peekable();
         // Get input tokens one by one
@@ -153,13 +206,13 @@ impl Command {
                 // First level suggestion
                 if input_tokens.len() == 1 {
                     if command_path.len() > 1 {
-                        return MatchResult::PathSuggestion(format!(
+                        return CompletionResult::PathSuggestion(format!(
                             "/{}",
                             command_path[0..1].join("/")
                         ));
                     }
                     if command_token.starts_with(input_token) {
-                        return MatchResult::PathSuggestion(format!("/{}", command_token));
+                        return CompletionResult::PathSuggestion(format!("/{}", command_token));
                     }
                 }
                 // After first level completion
@@ -171,27 +224,19 @@ impl Command {
                         if let Some(next_command_token) = command_tokens.get(*next_index) {
                             if next_command_token != *next_input_token {
                                 if next_command_token.starts_with(*next_input_token) {
-                                    return MatchResult::PathSuggestion(format!(
+                                    return CompletionResult::PathSuggestion(format!(
                                         "/{}",
                                         command_tokens[0..*next_index + 1].join("/")
                                     ));
                                 }
                             }
                         }
-                    } else {
-                        // No next input token but there is next command path
-                        if let Some(_) = command_path.get(input_index + 1) {
-                            return MatchResult::PathSuggestion(format!(
-                                "/{}",
-                                command_tokens[0..input_index + 1].join("/")
-                            ));
-                        }
                     }
                 }
             }
         }
 
-        MatchResult::None
+        CompletionResult::None
     }
 }
 
