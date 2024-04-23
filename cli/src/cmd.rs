@@ -128,15 +128,36 @@ impl Command {
             return MatchResult::PathMatch(command_path.join("/"));
         }
 
+        // Next path suggestion
+        if command_path
+            .iter()
+            .map(|t| t.to_string())
+            .collect::<Vec<_>>()
+            .starts_with(&input_tokens)
+        {
+            if command_path.len() > input_tokens.len() {
+                return MatchResult::PathSuggestion(format!(
+                    "/{}",
+                    command_path[0..input_tokens.len() + 1].join("/"),
+                ));
+            }
+        }
+
         // Path suggestion
         // Iter over input tokens
         let mut input_tokens_peekable = input_tokens.iter().enumerate().peekable();
         // Get input tokens one by one
-        while let Some((index, input_token)) = input_tokens_peekable.next() {
+        while let Some((input_index, input_token)) = input_tokens_peekable.next() {
             // If the same leve command token exist
-            if let Some(command_token) = command_tokens.get(index) {
+            if let Some(command_token) = command_tokens.get(input_index) {
                 // First level suggestion
                 if input_tokens.len() == 1 {
+                    if command_path.len() > 1 {
+                        return MatchResult::PathSuggestion(format!(
+                            "/{}",
+                            command_path[0..1].join("/")
+                        ));
+                    }
                     if command_token.starts_with(input_token) {
                         return MatchResult::PathSuggestion(format!("/{}", command_token));
                     }
@@ -156,6 +177,14 @@ impl Command {
                                     ));
                                 }
                             }
+                        }
+                    } else {
+                        // No next input token but there is next command path
+                        if let Some(_) = command_path.get(input_index + 1) {
+                            return MatchResult::PathSuggestion(format!(
+                                "/{}",
+                                command_tokens[0..input_index + 1].join("/")
+                            ));
                         }
                     }
                 }
