@@ -13,3 +13,4 @@ path = "src/main.rs"
 [dependencies]
 termion = "2.0.1"
 unicode-segmentation = "1.10.1"
+editor = { path = "../editor" }

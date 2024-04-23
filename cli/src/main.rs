@@ -2,6 +2,7 @@ use cli::{
     cmd::{Command, CommandRegistry},
     Cli,
 };
+use editor::Document;
 
 fn main() {
     let stdout = std::io::stdout();
@@ -59,7 +60,16 @@ fn main() {
             |args, ctx, terminal| Ok("Account added".to_string()),
         ),
         Command::new("/note/create", "Create note", |_, _, _| {
-            Ok("Note created".into())
+            let clbk = Box::new(|c| {
+                println!("Saved!");
+                Ok(())
+            });
+            let doc = Document::new("New note".into(), "".into(), clbk);
+            let res = editor::Editor::new(doc, &std::io::stdin(), &std::io::stdout())
+                .unwrap()
+                .run()
+                .unwrap();
+            Ok(res)
         }),
         Command::new("/note/list", "List notes", |_, _, _| Ok("Notes".into())),
         Command::new("..", "Step back in path", |args, ctx, terminal| {
